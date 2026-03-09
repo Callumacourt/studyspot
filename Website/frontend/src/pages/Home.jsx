@@ -1,8 +1,11 @@
 import { useNavigate } from "react-router-dom"
 import styles from "../styles/Pages/Home.module.css"
+import RoomFilter from "../components/RoomFilter.tsx";
+import { useState } from "react";
 
 export default function Home () {
     const navigate = useNavigate();
+    const [filterExpanded, setFilterExpanded] = useState(false) 
 
     const goToRoom = (roomId) => {
         navigate(`/room/${roomId}`);
@@ -12,7 +15,12 @@ export default function Home () {
         <main className = {styles.content}>
             <section className = {styles.navButtons}>
                 <button>Find me a quiet spot</button>
-                <button>Filter rooms</button>
+                <button onClick={() => setFilterExpanded(v => !v)}>Filter rooms</button>
+                <section className={styles.filterExpanded}>
+                {filterExpanded && (
+                    <RoomFilter/>
+                )}
+                </section>
             </section>
 
             <section className = {styles.campusMap}>

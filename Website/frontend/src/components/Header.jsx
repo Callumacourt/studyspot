@@ -8,8 +8,7 @@ export default function Header () {
             <nav>
                 <h3 onClick={() => navigate("/")}>StudySpot</h3>
                 <nav>
-                <button>Login</button>
-                <button>Register</button>
+                <button>Sign In</button>
                 </nav>
             </nav>
         </header>

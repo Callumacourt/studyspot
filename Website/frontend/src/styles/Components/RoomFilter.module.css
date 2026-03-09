@@ -1,0 +1,11 @@
+.filterForm {
+    color: black;
+}
+
+.filterForm label {
+    margin-right: 5px;
+}
+
+.filterForm fieldset {
+    margin-bottom: 10px;
+}

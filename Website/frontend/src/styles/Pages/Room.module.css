@@ -48,6 +48,10 @@
     grid-row: 1;
 }
 
+.tableMap, .stats {
+    min-height: 45vh;
+}
+
 .busyTimes {
     grid-column: 1 / -1; 
     grid-row: 2;

@@ -1,6 +1,12 @@
+import { useNavigate } from "react-router-dom"
 import styles from "../styles/Pages/Home.module.css"
 
 export default function Home () {
+    const navigate = useNavigate();
+
+    const goToRoom = (roomId) => {
+        navigate(`/room/${roomId}`);
+    };
 
     return (
         <main className = {styles.content}>
@@ -8,17 +14,18 @@ export default function Home () {
                 <button>Find me a quiet spot</button>
                 <button>Filter rooms</button>
             </section>
+
             <section className = {styles.campusMap}>
-                <button className={styles.roomButton} style={{top: '10%', left: '15%'}}>Room A101</button>
-                <button className={styles.roomButton} style={{top: '10%', left: '50%'}}>Room A102</button>
-                <button className={styles.roomButton} style={{top: '10%', left: '75%'}}>Room A103</button>
-                <button className={styles.roomButton} style={{top: '35%', left: '20%'}}>Room B201</button>
-                <button className={styles.roomButton} style={{top: '35%', left: '60%'}}>Room B202</button>
-                <button className={styles.roomButton} style={{top: '60%', left: '10%'}}>Room C301</button>
-                <button className={styles.roomButton} style={{top: '60%', left: '45%'}}>Room C302</button>
-                <button className={styles.roomButton} style={{top: '60%', left: '70%'}}>Room C303</button>
-                <button className={styles.roomButton} style={{top: '80%', left: '30%'}}>Library</button>
-                <button className={styles.roomButton} style={{top: '80%', left: '65%'}}>Study Hall</button>
+                <button className={styles.roomButton} onClick={() => goToRoom("A101")} style={{top: '10%', left: '15%'}}>Room A101</button>
+                <button className={styles.roomButton} onClick={() => goToRoom("A102")} style={{top: '10%', left: '50%'}}>Room A102</button>
+                <button className={styles.roomButton} onClick={() => goToRoom("A103")} style={{top: '10%', left: '75%'}}>Room A103</button>
+                <button className={styles.roomButton} onClick={() => goToRoom("B201")} style={{top: '35%', left: '20%'}}>Room B201</button>
+                <button className={styles.roomButton} onClick={() => goToRoom("B202")} style={{top: '35%', left: '60%'}}>Room B202</button>
+                <button className={styles.roomButton} onClick={() => goToRoom("C301")} style={{top: '60%', left: '10%'}}>Room C301</button>
+                <button className={styles.roomButton} onClick={() => goToRoom("C302")} style={{top: '60%', left: '45%'}}>Room C302</button>
+                <button className={styles.roomButton} onClick={() => goToRoom("C303")} style={{top: '60%', left: '70%'}}>Room C303</button>
+                <button className={styles.roomButton} onClick={() => goToRoom("LIBRARY")} style={{top: '80%', left: '30%'}}>Library</button>
+                <button className={styles.roomButton} onClick={() => goToRoom("STUDY-HALL")} style={{top: '80%', left: '65%'}}>Study Hall</button>
             </section>
         </main>
     )

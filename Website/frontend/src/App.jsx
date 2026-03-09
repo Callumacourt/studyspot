@@ -7,13 +7,17 @@ import './App.css'
 function App() {
     return (
         <Router>
-            <Header />
-            <Routes>
-                {routes.map((route) => (
-                    <Route key={route.path} path={route.path} element={route.element} />
-                ))}
-            </Routes>
-            <Footer />
+            <div className="appShell">
+                <Header />
+                <main className="appBody">
+                    <Routes>
+                        {routes.map((route) => (
+                            <Route key={route.path} path={route.path} element={route.element} />
+                        ))}
+                    </Routes>
+                </main>
+                <Footer />
+            </div>
         </Router>
     )
 }

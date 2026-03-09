@@ -11,6 +11,10 @@
     margin: 0 auto;
 }
 
+.header h3:hover {
+    cursor:pointer;
+}
+
 .header nav button {
     width: fit-content;
     padding: 0.875rem 2rem;

@@ -1,7 +1,21 @@
 #root {
   width: 100%;
+  min-height: 100dvh;
   margin: 0;
   padding: 0;
+}
+
+.appShell {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+.appBody {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .logo {

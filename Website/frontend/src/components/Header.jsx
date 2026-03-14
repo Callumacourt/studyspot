@@ -7,8 +7,10 @@ export default function Header () {
         <header className = {styles.header}>
             <nav>
                 <h3 onClick={() => navigate("/")}>StudySpot</h3>
-                <nav>
-                <button>Sign In</button>
+                <nav className = {styles.headerNav}>
+                <button className = {styles.privacyBtn}>Privacy Policy</button>
+                <button className = {styles.aboutUsBtn}>About</button>
+                <button className = {styles.signinBtn}>Sign In</button>
                 </nav>
             </nav>
         </header>

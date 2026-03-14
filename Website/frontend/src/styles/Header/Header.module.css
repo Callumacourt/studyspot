@@ -4,7 +4,7 @@
 
 .header nav {
     display: grid;
-    grid-template-columns: 2fr 1fr;
+    grid-template-columns: 2fr auto;
     align-items: center;
     gap: 2rem;
     max-width: 1400px;
@@ -28,6 +28,10 @@
     justify-self: end;
 }
 
+.signinBtn {
+    background-color: #2A5C82;
+}
+
 .header nav button:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
@@ -38,8 +42,17 @@
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
+.headerNav {
+    display: flex !important;
+}
+
 .header h3 {
     margin: 0;
     font-size: 1.5rem;
     font-weight: 600;
+}
+
+.aboutUsBtn, .privacyBtn {
+    background-color: transparent;
+    text-decoration: underline;
 }

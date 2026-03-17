@@ -1,7 +1,7 @@
 .footer {
     background: #f3f4f6;
     color: #111827;
-    padding: 1.75rem 4rem 1rem;
+    padding: 1.75rem 6rem 1rem;
     display: grid;
     grid-template-columns: minmax(260px, 1.4fr) minmax(220px, 1fr);
     gap: 1.25rem 2rem;

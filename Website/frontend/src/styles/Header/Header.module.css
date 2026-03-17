@@ -2,20 +2,61 @@
     padding: 1rem 2rem;
 }
 
-.header nav {
-    display: grid;
-    grid-template-columns: 2fr auto;
+.mainNav {
+    display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 2rem;
     max-width: 1400px;
     margin: 0 auto;
 }
 
-.header h3:hover {
-    cursor:pointer;
+.leftGroup {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
 }
 
-.header nav button {
+.header h3 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.header h3:hover {
+    cursor: pointer;
+}
+
+.darkModeBtn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    margin-left: 1vw;
+    border: 1px solid #d0d0d0;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.darkModeBtn img {
+    width: 1.1rem;
+    height: 1.1rem;
+}
+
+.darkModeBtn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.headerNav {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.headerNav button {
     width: fit-content;
     padding: 0.875rem 2rem;
     color: white;
@@ -25,34 +66,25 @@
     font-weight: 500;
     cursor: pointer;
     transition: all 0.3s ease;
-    justify-self: end;
+}
+
+.aboutUsBtn,
+.privacyBtn {
+    background-color: transparent;
+    text-decoration: underline;
+    color: black;
 }
 
 .signinBtn {
-    background-color: #2A5C82;
+    background-color: #2a5c82;
 }
 
-.header nav button:hover {
+.headerNav button:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-.header nav button:active {
+.headerNav button:active {
     transform: translateY(0);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-.headerNav {
-    display: flex !important;
-}
-
-.header h3 {
-    margin: 0;
-    font-size: 1.5rem;
-    font-weight: 600;
-}
-
-.aboutUsBtn, .privacyBtn {
-    background-color: transparent;
-    text-decoration: underline;
 }

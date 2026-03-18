@@ -2,22 +2,23 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import styles from "../styles/Pages/Login.module.css";
 
-export default function LoginPage() {
+export default function SignUpPage() {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
+    fullName: "",
     email: "",
     password: "",
-    rememberMe: false,
+    confirmPassword: "",
   });
 
   const [error, setError] = useState("");
 
   function handleChange(event) {
-    const { name, value, type, checked } = event.target;
+    const { name, value } = event.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: type === "checkbox" ? checked : value,
+      [name]: value,
     }));
   }
 
@@ -25,20 +26,30 @@ export default function LoginPage() {
     event.preventDefault();
     setError("");
 
-    if (!formData.email || !formData.password) {
-      setError("Please enter both email and password.");
+    if (
+      !formData.fullName ||
+      !formData.email ||
+      !formData.password ||
+      !formData.confirmPassword
+    ) {
+      setError("Please complete all fields.");
       return;
     }
 
     if (!formData.email.toLowerCase().endsWith("@cardiff.ac.uk")) {
-      setError("Sorry, your email must belong to Cardiff University");
+      setError("Sorry, you must belong to Cardiff University");
+      return;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match.");
       return;
     }
 
     navigate("/success", {
       state: {
-        title: "Sign In Successful",
-        message: `Welcome back, ${formData.email}`,
+        title: "Sign Up Successful",
+        message: `Your account has been created for ${formData.email}`,
       },
     });
   }
@@ -46,15 +57,30 @@ export default function LoginPage() {
   return (
     <div className={styles.page}>
       <div className={styles.card}>
-        <h1 className={styles.title}>Sign In</h1>
+        <h1 className={styles.title}>Sign Up</h1>
         <p className={styles.subtitle}>
-          Welcome back. Please enter your Cardiff University details.
+          Create your Cardiff University account.
         </p>
 
         <form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.field}>
+            <label htmlFor="fullName" className={styles.label}>
+              Full Name
+            </label>
+            <input
+              id="fullName"
+              name="fullName"
+              type="text"
+              placeholder="Josh Brown"
+              value={formData.fullName}
+              onChange={handleChange}
+              className={styles.input}
+            />
+          </div>
+
+          <div className={styles.field}>
             <label htmlFor="email" className={styles.label}>
-              Email
+              Cardiff Email
             </label>
             <input
               id="email"
@@ -75,40 +101,39 @@ export default function LoginPage() {
               id="password"
               name="password"
               type="password"
-              placeholder="Enter your password"
+              placeholder="Create a password"
               value={formData.password}
               onChange={handleChange}
               className={styles.input}
             />
           </div>
 
-          <div className={styles.options}>
-            <label className={styles.checkboxLabel}>
-              <input
-                name="rememberMe"
-                type="checkbox"
-                checked={formData.rememberMe}
-                onChange={handleChange}
-              />
-              <span>Remember me</span>
+          <div className={styles.field}>
+            <label htmlFor="confirmPassword" className={styles.label}>
+              Confirm Password
             </label>
-
-            <a href="#" className={styles.link}>
-              Forgot password?
-            </a>
+            <input
+              id="confirmPassword"
+              name="confirmPassword"
+              type="password"
+              placeholder="Re-enter your password"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              className={styles.input}
+            />
           </div>
 
           {error && <p className={styles.error}>{error}</p>}
 
           <button type="submit" className={styles.button}>
-            Sign In
+            Sign Up
           </button>
         </form>
 
         <p className={styles.footerText}>
-          Don&apos;t have an account?{" "}
-          <Link to="/signup" className={styles.link}>
-            Sign up
+          Already have an account?{" "}
+          <Link to="/login" className={styles.link}>
+            Sign in
           </Link>
         </p>
       </div>

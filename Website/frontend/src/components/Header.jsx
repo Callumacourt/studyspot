@@ -22,7 +22,9 @@ export default function Header() {
                 <div className={styles.headerNav}>
                     <button className={styles.privacyBtn}>Privacy Policy</button>
                     <button className={styles.aboutUsBtn}>About</button>
-                    <button className={styles.signinBtn}>Sign In</button>
+                    <button className={styles.signinBtn}
+                    onClick={() => navigate("/login")}
+                    >Sign In</button>
                 </div>
             </nav>
         </header>

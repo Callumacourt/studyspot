@@ -1,0 +1,45 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Just used to specify what metric the sensor reading is for
+enum MetricType {
+  TEMP
+  HUMIDITY
+  NOISE
+  OCCUPANCY
+}
+
+model Room {
+  id Int @id @default(autoincrement())
+  readings SensorReading[]
+  roomName String
+  occupancyAverages OccupancyAverage[]
+}
+
+model SensorReading {
+  readingId Int @id @default(autoincrement())
+  roomId Int
+  room Room @relation(fields: [roomId], references: [id])
+  metricType MetricType
+  value Float
+  time DateTime
+}
+
+model OccupancyAverage {
+  id Int @id @default(autoincrement())
+  roomId Int
+  room Room @relation(fields: [roomId], references: [id])
+  dayOfWeek Int // 0 = Monday, 1 = Tues ... 7 = Sunday
+  hour Int // 0 = midnight, 1 = 1AM ... etc
+  averangeOccupancy Int
+}

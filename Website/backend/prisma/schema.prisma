@@ -1,6 +1,6 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// This is our database file
 
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
 // Get a free hosted Postgres database in seconds: `npx create-db`
 generator client {
   provider = "prisma-client"
@@ -24,6 +24,7 @@ model Room {
   readings SensorReading[]
   roomName String
   occupancyAverages OccupancyAverage[]
+  sensors Sensor []
 }
 
 model SensorReading {
@@ -42,4 +43,10 @@ model OccupancyAverage {
   dayOfWeek Int // 0 = Monday, 1 = Tues ... 7 = Sunday
   hour Int // 0 = midnight, 1 = 1AM ... etc
   averangeOccupancy Int
+}
+
+model Sensor {
+  sensorId Int @id
+  roomId Int
+  room Room @relation(fields: [roomId], references: [id])
 }

@@ -8,7 +8,7 @@ const router = express.Router();
 
 app.use(express.json());
 
-// Thingsboard API call routes
+// Mount all sensor related API routes at /api
 app.use("/api", sensorRoute);
 
 app.listen(port, () => {

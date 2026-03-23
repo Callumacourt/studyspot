@@ -6,6 +6,9 @@ import SignUpPage from './pages/SignUpPage';
 import SuccessPage from "./pages/SuccessPage";
 import Room from './components/Room';
 
+/**
+ * Here we define the respective component for each route path
+ */
 
 const routes = [
   { path: '/', element: <Home /> },

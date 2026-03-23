@@ -1,7 +1,5 @@
 // This is our database file
-
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
-// Get a free hosted Postgres database in seconds: `npx create-db`
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
@@ -36,6 +34,7 @@ model SensorReading {
   time DateTime
 }
 
+// Average amount of people in a room at a given hour on a given day
 model OccupancyAverage {
   id Int @id @default(autoincrement())
   roomId Int

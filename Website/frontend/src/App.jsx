@@ -4,6 +4,7 @@ import Header from './components/Header';
 import Footer from './components/Footer';
 import './App.css'
 
+// Main app component to serve our router
 function App() {
     return (
         <Router>

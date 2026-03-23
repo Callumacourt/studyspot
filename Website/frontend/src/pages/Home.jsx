@@ -4,11 +4,16 @@ import RoomFilter from "../components/RoomFilter.tsx";
 import { useState } from "react";
 import chevronDown from "../assets/icons/chevron-down.svg";
 import chevronUp from "../assets/icons/chevron-up.svg";
+import searchIcn from "../assets/icons/search.svg";
 
 export default function Home () {
     const navigate = useNavigate();
     const [filterExpanded, setFilterExpanded] = useState(false) 
 
+    /**
+     * Navigate to the detailed view for a specific room.
+     * @param {number} roomId - The ID of the room to view
+     */
     const goToRoom = (roomId) => {
         navigate(`/room/${roomId}`);
     };
@@ -31,7 +36,10 @@ export default function Home () {
                     />
                     </button>
                     <span>
-                        <button>Search for a room</button>
+                        <button className = {styles.searchBtn}>
+                            <span>Search for a room</span>
+                            <img src={searchIcn} alt="Sarch icon" />
+                        </button>
                     </span>
                     <section className={styles.filterExpanded}>
                     {filterExpanded && (
@@ -50,19 +58,13 @@ export default function Home () {
                     </ul>
                 </section>
             </section>
-
-            {/* random fake rooms - maybe we need an admin workflow for rooms to be added */}
             <section className = {styles.campusMap}>
-                <button className={styles.roomButton} onClick={() => goToRoom("A101")} style={{top: '10%', left: '15%'}}>Room A101</button>
-                <button className={styles.roomButton} onClick={() => goToRoom("A102")} style={{top: '10%', left: '50%'}}>Room A102</button>
-                <button className={styles.roomButton} onClick={() => goToRoom("A103")} style={{top: '10%', left: '75%'}}>Room A103</button>
-                <button className={styles.roomButton} onClick={() => goToRoom("B201")} style={{top: '35%', left: '20%'}}>Room B201</button>
-                <button className={styles.roomButton} onClick={() => goToRoom("B202")} style={{top: '35%', left: '60%'}}>Room B202</button>
-                <button className={styles.roomButton} onClick={() => goToRoom("C301")} style={{top: '60%', left: '10%'}}>Room C301</button>
-                <button className={styles.roomButton} onClick={() => goToRoom("C302")} style={{top: '60%', left: '45%'}}>Room C302</button>
-                <button className={styles.roomButton} onClick={() => goToRoom("C303")} style={{top: '60%', left: '70%'}}>Room C303</button>
-                <button className={styles.roomButton} onClick={() => goToRoom("LIBRARY")} style={{top: '80%', left: '30%'}}>Library</button>
-                <button className={styles.roomButton} onClick={() => goToRoom("STUDY-HALL")} style={{top: '80%', left: '65%'}}>Study Hall</button>
+                <nav className = {styles.navBoard}>
+                    <button>Recently Viewed</button>
+                    <button>Your Favourites</button>
+                    <button>Cardiff University</button>
+                </nav>
+                <h2>Explore Study Spaces</h2>
             </section>
         </main>
     )

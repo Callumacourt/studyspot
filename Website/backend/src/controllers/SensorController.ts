@@ -1,8 +1,8 @@
 const SensorService = require("../services/SensorService")
 import { Request, Response, NextFunction } from 'express';
 
-// This just handles the thingsboard sensor data API call
-// Data here is then passed to middleware/thingsboardParser
+// Controller for handling sensor data requests.
+// Calls SensorService to fetch data from ThingsBoard and handles HTTP responses.
 
 export const SensorController = {
 

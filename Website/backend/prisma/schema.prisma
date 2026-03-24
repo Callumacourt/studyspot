@@ -17,12 +17,36 @@ enum MetricType {
   OCCUPANCY
 }
 
+model User {
+  userId Int @id @default(autoincrement())
+  email String @unique
+  password String // make sure we hash this before storing
+  favouritedRooms Room[]
+}
+
+model University {
+  id Int @id @default(autoincrement())
+  name String
+  buildings Building []
+}
+
+model Building {
+  id Int @id @default(autoincrement())
+  universityId Int
+  university University @relation(fields: [universityId], references: [id])
+  name String
+  rooms Room []
+}
+
 model Room {
   id Int @id @default(autoincrement())
   readings SensorReading[]
+  buildingId Int
+  building Building @relation(fields: [buildingId], references: [id])
   roomName String
   occupancyAverages OccupancyAverage[]
   sensors Sensor []
+  favouritedByUsers User []
 }
 
 model SensorReading {
@@ -45,7 +69,8 @@ model OccupancyAverage {
 }
 
 model Sensor {
-  sensorId Int @id
+  sensorId Int @id @default(autoincrement())
   roomId Int
   room Room @relation(fields: [roomId], references: [id])
 }
+

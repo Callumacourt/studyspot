@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import styles from "../styles/Pages/Login.module.css";
+import axios from "axios";
 
 export default function SignUpPage() {
   const navigate = useNavigate();
@@ -22,9 +23,29 @@ export default function SignUpPage() {
     }));
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
     setError("");
+
+    try {
+      const response = await axios.post(
+        "http://localhost:3000/users/register", // will need to change this route when we run on actual server
+      {
+        email: formData.email,
+        password: formData.password,
+      });
+
+      navigate("/success", {
+      state: {
+        title: "Sign Up Successful",
+        message: `Your account has been created for ${formData.email}`,
+      },
+    });
+    } catch (err) {
+      setError(
+        err.response?.data?.error || "Registration failed. Please try again."
+      )
+    }
 
     if (
       !formData.fullName ||
@@ -36,8 +57,8 @@ export default function SignUpPage() {
       return;
     }
 
-    if (!formData.email.toLowerCase().endsWith("@cardiff.ac.uk")) {
-      setError("Sorry, you must belong to Cardiff University");
+    if (!formData.email.toLowerCase().endsWith(".ac.uk")) {
+      setError("Invalid Student Email");
       return;
     }
 
@@ -45,13 +66,6 @@ export default function SignUpPage() {
       setError("Passwords do not match.");
       return;
     }
-
-    navigate("/success", {
-      state: {
-        title: "Sign Up Successful",
-        message: `Your account has been created for ${formData.email}`,
-      },
-    });
   }
 
   return (

@@ -65,7 +65,7 @@ model OccupancyAverage {
   room Room @relation(fields: [roomId], references: [id])
   dayOfWeek Int // 0 = Monday, 1 = Tues ... 7 = Sunday
   hour Int // 0 = midnight, 1 = 1AM ... etc
-  averangeOccupancy Int
+  averageOccupancy Int
 }
 
 model Sensor {

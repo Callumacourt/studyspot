@@ -124,7 +124,7 @@ VITE_API_URL="http://localhost:3000/api"
 ### Backend
 ```bash
 cd backend
-npm run dev
+npx tsx src/app.ts
 ```
 Server runs at `http://localhost:3000` 
 

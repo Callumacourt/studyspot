@@ -18,7 +18,7 @@ export const SensorController = {
             }
             
             // fetch sensor data for that roomID
-            const readings = await SensorService.getSensorData(roomId);
+            const readings = await SensorService.getSensorDataByRoom(roomId);
 
             res.status(200).json({ success: true, data: readings});
 

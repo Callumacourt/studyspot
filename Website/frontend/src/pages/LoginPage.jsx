@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import styles from "../styles/Pages/Login.module.css";
+import axios from "axios";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -21,7 +22,7 @@ export default function LoginPage() {
     }));
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
     setError("");
 
@@ -35,12 +36,28 @@ export default function LoginPage() {
       return;
     }
 
-    navigate("/success", {
+
+    try {
+      const response = await axios.post(
+        "http://localhost:3000/users/login", // will need to change this route when we run on actual server
+      {
+        email: formData.email,
+        password: formData.password,
+      });
+      localStorage.setItem("token", response.data.token); // Save jwt for login
+      localStorage.setItem("user", JSON.stringify(response.data.user))
+      navigate("/success", {
       state: {
-        title: "Sign In Successful",
-        message: `Welcome back, ${formData.email}`,
+        title: "Log in Successful",
+        message: `You have been logged in`,
       },
     });
+    } catch (err) {
+      console.log(err)
+      setError(
+        err.response?.data?.error || " Log in failed. Please try again."
+      )
+    }
   }
 
   return (

@@ -1,5 +1,6 @@
 .header {
-    padding: 1rem 2rem;
+    padding: 1rem 0;
+    background-color: white;
 }
 
 .mainNav {
@@ -7,8 +8,11 @@
     align-items: center;
     justify-content: space-between;
     gap: 2rem;
-    max-width: 1400px;
+    width: 100%;
     margin: 0 auto;
+    padding: 0 var(--page-gutter);
+    box-sizing: border-box;
+    color: black;
 }
 
 .leftGroup {
@@ -17,10 +21,11 @@
     gap: 0.75rem;
 }
 
-.header h3 {
+.header h2 {
     margin: 0;
-    font-size: 1.5rem;
-    font-weight: 600;
+    font-size: 2.25rem;
+    font-weight: 400;
+    cursor: pointer;
 }
 
 .header h3:hover {
@@ -53,15 +58,24 @@
 .headerNav {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 2rem;
+}
+
+.navLinks {
+    display: flex;
+    align-items: center;
+    gap: 2vw;
+}
+
+.authArea {
+    margin-left: 6vw;
+    margin-right: 4vw;
 }
 
 .headerNav button {
     width: fit-content;
-    padding: 0.875rem 2rem;
-    color: white;
     border: none;
-    border-radius: 8px;
+    border-radius: 200px;
     font-size: 1.05rem;
     font-weight: 500;
     cursor: pointer;
@@ -71,8 +85,12 @@
 .aboutUsBtn,
 .privacyBtn {
     background-color: transparent;
-    text-decoration: underline;
+    letter-spacing: 0.05em;
     color: black;
+}
+
+.userBtn {
+    background-color: transparent;
 }
 
 .signinBtn {

@@ -1,5 +1,6 @@
 .header {
-    padding: 1rem 2rem;
+    padding: 1rem 0;
+    background-color: #ffffff;
 }
 
 .mainNav {
@@ -7,61 +8,52 @@
     align-items: center;
     justify-content: space-between;
     gap: 2rem;
-    max-width: 1400px;
+    width: 100%;
     margin: 0 auto;
+    padding: 0 var(--page-gutter);
+    box-sizing: border-box;
+    color: #000000;
 }
 
 .leftGroup {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
 }
 
-.header h3 {
+.logo {
     margin: 0;
-    font-size: 1.5rem;
-    font-weight: 600;
-}
-
-.header h3:hover {
+    font-size: 2.25rem;
+    font-weight: 400;
     cursor: pointer;
-}
-
-.darkModeBtn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 2rem;
-    height: 2rem;
-    margin-left: 1vw;
-    border: 1px solid #d0d0d0;
-    border-radius: 999px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.darkModeBtn img {
-    width: 1.1rem;
-    height: 1.1rem;
-}
-
-.darkModeBtn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
 .headerNav {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 2rem;
+}
+
+.navLinks {
+    display: flex;
+    align-items: center;
+    gap: 2vw;
+}
+
+.authArea {
+    position: relative;
+    display: flex;
+    align-items: center;
+    margin-left: 2rem;
+}
+
+.profileMenu {
+    position: relative;
 }
 
 .headerNav button {
     width: fit-content;
-    padding: 0.875rem 2rem;
-    color: white;
     border: none;
-    border-radius: 8px;
+    border-radius: 999px;
     font-size: 1.05rem;
     font-weight: 500;
     cursor: pointer;
@@ -70,21 +62,66 @@
 
 .aboutUsBtn,
 .privacyBtn {
+    padding: 0.45rem 0;
     background-color: transparent;
-    text-decoration: underline;
-    color: black;
+    letter-spacing: 0.05em;
+    color: #000000;
 }
 
 .signinBtn {
+    padding: 0.7rem 1.25rem;
     background-color: #2a5c82;
+    color: #ffffff;
+}
+
+.userBtn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    padding: 0;
+    background-color: transparent;
+}
+
+.userBtn img {
+    width: 1.6rem;
+    height: 1.6rem;
 }
 
 .headerNav button:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 .headerNav button:active {
     transform: translateY(0);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12);
+}
+
+@media (max-width: 768px) {
+    .mainNav {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .headerNav {
+        width: 100%;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+
+    .navLinks {
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .authArea {
+        margin-left: 0;
+    }
+
+    .logo {
+        font-size: 2rem;
+    }
 }

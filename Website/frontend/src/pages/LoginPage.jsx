@@ -46,6 +46,8 @@ export default function LoginPage() {
       });
       localStorage.setItem("token", response.data.token); // Save jwt for login
       localStorage.setItem("user", JSON.stringify(response.data.user))
+      window.dispatchEvent(new Event("authChanged"));
+      
       navigate("/success", {
       state: {
         title: "Log in Successful",

@@ -1,76 +1,114 @@
 .footer {
-    background: #f3f4f6;
-    color: #111827;
-    padding: 1.75rem 6rem 1rem;
-    display: grid;
-    grid-template-columns: minmax(260px, 1.4fr) minmax(220px, 1fr);
-    gap: 1.25rem 2rem;
-    align-items: start;
-    border-top: 1px solid #d1d5db;
+    width: 100%;
+    background-color: #f3f3f3;
+    border-top: 1px solid #dddddd;
+    margin-top: 60px;
 }
 
-.brand h4 {
-    margin: 0 0 0.4rem;
-    font-size: 1.1rem;
-    font-weight: 700;
+.topSection {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 36px 60px 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 60px;
 }
 
-.brand p {
+.brand {
+    flex: 1.4;
+    min-width: 220px;
+}
+
+.logo {
+    margin: 0 0 8px;
+    font-size: 2rem;
+    font-weight: 500;
+    color: #333333;
+}
+
+.tagline {
     margin: 0;
-    max-width: 40ch;
-    color: #4b5563;
-    line-height: 1.45;
+    font-size: 1.15rem;
+    font-style: italic;
+    color: #555555;
 }
 
-.linkSection {
-    justify-self: end;
+.column {
+    flex: 1;
+    min-width: 160px;
 }
 
-.linkSection h4 {
-    margin: 0 0 0.6rem;
-    font-size: 0.95rem;
-    font-weight: 700;
-    color: #1f2937;
+.heading {
+    margin: 0 0 12px;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #555555;
 }
 
 .links {
     display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem 1rem;
-    justify-content: flex-end;
+    flex-direction: column;
+    gap: 8px;
 }
 
 .links a {
-    color: #1f2937;
     text-decoration: none;
-    font-weight: 500;
+    font-size: 1rem;
+    color: #555555;
+    transition: color 0.2s ease;
 }
 
 .links a:hover {
-    color: #111827;
-    text-decoration: underline;
+    color: #111111;
+}
+
+.bottomSection {
+    border-top: 1px solid #dddddd;
+    padding: 18px 60px;
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
 .copy {
-    grid-column: 1 / -1;
-    margin-top: 0.5rem;
-    padding-top: 0.75rem;
-    border-top: 1px solid #e5e7eb;
-    font-size: 0.82rem;
-    color: #6b7280;
+    font-size: 0.95rem;
+    font-style: italic;
+    color: #8a8a8a;
 }
 
-@media (max-width: 640px) {
-    .footer {
-        grid-template-columns: 1fr;
-        padding: 1.25rem 1rem 0.9rem;
+.logoLink {
+    text-decoration: none;
+    color: inherit;
+}
+
+.link {
+    text-decoration: none;
+    color: #555555;
+    transition: color 0.2s ease;
+}
+
+.link:hover {
+    color: #111111;
+}
+
+@media (max-width: 768px) {
+    .topSection {
+        flex-direction: column;
+        gap: 32px;
+        padding: 30px 24px 24px;
     }
 
-    .linkSection {
-        justify-self: start;
+    .bottomSection {
+        padding: 16px 24px;
     }
 
-    .links {
-        justify-content: flex-start;
+    .logo {
+        font-size: 1.7rem;
+    }
+
+    .tagline,
+    .links a,
+    .copy {
+        font-size: 0.95rem;
     }
 }

@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import styles from "../styles/Footer/Footer.module.css";
 
 export default function Footer() {
@@ -5,24 +6,49 @@ export default function Footer() {
 
     return (
         <footer className={styles.footer}>
-            <div className={styles.brand}>
-                <h4>StudySpot</h4>
-                <p>Helping students stay focused and organised.</p>
+            <div className={styles.topSection}>
+                <div className={styles.brand}>
+                    <h4 className={styles.logo}>
+                        <Link to="/" className={styles.logoLink}>
+                            StudySpot
+                        </Link>
+                    </h4>
+                    <p className={styles.tagline}>Helping students stay focused</p>
+                </div>
+
+                <div className={styles.column}>
+                    <h4 className={styles.heading}>Software</h4>
+                    <nav className={styles.links} aria-label="Software links">
+                        <Link to="/how-it-works" className={styles.link}>
+                            How it works
+                        </Link>
+                        <Link to="/report-problem" className={styles.link}>
+                            Report A Problem
+                        </Link>
+                    </nav>
+                </div>
+
+                <div className={styles.column}>
+                    <h4 className={styles.heading}>Quick Links</h4>
+                    <nav className={styles.links} aria-label="Quick links">
+                        <Link to="/about" className={styles.link}>
+                            About Us
+                        </Link>
+                        <Link to="/privacy" className={styles.link}>
+                            Privacy Policy
+                        </Link>
+                        <Link to="/contactus" className={styles.link}>
+                            Contact
+                        </Link>
+                    </nav>
+                </div>
             </div>
 
-            <div className={styles.linkSection}>
-                <h4>Quick Links</h4>
-                <nav className={styles.links} aria-label="Footer links">
-                    <a href="/about">About</a>
-                    <a href="/privacy">Privacy</a>
-                    <a href="/terms">Terms</a>
-                    <a href="/contact">Contact</a>
-                </nav>
+            <div className={styles.bottomSection}>
+                <small className={styles.copy}>
+                    © StudySpot {year}, All Rights Reserved
+                </small>
             </div>
-
-            <img src="" alt="" />
-
-            <small className={styles.copy}>© {year} StudySpot. All rights reserved.</small>
         </footer>
     );
 }

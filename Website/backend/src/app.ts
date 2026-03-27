@@ -2,6 +2,7 @@ import "dotenv/config";
 import sensorRoute from "./routes/sensorRoute";
 import loginRoute from "./routes/LoginRoute";
 import registerRoute from "./routes/RegisterRoute";
+import roomRoute from "./routes/roomRoute";
 import cors from "cors";
 
 const express = require('express');
@@ -15,6 +16,7 @@ console.log("DATABASE_URL:", process.env.DATABASE_URL);
 
 // Mount all sensor related API routes at /api
 app.use("/api", sensorRoute);
+app.use("/api", roomRoute);
 
 app.use("/users", registerRoute);
 app.use("/users", loginRoute);

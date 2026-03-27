@@ -1,5 +1,5 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
 import styles from "../styles/Pages/Home.module.css";
 import chevronDown from "../assets/icons/chevron-down.svg";
 import chevronUp from "../assets/icons/chevron-up.svg";
@@ -7,6 +7,8 @@ import chevronRight from "../assets/icons/chevron-right.svg";
 import searchIcn from "../assets/icons/search.svg";
 import tempIcn from "../assets/icons/thermometer.svg";
 import userIcn from "../assets/icons/user.svg";
+
+const API_BASE_URL = "http://localhost:3000";
 
 const defaultFilters = {
     search: "",
@@ -26,109 +28,12 @@ const accessibilityOptions = [
     "Wheelchair accessible",
 ];
 
-const sampleRooms = [
-    {
-        id: 1,
-        name: "Silent Study Room",
-        building: "ASSL",
-        location: "Floor 3", 
-        temp: 22, 
-        occupied: 33,
-        free: 7,
-        occupancyPercent: 38,
-        noise: "Silent",
-        humidity: 41,
-        accessibility: [
-            "Lift access",
-            "Toilet nearby",
-            "Close to refreshments",
-            "Wheelchair accessible",
-            "Adjustable Desks",
-        ],
-    },
-    {
-        id: 2,
-        name: "Group Study Room",
-        building: "ASSL",
-        location: "G.01",
-        temp: 18,
-        occupied: 15,
-        free: 12,
-        occupancyPercent: 28,
-        noise: "Quiet",
-        humidity: 46,
-        accessibility: [
-            "Adjustable Desks",
-            "Lift access",
-            "Wheelchair accessible",
-        ],
-    },
-    {
-        id: 3,
-        name: "Room 1.45",
-        building: "Science Library",
-        location: "1.45",
-        temp: 21,
-        occupied: 10,
-        free: 4,
-        occupancyPercent: 61,
-        noise: "Noisy",
-        humidity: 49,
-        accessibility: ["Close to refreshments"],
-    },
-    {
-        id: 4,
-        name: "Room 0.15",
-        building: "Queens Building",
-        location: "0.15",
-        temp: 23,
-        occupied: 52,
-        free: 3,
-        occupancyPercent: 84,
-        noise: "Quiet",
-        humidity: 55,
-        accessibility: [
-            "Lift access",
-            "Toilet nearby",
-            "Close to refreshments",
-        ],
-    },
-    {
-        id: 5,
-        name: "Room 1.32",
-        building: "Sir Martin Evans",
-        location: "1.32",
-        temp: 15,
-        occupied: 11,
-        free: 8,
-        occupancyPercent: 24,
-        noise: "Silent",
-        humidity: 44,
-        accessibility: [
-            "Adjustable Desks",
-            "Lift access",
-            "Toilet nearby",
-            "Wheelchair accessible",
-        ],
-    },
-    {
-        id: 6,
-        name: "Focus Booth",
-        building: "Any Building",
-        location: "West Wing",
-        temp: 20,
-        occupied: 8,
-        free: 6,
-        occupancyPercent: 33,
-        noise: "Quiet",
-        humidity: 35,
-        accessibility: ["Adjustable Desks"],
-    },
-];
-
 export default function Home () {
     const navigate = useNavigate();
     const [filters, setFilters] = useState(defaultFilters);
+    const [rooms, setRooms] = useState([]);
+    const [roomsLoading, setRoomsLoading] = useState(true);
+    const [roomsError, setRoomsError] = useState("");
     const [sectionsOpen, setSectionsOpen] = useState({
         occupancy: true,
         noise: true,
@@ -145,12 +50,49 @@ export default function Home () {
         navigate(`/room/${roomId}`);
     };
 
-    const buildingOptions = [
-        "Any Building",
-        ...new Set(sampleRooms.map((room) => room.building)),
-    ];
+    useEffect(() => {
+        let ignore = false;
 
-    const filteredRooms = sampleRooms.filter((room) => {
+        async function loadRooms() {
+            setRoomsLoading(true);
+            setRoomsError("");
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/rooms`);
+
+                if (!response.ok) {
+                    throw new Error("Failed to fetch rooms");
+                }
+
+                const payload = await response.json();
+
+                if (!ignore) {
+                    setRooms(payload.data ?? []);
+                }
+            } catch (error) {
+                if (!ignore) {
+                    console.error(error);
+                    setRoomsError("Unable to load rooms right now.");
+                }
+            } finally {
+                if (!ignore) {
+                    setRoomsLoading(false);
+                }
+            }
+        }
+
+        loadRooms();
+
+        return () => {
+            ignore = true;
+        };
+    }, []);
+
+    const buildingOptions = Array.from(
+        new Set(["Any Building", ...rooms.map((room) => room.building)])
+    );
+
+    const filteredRooms = rooms.filter((room) => {
         const occupancyMap = {
             Any: true,
             Low: room.occupancyPercent <= 30,
@@ -490,7 +432,21 @@ export default function Home () {
                     </div>
 
                     <div className={styles.resultsList}>
-                        {filteredRooms.map((room) => (
+                        {roomsLoading && (
+                            <div className={styles.emptyState}>
+                                <h3>Loading rooms...</h3>
+                                <p>Please wait while we fetch study spaces.</p>
+                            </div>
+                        )}
+
+                        {roomsError && !roomsLoading && (
+                            <div className={styles.emptyState}>
+                                <h3>Could not load rooms</h3>
+                                <p>{roomsError}</p>
+                            </div>
+                        )}
+
+                        {!roomsLoading && !roomsError && filteredRooms.map((room) => (
                             <article
                                 key={room.id}
                                 className={styles.roomCard}
@@ -530,7 +486,7 @@ export default function Home () {
                             </article>
                         ))}
 
-                        {filteredRooms.length === 0 && (
+                        {!roomsLoading && !roomsError && filteredRooms.length === 0 && (
                             <div className={styles.emptyState}>
                                 <h3>No rooms match these filters</h3>
                                 <p>Try widening the filters or clearing them to explore more spaces.</p>

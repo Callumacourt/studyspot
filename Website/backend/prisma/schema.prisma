@@ -1,5 +1,7 @@
 // This is our database file
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
@@ -39,15 +41,25 @@ model Building {
 }
 
 model Room {
-  id Int @id @default(autoincrement())
-  readings SensorReading[]
-  buildingId Int
-  building Building @relation(fields: [buildingId], references: [id])
-  roomName String
+  id                Int      @id @default(autoincrement())
+  buildingId        Int
+  building          Building @relation(fields: [buildingId], references: [id])
+  roomName          String
+  location          String?
+  temperature       Int?
+  occupied          Int?
+  free              Int?
+  occupancyPercent  Int?
+  noise             String?
+  humidity          Int?
+  accessibility     String[]
+
+  readings          SensorReading[]
   occupancyAverages OccupancyAverage[]
-  sensors Sensor []
-  favouritedByUsers User []
+  sensors           Sensor[]
+  favouritedByUsers User[]
 }
+
 
 model SensorReading {
   readingId Int @id @default(autoincrement())

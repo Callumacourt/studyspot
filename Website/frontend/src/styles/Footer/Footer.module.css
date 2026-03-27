@@ -1,7 +1,7 @@
 .footer {
     width: 100%;
-    background-color: #f3f3f3;
-    border-top: 1px solid #dddddd;
+    background-color: #1F2937;
+    border-top: 1px solid #334155;
     margin-top: 60px;
 }
 
@@ -20,18 +20,16 @@
     min-width: 220px;
 }
 
-.logo {
-    margin: 0 0 8px;
-    font-size: 2rem;
-    font-weight: 500;
-    color: #333333;
+.logo,
+.heading {
+    color: #F8FAFC;
 }
 
 .tagline {
     margin: 0;
     font-size: 1.15rem;
     font-style: italic;
-    color: #555555;
+    color: #CBD5E1;
 }
 
 .column {
@@ -43,24 +41,25 @@
     margin: 0 0 12px;
     font-size: 1.2rem;
     font-weight: 600;
-    color: #555555;
+    color: #e1cccc;
 }
 
 .links {
     display: flex;
     flex-direction: column;
     gap: 8px;
+    color: #CBD5E1;
 }
 
 .links a {
     text-decoration: none;
     font-size: 1rem;
-    color: #555555;
+    color: #CBD5E1;
     transition: color 0.2s ease;
 }
 
 .links a:hover {
-    color: #111111;
+    color: #FFFFFF;
 }
 
 .bottomSection {
@@ -73,7 +72,7 @@
 .copy {
     font-size: 0.95rem;
     font-style: italic;
-    color: #8a8a8a;
+    color: #CBD5E1;
 }
 
 .logoLink {

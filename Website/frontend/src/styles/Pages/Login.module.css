@@ -165,3 +165,34 @@
 .buttonLink:hover {
   background-color: #1d4ed8;
 }
+/* mobile styling */
+@media (max-width: 480px) {
+    .card {
+        padding: 24px 18px;
+        border-radius: 12px;
+    }
+
+    .title {
+        font-size: 22px;
+    }
+
+    .subtitle {
+        font-size: 13px;
+    }
+
+    .options {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .successActions {
+        flex-direction: column;
+    }
+
+    .buttonLink,
+    .secondaryButton {
+        width: 100%;
+        text-align: center;
+    }
+}

@@ -6,7 +6,6 @@
 
 .profileDropdown ul {
     padding: 1vh 1vw;
-
 }
 
 .profileDropdown li {
@@ -18,7 +17,8 @@
     color: black;
 }
 
-.profileDropdown a:hover, .profileDropdown button:hover {
+.profileDropdown a:hover,
+.profileDropdown button:hover {
     text-decoration: underline;
 }
 
@@ -31,4 +31,23 @@
 .profileDropdown button:hover {
     transform: none;
     box-shadow: none;
+}
+
+/* mobile styling - dropdown takes up more space on small screens */
+@media (max-width: 768px) {
+    .profileDropdown {
+        right: 0;
+        min-width: 160px;
+        border-radius: 16px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    }
+
+    .profileDropdown ul {
+        padding: 8px 16px;
+    }
+
+    .profileDropdown li {
+        line-height: 2.8rem;
+        font-size: 0.95rem;
+    }
 }

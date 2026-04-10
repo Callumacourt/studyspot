@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
 import styles from "../styles/Pages/Login.module.css";
-/*import axios from "axios";*/
+import { isAllowedUniversityEmail, normalizeEmail } from "../utils/auth";
 
 export default function SignUpPage() {
   const navigate = useNavigate();
@@ -27,29 +28,11 @@ export default function SignUpPage() {
     event.preventDefault();
     setError("");
 
-    try {
-      const response = await axios.post(
-        "http://localhost:3000/users/register", // will need to change this route when we run on actual server
-      {
-        email: formData.email,
-        password: formData.password,
-      });
-
-      navigate("/success", {
-      state: {
-        title: "Sign Up Successful",
-        message: `Your account has been created for ${formData.email}`,
-      },
-    });
-    } catch (err) {
-      setError(
-        err.response?.data?.error || "Registration failed. Please try again."
-      )
-    }
+    const normalizedEmail = normalizeEmail(formData.email);
 
     if (
       !formData.fullName ||
-      !formData.email ||
+      !normalizedEmail ||
       !formData.password ||
       !formData.confirmPassword
     ) {
@@ -57,14 +40,35 @@ export default function SignUpPage() {
       return;
     }
 
-    if (!formData.email.toLowerCase().endsWith(".ac.uk")) {
-      setError("Invalid Student Email");
+    if (!isAllowedUniversityEmail(normalizedEmail)) {
+      setError("Please use a valid Cardiff University email.");
       return;
     }
 
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match.");
       return;
+    }
+
+    try {
+      await axios.post(
+        "http://localhost:3000/users/register", // will need to change this route when we run on actual server
+        {
+          email: normalizedEmail,
+          password: formData.password,
+        }
+      );
+
+      navigate("/success", {
+        state: {
+          title: "Sign Up Successful",
+          message: `Your account has been created for ${normalizedEmail}`,
+        },
+      });
+    } catch (err) {
+      setError(
+        err.response?.data?.error || "Registration failed. Please try again."
+      );
     }
   }
 
@@ -94,7 +98,7 @@ export default function SignUpPage() {
 
           <div className={styles.field}>
             <label htmlFor="email" className={styles.label}>
-              Cardiff Email
+              University Email
             </label>
             <input
               id="email"

@@ -14,7 +14,7 @@ export default function ProfileDropdown({ onSignOut }) {
         <section className={styles.profileDropdown}>
             <nav aria-label="Profile menu">
                 <ul>
-                    <li><Link to="/favourites">Favourites</Link></li>
+                    <li><Link to="/favorites">Favourites</Link></li>
                     <li><Link to="/recommendations">Recommendations</Link></li>
                     <li><button onClick={handleSignOut} type="button">Sign Out</button></li>
                 </ul>

@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
 import styles from "../styles/Pages/Login.module.css";
-/*import axios from "axios";*/
+import { isAllowedUniversityEmail, normalizeEmail } from "../utils/auth";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -26,39 +27,42 @@ export default function LoginPage() {
     event.preventDefault();
     setError("");
 
-    if (!formData.email || !formData.password) {
+    const normalizedEmail = normalizeEmail(formData.email);
+
+    if (!normalizedEmail || !formData.password) {
       setError("Please enter both email and password.");
       return;
     }
 
-    if (!formData.email.toLowerCase().endsWith("@cardiff.ac.uk")) {
-      setError("Sorry, your email must belong to Cardiff University");
+    if (!isAllowedUniversityEmail(normalizedEmail)) {
+      setError("Please use a valid Cardiff University email address.");
       return;
     }
-
 
     try {
       const response = await axios.post(
         "http://localhost:3000/users/login", // will need to change this route when we run on actual server
       {
-        email: formData.email,
+        email: normalizedEmail,
         password: formData.password,
       });
       localStorage.setItem("token", response.data.token); // Save jwt for login
-      localStorage.setItem("user", JSON.stringify(response.data.user))
+      localStorage.setItem(
+        "user",
+        JSON.stringify(response.data.user ?? { email: normalizedEmail })
+      );
       window.dispatchEvent(new Event("authChanged"));
-      
+
       navigate("/success", {
-      state: {
-        title: "Log in Successful",
-        message: `You have been logged in`,
-      },
-    });
+        state: {
+          title: "Log in Successful",
+          message: "You have been logged in",
+        },
+      });
     } catch (err) {
-      console.log(err)
       setError(
         err.response?.data?.error || " Log in failed. Please try again."
-      )
+      );
     }
   }
 

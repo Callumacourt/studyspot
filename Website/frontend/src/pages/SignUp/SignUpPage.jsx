@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import styles from "../styles/Pages/Login.module.css";
+import styles from "./SignUpPage.module.css";
 import axios from "axios";
 
 export default function SignUpPage() {

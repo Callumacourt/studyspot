@@ -1,10 +1,10 @@
-import Home from './pages/Home';
-import About from './pages/About';
-import ErrorPage from './pages/ErrorPage';
-import LoginPage from './pages/LoginPage';
-import SignUpPage from './pages/SignUpPage';
-import SuccessPage from "./pages/SuccessPage";
-import Room from './components/Room';
+import Home from './pages/Home/Home';
+import About from './pages/About/About';
+import ErrorPage from './pages/Error/ErrorPage';
+import LoginPage from './pages/Login/LoginPage';
+import SignUpPage from './pages/SignUp/SignUpPage';
+import SuccessPage from "./pages/Success/SuccessPage";
+import Room from './pages/Room/Room';
 
 /**
  * Here we define the respective component for each route path

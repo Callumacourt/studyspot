@@ -1,5 +1,5 @@
-import styles from "../styles/Header/Header.module.css";
-import ProfileDropdown from "./ProfileDropdown";
+import styles from "./Header.module.css";
+import ProfileDropdown from "../ProfileDropdown/ProfileDropdown";
 import userIcn from "../assets/icons/user.svg";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";

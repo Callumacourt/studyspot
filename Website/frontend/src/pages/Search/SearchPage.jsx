@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom"
-import styles from "../styles/Pages/SearchPage.module.css";
-import RoomFilter from "../components/RoomFilter.tsx";
-import RoomCard from "../components/RoomCard.jsx";
+import styles from "./SearchPage.module.css";
+import RoomFilter from "../../components/RoomFilter/RoomFilter.tsx";
+import RoomCard from "../../components/RoomCard/RoomCard.jsx";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import chevronDown from "../assets/icons/chevron-down.svg";

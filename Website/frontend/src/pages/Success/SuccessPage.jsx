@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import styles from "../styles/Pages/Login.module.css";
+import styles from "./SuccessPage.module.css";
 
 export default function SuccessPage() {
   const location = useLocation();

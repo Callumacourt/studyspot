@@ -1,4 +1,4 @@
-import styles from "../styles/Components/RoomCard.module.css";
+import styles from "./RoomCard.module.css";
 
 export default function RoomCard ({name, building, onClick }) {
     return (

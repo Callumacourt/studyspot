@@ -6,8 +6,8 @@ import tempIcn from "../assets/icons/thermometer.svg"
 import noiseIcn from "../assets/icons/volume-2.svg"
 import peopleIcn from "../assets/icons/user.svg"
 import chevronRightIcn from "../assets/icons/chevron-right.svg"
-import { useSensorData } from "../hooks/useSensorData";
-import styles from "../styles/Pages/Room.module.css";
+import { useSensorData } from "../../hooks/useSensorData";
+import styles from "./Room.module.css";
 
 export default function Room () {
     const { roomId } = useParams();

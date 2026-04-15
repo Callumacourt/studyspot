@@ -1,6 +1,6 @@
 import styles from "../styles/Pages/About.module.css";
-import studyRoomImg from "../assets/images/study-room.jpg";
-import studentsImg from "../assets/images/study-group.jpg";
+import studyRoomImg from "../assets/Images/study-room.jpg";
+import studentsImg from "../assets/Images/study-group.jpg";
 
 export default function About() {
     return (

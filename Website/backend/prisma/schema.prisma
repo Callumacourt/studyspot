@@ -72,5 +72,6 @@ model Sensor {
   sensorId Int @id @default(autoincrement())
   roomId Int
   room Room @relation(fields: [roomId], references: [id])
+  deviceId String? // thingsboard device ID
 }
 

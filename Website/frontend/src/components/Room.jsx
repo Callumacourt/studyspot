@@ -6,6 +6,7 @@ import tempIcn from "../assets/icons/thermometer.svg"
 import noiseIcn from "../assets/icons/volume-2.svg"
 import peopleIcn from "../assets/icons/user.svg"
 import chevronRightIcn from "../assets/icons/chevron-right.svg"
+import { useSensorData } from "../hooks/useSensorData";
 import styles from "../styles/Pages/Room.module.css";
 
 export default function Room () {
@@ -13,7 +14,7 @@ export default function Room () {
     const navigate = useNavigate();
 
     const isLoggedIn = Boolean(localStorage.getItem("token"));
-    const [isFavourite, setIsFavourite] = useState(false); // TODO: fetch from user account
+    const [isFavourite, setIsFavourite] = useState(false); 
 
     // Redirect to login if not authenticated, otherwise toggle
     const handleFavouriteClick = () => {
@@ -24,14 +25,8 @@ export default function Room () {
         setIsFavourite((prev) => !prev);
     };
 
-    // TODO: fetch from backend API using roomId
-    const roomData = null;
-    const stats = roomData?.stats;
+    const { stats, loading, error } = useSensorData(roomId);
     const tables = roomData?.tables ?? [];
-
-    const handleReportClick = () => {
-        // TODO: open report modal
-    };
 
     return (
         <main className={styles.page}>
@@ -80,13 +75,16 @@ export default function Room () {
             <section className={styles.content}>
                 <aside className={styles.stats}>
                     <h2>Live Stats</h2>
-                    <div className={styles.sensorData}>
-                        {/* Fallback messages shown until data is fetched */}
-                        <span><img src={peopleIcn} alt="Person Icon"/>{stats?.occupancy ?? "No occupancy data"}</span>
-                        <span><img src={tempIcn} alt="Temperature Icon"/>{stats?.temp ?? "No temperature data"}</span>
-                        <span><img src={humidityIcn} alt="Humidity Icon"/>{stats?.humidity ?? "No humidity data"}</span>
-                        <span><img src={noiseIcn} alt="Noise Icon"/>{stats?.noise ?? "No noise data"}</span>
-                    </div>
+                    {loading && <p>Loading sensor data...</p>}
+                    {error && <p>Error: {error}</p>}
+                    {!loading && !error && (
+                        <div className={styles.sensorData}>
+                            <span><img src={peopleIcn} alt="Person Icon"/>{stats?.occupancy ?? "No occupancy data"}</span>
+                            <span><img src={tempIcn} alt="Temperature Icon"/>{stats?.temp ?? "No temperature data"}</span>
+                            <span><img src={humidityIcn} alt="Humidity Icon"/>{stats?.humidity ?? "No humidity data"}</span>
+                            <span><img src={noiseIcn} alt="Noise Icon"/>{stats?.noise ?? "No noise data"}</span>
+                        </div>
+                    )}
                 </aside>
 
                 <section className={styles.tableMap}>

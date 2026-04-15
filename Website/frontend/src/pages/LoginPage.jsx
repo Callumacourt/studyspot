@@ -31,8 +31,8 @@ export default function LoginPage() {
       return;
     }
 
-    if (!formData.email.toLowerCase().endsWith("@cardiff.ac.uk")) {
-      setError("Sorry, your email must belong to Cardiff University");
+    if (!formData.email.toLowerCase().endsWith(".ac.uk")) {
+      setError("Please use a valid university email");
       return;
     }
 

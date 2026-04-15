@@ -18,7 +18,6 @@ const routes = [
   { path: "/signup", element: <SignUpPage /> },
   { path: "/success", element: <SuccessPage /> },
   { path: '*', element: <ErrorPage /> },
-
 ];
 
 export default routes;

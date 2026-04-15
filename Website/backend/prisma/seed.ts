@@ -1,7 +1,7 @@
 import "dotenv/config";
 import bcrypt from "bcrypt";
 import { PrismaPg } from "@prisma/adapter-pg";
-import { PrismaClient } from "../src/generated/prisma";
+import { PrismaClient } from "../src/generated/prisma/client";
 
 const prisma = new PrismaClient({
     adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),
@@ -39,8 +39,7 @@ async function main() {
                 sensors: {
                     create: {
                         name: `${ROOM_NAMES[i].toLowerCase().replace(/\s+/g, "-")}-main`,
-                        // Replace with REAL ThingsBoard device UUID later
-                        thingsboardDeviceId: `TB_DEVICE_UUID_${i + 1}`,
+                        deviceId: `TB_DEVICE_UUID_${i + 1}`,
                     },
                 },
             },

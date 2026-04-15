@@ -43,7 +43,7 @@ model Room {
   readings SensorReading[]
   buildingId Int
   building Building @relation(fields: [buildingId], references: [id])
-  roomName String
+  name String
   occupancyAverages OccupancyAverage[]
   sensors Sensor []
   favouritedByUsers User []
@@ -72,6 +72,7 @@ model Sensor {
   sensorId Int @id @default(autoincrement())
   roomId Int
   room Room @relation(fields: [roomId], references: [id])
+  name String?
   deviceId String? // thingsboard device ID
 }
 

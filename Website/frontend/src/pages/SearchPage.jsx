@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom"
-import styles from "../styles/Pages/Home.module.css"
+import styles from "../styles/Pages/SearchPage.module.css";
 import RoomFilter from "../components/RoomFilter.tsx";
 import RoomCard from "../components/RoomCard.jsx";
 import { useState, useEffect } from "react";
@@ -8,7 +8,7 @@ import chevronDown from "../assets/icons/chevron-down.svg";
 import chevronUp from "../assets/icons/chevron-up.svg";
 import searchIcn from "../assets/icons/search.svg";
 
-export default function FilterPage() {
+export default function SearchPage () {
     const navigate = useNavigate();
     const [filterExpanded, setFilterExpanded] = useState(false);
     const [rooms, setRooms] = useState([]);

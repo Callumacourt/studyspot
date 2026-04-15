@@ -1,5 +1,5 @@
 import { useState } from "react";
-import styles from "../styles/Components/RoomFilter.module.css"
+import styles from "../styles/Components/RoomFilter.module.css";
 
 // Types for the range filter component and overall filter state
 type RangeFilterProps = {

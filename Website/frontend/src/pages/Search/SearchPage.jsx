@@ -1,12 +1,12 @@
 import { useNavigate } from "react-router-dom"
 import styles from "./SearchPage.module.css";
-import RoomFilter from "../../components/RoomFilter/RoomFilter.tsx";
+import RoomFilter from "../../components/RoomFilter/RoomFilter.js"
 import RoomCard from "../../components/RoomCard/RoomCard.jsx";
 import { useState, useEffect } from "react";
 import axios from "axios";
-import chevronDown from "../assets/icons/chevron-down.svg";
-import chevronUp from "../assets/icons/chevron-up.svg";
-import searchIcn from "../assets/icons/search.svg";
+import chevronDown from "../../assets/icons/chevron-down.svg";
+import chevronUp from "../../assets/icons/chevron-up.svg";
+import searchIcn from "../../assets/icons/search.svg";
 
 export default function SearchPage () {
     const navigate = useNavigate();
@@ -90,6 +90,7 @@ export default function SearchPage () {
                             key={room.id}
                             name={room.name}
                             building={room.building?.name}
+                            metrics={room.metrics}
                             onClick={() => goToRoom(room.id)}
                         />
                     ))}

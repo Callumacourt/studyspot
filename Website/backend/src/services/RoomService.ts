@@ -1,14 +1,42 @@
+import { Sensor } from "../generated/prisma/client";
 import { prisma } from "../prisma";
 
 export const RoomService = {
     async getAllRooms() {
-        return await prisma.room.findMany({
+        const rooms = await prisma.room.findMany({
             include: {
-                building: {
-                    include: {university : true}
+                building: true,
+                sensors: {
+                    include: {
+                        sensorReadings: {
+                            orderBy: { createdAt: "desc" },
+                            take: 1,
+                        },
+                    },
                 },
-                sensors: true,
-            }
-        })
-    }
-}
+            },
+        });
+
+        return rooms.map((room: typeof rooms[number]) => {
+            const latestReading = room.sensors
+                .flatMap((sensor : Sensor) => sensor.sensorReadings())
+                .sort(
+                    (a, b) =>
+                        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+                )[0];
+
+            return {
+                id: room.id,
+                name: room.name,
+                building: room.buildingId,
+                metrics: latestReading
+                    ? {
+                          temperature: latestReading.temperature,
+                          humidity: latestReading.humidity,
+                          occupancy: latestReading.occupancy,
+                      }
+                    : null,
+            };
+        });
+    },
+};

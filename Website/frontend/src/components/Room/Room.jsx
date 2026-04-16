@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import reportIcn from "../../assets/icons/flag.svg";
-import humidityIcn from "../../assets/icons/humidity.svg";
-import tempIcn from "../../assets/icons/thermometer.svg";
-import noiseIcn from "../../assets/icons/volume-2.svg";
-import peopleIcn from "../../assets/icons/user.svg";
-import chevronRightIcn from "../../assets/icons/chevron-right.svg"
+import reportIcn from "../assets/icons/flag.svg"
+import humidityIcn from "../assets/icons/humidity.svg"
+import tempIcn from "../assets/icons/thermometer.svg"
+import noiseIcn from "../assets/icons/volume-2.svg"
+import peopleIcn from "../assets/icons/user.svg"
+import chevronRightIcn from "../assets/icons/chevron-right.svg"
 import { useSensorData } from "../../hooks/useSensorData";
 import styles from "./Room.module.css";
 

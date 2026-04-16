@@ -90,4 +90,13 @@
 
 .campusMap {
     color: black;
+    display: grid;
+    width: 100%;
+}
+
+.roomGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    border-radius: 50%;
 }

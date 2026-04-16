@@ -1,42 +1,37 @@
-import { Sensor } from "../generated/prisma/client";
 import { prisma } from "../prisma";
 
 export const RoomService = {
-    async getAllRooms() {
-        const rooms = await prisma.room.findMany({
-            include: {
-                building: true,
-                sensors: {
-                    include: {
-                        sensorReadings: {
-                            orderBy: { createdAt: "desc" },
-                            take: 1,
-                        },
-                    },
-                },
-            },
-        });
+  async getAllRooms() {
+    const rooms = await prisma.room.findMany({
+      include: {
+        building: true,
+        readings: {
+          orderBy: { time: "desc" },
+          take: 50, 
+        },
+      },
+    });
 
-        return rooms.map((room: typeof rooms[number]) => {
-            const latestReading = room.sensors
-                .flatMap((sensor : Sensor) => sensor.sensorReadings())
-                .sort(
-                    (a, b) =>
-                        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-                )[0];
+    return rooms.map((room) => {
+      const latestByMetric = new Map<string, number>();
 
-            return {
-                id: room.id,
-                name: room.name,
-                building: room.buildingId,
-                metrics: latestReading
-                    ? {
-                          temperature: latestReading.temperature,
-                          humidity: latestReading.humidity,
-                          occupancy: latestReading.occupancy,
-                      }
-                    : null,
-            };
-        });
-    },
+      for (const r of room.readings) {
+        if (!latestByMetric.has(r.metricType)) {
+          latestByMetric.set(r.metricType, r.value);
+        }
+      }
+
+      return {
+        id: room.id,
+        name: room.name,
+        building: room.buildingId,
+        metrics: {
+          temperature: latestByMetric.get("TEMP") ?? null,
+          humidity: latestByMetric.get("HUMIDITY") ?? null,
+          occupancy: latestByMetric.get("OCCUPANCY") ?? null,
+          noise: latestByMetric.get("NOISE") ?? null,
+        },
+      };
+    });
+  },
 };

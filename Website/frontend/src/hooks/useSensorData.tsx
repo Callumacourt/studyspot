@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 
-type Timeseries = { ts: number; value: string }[];
+type MetricValue = number | boolean | string | null;
+type Timeseries = { ts: number; value: MetricValue }[];
 
 type SensorReading = {
     sensorId: number;
@@ -12,19 +13,18 @@ type SensorReading = {
 };
 
 type Stats = {
-    occupancy: string | null;
+    occupancy: number | null;
     temp: string | null;
     humidity: string | null;
-    noise: string | null;
+    noise: number | null;
 };
 
 // Helper to get the latest value from a timeseries array
-function latestValue(timeseries: Timeseries): string | null {
+function latestValue(timeseries: Timeseries): MetricValue {
     if (!timeseries || timeseries.length === 0) return null;
-    return timeseries[0].value; // ThingsBoard returns latest first
+    return timeseries[0].value;
 }
 
-// Flatten all sensor readings for a room into a single stats object
 function parseStats(data: SensorReading[]): Stats {
     const stats: Stats = { occupancy: null, temp: null, humidity: null, noise: null };
 
@@ -32,10 +32,18 @@ function parseStats(data: SensorReading[]): Stats {
         for (const reading of sensor.readings) {
             const val = latestValue(reading.timeseries as Timeseries);
             switch (reading.metricKey) {
-                case "temperature": stats.temp = val ? `${val}°C` : null; break;
-                case "humidity":    stats.humidity = val ? `${val}%` : null; break;
-                case "noise":       stats.noise = val ?? null; break;
-                case "occupancy":   stats.occupancy = val ?? null; break;
+                case "temperature":
+                    stats.temp = val != null ? `${val}°C` : null;
+                    break;
+                case "humidity":
+                    stats.humidity = val != null ? `${val}%` : null;
+                    break;
+                case "noise":
+                    stats.noise = typeof val === "number" ? val : null;
+                    break;
+                case "occupancy":
+                    stats.occupancy = typeof val === "number" ? val : null;
+                    break;
             }
         }
     }

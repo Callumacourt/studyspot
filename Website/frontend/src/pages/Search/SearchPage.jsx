@@ -22,6 +22,7 @@ export default function SearchPage () {
                 setRooms(res.data.rooms);
             } catch (err) {
                 setError("Failed to load rooms.");
+                console.log(err);
             } finally {
                 setLoading(false);
             }

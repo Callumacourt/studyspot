@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import chevronDown from "../../assets/icons/chevron-down.svg";
 import chevronUp from "../../assets/icons/chevron-up.svg";
-import searchIcn from "../../assets/icons/search.svg";
+import RoomSearcher from "../../components/RoomSearcher/RoomSearcher";
 
 export default function SearchPage() {
   const navigate = useNavigate();
@@ -16,32 +16,60 @@ export default function SearchPage() {
   const [error, setError] = useState("");
   const [urlParams, setUrlParams] = useSearchParams();
 
+  const handleSearch = (query) => {
+    const next = new URLSearchParams(urlParams);
+    if (query && query.trim() !== "") next.set("name", query.trim());
+    else next.delete("name");
+    setUrlParams(next);
+  }
+
+  const queryString = urlParams.toString();
+
   useEffect(() => {
+    let cancelled = false;
+
     async function fetchRooms() {
       setLoading(true);
       setError("");
 
       try {
-        const qs = urlParams.toString();
-        const endpoint = qs ? `/api/rooms/filter?${qs}` : "/api/rooms";
+        const endpoint = queryString ? `/api/rooms/filter?${queryString}` : "/api/rooms";
         const res = await axios.get(endpoint);
         const payload = res.data?.rooms ?? res.data?.data ?? [];
-        setRooms(payload);
+        if (!cancelled) setRooms(payload);
       } catch (err) {
-        setError("Failed to load rooms.");
-        console.error(err);
+        if (!cancelled) {
+          setError("Failed to load rooms.");
+          console.error(err);
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     }
 
     fetchRooms();
-  }, [urlParams]);
+    return () => {
+      cancelled = true;
+    };
+  }, [queryString]);
 
   const handleFilterChange = (filters) => {
-    const next = new URLSearchParams();
+    const next = new URLSearchParams(urlParams);
 
-    // Only apply range filters if the user has moved them from the full range
+    // clear filter related keys
+    [
+      "tempMin",
+      "tempMax",
+      "humidityMin",
+      "humidityMax",
+      "noise",
+      "occupancy",
+      "wheelchairAccessible",
+      "hasAdjustableDesks",
+      "hearingAssistance",
+    ].forEach((k) => next.delete(k));
+
+    // Re-add active filters
     if (filters.temp[0] > 10) next.set("tempMin", String(filters.temp[0]));
     if (filters.temp[1] < 40) next.set("tempMax", String(filters.temp[1]));
     if (filters.humidity[0] > 10) next.set("humidityMin", String(filters.humidity[0]));
@@ -77,10 +105,10 @@ export default function SearchPage() {
             <img src={filterExpanded ? chevronDown : chevronUp} alt="" aria-hidden="true" />
           </button>
           <span>
-            <button className={styles.searchBtn}>
+            <div className={styles.searchBtn}>
               <span>Search for a room</span>
-              <img src={searchIcn} alt="Search icon" />
-            </button>
+              <RoomSearcher onSearch={handleSearch} />
+            </div>
           </span>
 
           <section className={styles.filterExpanded}>

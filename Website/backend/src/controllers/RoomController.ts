@@ -14,9 +14,7 @@ export const RoomController = {
   async getRoomsByFilter(req: Request, res: Response) {
     try {
       const q = req.query;
-      console.log("[RoomController] filter query:", q);
-
-      const rooms = await RoomService.getRoomsByFilter({
+      const params = {
         buildingId: q.buildingId ? Number(q.buildingId) : undefined,
         noise: q.noise ? String(q.noise) : undefined,
         occupancy: q.occupancy ? String(q.occupancy) : undefined,
@@ -28,8 +26,10 @@ export const RoomController = {
         hasAdjustableDesks: q.hasAdjustableDesks === "true" ? true : undefined,
         groundFloor: q.groundFloor === "true" ? true : undefined,
         hearingAssistance: q.hearingAssistance === "true" ? true : undefined,
-      });
+        name: q.name ? String(q.name).trim() || undefined : undefined,
+      };
 
+      const rooms = await RoomService.getRoomsByFilter(params);
       return res.status(200).json({ success: true, rooms });
     } catch (error: any) {
       return res.status(400).json({ success: false, error: error.message });

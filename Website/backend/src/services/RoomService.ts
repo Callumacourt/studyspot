@@ -13,6 +13,7 @@ type RoomFilterParams = {
   tempMax?: number;
   humidityMin?: number;
   humidityMax?: number;
+  name?: string;
 };
 
 // extract latest metric values from readings.
@@ -54,6 +55,7 @@ export const RoomService = {
         ...(params.hasAdjustableDesks !== undefined && { hasAdjustableDesks: params.hasAdjustableDesks }),
         ...(params.groundFloor !== undefined && { groundFloor: params.groundFloor }),
         ...(params.hearingAssistance !== undefined && { hearingAssistance: params.hearingAssistance }),
+        ...(params.name && { name: { contains: params.name, mode: "insensitive" } }),
       },
       include: {
         building: true,
@@ -61,16 +63,42 @@ export const RoomService = {
       },
     });
 
-    const filters = buildMetricFilters(params);
+    // build metric filters if provided (uses your existing utils)
+    const metricFilters = buildMetricFilters({
+      noise: params.noise,
+      occupancy: params.occupancy,
+      tempMin: params.tempMin,
+      tempMax: params.tempMax,
+      humidityMin: params.humidityMin,
+      humidityMax: params.humidityMax,
+    });
 
-    const mapped = rooms.map((room) => ({
+    return rooms
+      .map((room) => ({
+        id: room.id,
+        name: room.name,
+        building: room.building,
+        metrics: extractMetrics(room.readings),
+      }))
+      .filter((r) => metricsMatchFilters(r.metrics, metricFilters));
+  },
+
+  async getRoomByName(roomName: string) {
+    const room = await prisma.room.findFirst({
+      where: { name: { equals: roomName, mode: "insensitive" } },
+      include: {
+        building: true,
+        readings: { orderBy: { time: "desc" }, take: 200 },
+      },
+    });
+
+    if (!room) return null;
+
+    return {
       id: room.id,
       name: room.name,
       building: room.building,
       metrics: extractMetrics(room.readings),
-    }));
-
-    const result = mapped.filter((room) => metricsMatchFilters(room.metrics, filters));
-    return result;
+    };
   },
 };

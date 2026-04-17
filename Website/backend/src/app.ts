@@ -18,7 +18,7 @@ console.log("DATABASE_URL:", process.env.DATABASE_URL);
 app.use("/api", sensorRoute);
 app.use("/users", registerRoute);
 app.use("/users", loginRoute);
-app.use("/rooms", roomRoute);
+app.use("/api/rooms", roomRoute);
 
 app.listen(port, () => {
     console.log(`Server listening at ht\tp://localhost:${port}`);

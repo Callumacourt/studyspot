@@ -1,7 +1,7 @@
 import "dotenv/config";
 import bcrypt from "bcrypt";
 import { PrismaPg } from "@prisma/adapter-pg";
-import { PrismaClient } from "../src/generated/prisma/client";
+import { PrismaClient, MetricType } from "../src/generated/prisma/client";
 
 const prisma = new PrismaClient({
     adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),
@@ -19,7 +19,6 @@ const ROOM_NAMES = [
 ];
 
 // Some initial data to test the database with
-
 async function main() {
     const uni = await prisma.university.create({
         data: { name: "Cardiff University" },
@@ -31,16 +30,35 @@ async function main() {
 
     const createdRooms = [];
 
+    const rand = (min: number, max: number) => Number((Math.random() * (max - min) + min).toFixed(1));
+    const now = Date.now();
+
     for (let i = 0; i < ROOM_NAMES.length; i++) {
+        const temp = rand(16, 28);       // °C
+        const humidity = rand(30, 75);   // %
+        const noise = rand(35, 85);      // dB
+        const occupancy = rand(5, 95);   // %
+
         const room = await prisma.room.create({
             data: {
                 name: ROOM_NAMES[i],
                 buildingId: building.id,
+
                 sensors: {
                     create: {
                         name: `${ROOM_NAMES[i].toLowerCase().replace(/\s+/g, "-")}-main`,
                         deviceId: `TB_DEVICE_UUID_${i + 1}`,
                     },
+                },
+
+                // seed latest readings with variation across rooms
+                readings: {
+                    create: [
+                        { metricType: MetricType.TEMP, value: temp, time: new Date(now - i * 60_000) },
+                        { metricType: MetricType.HUMIDITY, value: humidity, time: new Date(now - i * 60_000 - 1_000) },
+                        { metricType: MetricType.NOISE, value: noise, time: new Date(now - i * 60_000 - 2_000) },
+                        { metricType: MetricType.OCCUPANCY, value: occupancy, time: new Date(now - i * 60_000 - 3_000) },
+                    ],
                 },
             },
         });

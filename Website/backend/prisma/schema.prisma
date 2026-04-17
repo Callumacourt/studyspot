@@ -47,6 +47,11 @@ model Room {
   occupancyAverages OccupancyAverage[]
   sensors Sensor []
   favouritedByUsers User []
+
+  wheelchairAccessible Boolean @default(false)
+  hasAdjustableDesks Boolean @default(false)
+  groundFloor Boolean @default(false)
+  hearingAssistance Boolean @default(false)
 }
 
 model SensorReading {

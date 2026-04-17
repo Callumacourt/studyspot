@@ -9,4 +9,9 @@ router.get('/sensordata/:roomId', (req: Request, res: Response) => {
     SensorController.getSensorData(roomId, req, res)
 });
 
+// Route for linking a sensor to a room
+router.post('/link', (req: Request, res: Response) => {
+    SensorController.linkSensorToRoom(req, res);
+});
+
 export default router;

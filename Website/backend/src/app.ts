@@ -3,6 +3,7 @@ import sensorRoute from "./routes/sensorRoute";
 import loginRoute from "./routes/LoginRoute";
 import registerRoute from "./routes/RegisterRoute";
 import roomRoute from "./routes/RoomRoute";
+import { SensorService } from "./services/SensorService";
 import cors from "cors";
 
 const express = require('express');
@@ -20,6 +21,16 @@ app.use("/users", registerRoute);
 app.use("/users", loginRoute);
 app.use("/api/rooms", roomRoute);
 
+// Sync sensor data every 60 seconds
+setInterval(async () => {
+  try {
+    console.log("[App] Starting sensor sync...");
+    await SensorService.syncAllSensors();
+  } catch (error) {
+    console.error("[App] Sensor sync failed:", error);
+  }
+}, 60_000); // 1 minute
+
 app.listen(port, () => {
-    console.log(`Server listening at ht\tp://localhost:${port}`);
+    console.log(`Server listening at http://localhost:${port}`);
 });

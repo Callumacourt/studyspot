@@ -63,7 +63,6 @@ export const RoomService = {
       },
     });
 
-    // build metric filters if provided (uses your existing utils)
     const metricFilters = buildMetricFilters({
       noise: params.noise,
       occupancy: params.occupancy,

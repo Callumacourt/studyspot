@@ -1,30 +1,10 @@
 import { useState } from "react";
 import styles from "./RoomFilter.module.css";
-
-type RangeFilterProps = {
-    label: string;
-    reading: keyof FiltersState;
-    vals: FiltersState;
-    setVals: React.Dispatch<React.SetStateAction<FiltersState>>;
-    min: number;
-    max: number;
-    step: number;
-    unit: string;
-};
-
-type FiltersState = {
-    temp: [number, number];
-    humidity: [number, number];
-    noise: string;
-    occupancy: string;
-    accessibility: string[];
-};
-
-type RoomFilterProps = {
-    onFilterChange: (filters: FiltersState) => void;
-    onReset: () => void;
-    filteredRooms?: { id: string; name: string }[];
-};
+import RangeFilter from "./utils/RangeFilter";
+import ButtonGroup from "./utils/ButtonGroup";
+import type { FiltersState, RoomFilterProps } from "./utils/filterTypes";
+import chevronUp from "../../assets/icons/chevron-up.svg";
+import chevronDown from "../../assets/icons/chevron-down.svg";
 
 export default function RoomFilter({ onFilterChange, onReset, filteredRooms = [] }: RoomFilterProps) {
   const defaultFilters: FiltersState = {
@@ -36,25 +16,40 @@ export default function RoomFilter({ onFilterChange, onReset, filteredRooms = []
   };
 
   const [vals, setVals] = useState<FiltersState>(defaultFilters);
+  const [showEnvironmentFilters, setShowEnvironmentFilters] = useState(false);
+  const [showAccessibilityFilters, setShowAccessibilityFilters] = useState(false);
 
-  const handleNoiseChange = (e: React.ChangeEvent<HTMLSelectElement>) =>
-    setVals((prev) => ({ ...prev, noise: e.target.value }));
-
-  const handleOccupancyChange = (e: React.ChangeEvent<HTMLSelectElement>) =>
-    setVals((prev) => ({ ...prev, occupancy: e.target.value }));
+  const handleNoiseChange = (noiseLvl: string) => {
+    setVals((prev) => {
+      const next = { ...prev, noise: prev.noise === noiseLvl ? "" : noiseLvl };
+      onFilterChange(next);
+      return next;
+    });
+  };
 
   const handleAccessibilityChange = (feature: string) => {
     setVals((prevVals) => {
       const updated = prevVals.accessibility.includes(feature)
         ? prevVals.accessibility.filter((f) => f !== feature)
         : [...prevVals.accessibility, feature];
-      return { ...prevVals, accessibility: updated };
-    });
+
+        const next = {...prevVals, accessibility: updated };
+          onFilterChange(next);
+          return next;
+        });
   };
 
   const handleReset = () => {
     setVals(defaultFilters);
     onReset();
+  };
+
+  const handleOccupancyChangeBtn = (occ: string) => {
+    setVals((prev) => {
+      const next = { ...prev, occupancy: prev.occupancy === occ ? "" : occ };
+      onFilterChange(next);
+      return next;
+    });
   };
 
   return (
@@ -65,89 +60,125 @@ export default function RoomFilter({ onFilterChange, onReset, filteredRooms = []
         onFilterChange(vals);
       }}
     >
-      {/* Environment filters */}
-      <fieldset>
-        <legend>Environment</legend>
-        <RangeFilter label="Temperature" reading="temp" vals={vals} setVals={setVals} min={10} max={40} step={1} unit="°C" />
-        <RangeFilter label="Humidity" reading="humidity" vals={vals} setVals={setVals} min={10} max={100} step={1} unit="%" />
-        <label htmlFor="Noise">Noise Level:</label>
-        <select name="Noise" id="Noise" value={vals.noise} onChange={handleNoiseChange} aria-label="Select noise level">
-          <option value="">Any</option>
-          <option value="Quiet">Quiet</option>
-          <option value="Normal">Normal</option>
-          <option value="Loud">Loud</option>
-        </select>
+      <fieldset className = {styles.noiseFilter}>
+        <legend>Noise Level</legend>
+        <div className={styles.noiseBtns}>
+          <button
+            type="button"
+            className={`${styles.leftBtn} ${vals.noise === "Silent" ? styles.clicked : ""}`}
+            aria-label="Silent"
+            onClick={() => handleNoiseChange("Silent")}
+          >
+            Silent
+          </button>
+          <button
+            type="button"
+            className={vals.noise === "Quiet" ? styles.clicked : ""}
+            aria-label="Quiet"
+            onClick={() => handleNoiseChange("Quiet")}
+          >
+            Quiet
+          </button>
+          <button
+            type="button"
+            className={`${styles.rightBtn} ${vals.noise === "Normal" ? styles.clicked : ""}`}
+            aria-label="Normal+"
+            onClick={() => handleNoiseChange("Normal")}
+          >
+            Moderate+
+          </button>
+        </div>
       </fieldset>
 
-      {/* Capacity filter */}
-      <fieldset>
-        <legend>Capacity</legend>
-        <label htmlFor="Occupancy">Occupancy</label>
-        <select name="Occupancy" id="Occupancy" value={vals.occupancy} onChange={handleOccupancyChange} aria-label="Select occupancy level">
-          <option value="">Any</option>
-          <option value="Sparse">Sparse</option>
-          <option value="Moderate">Moderate</option>
-          <option value="Busy">Busy</option>
-        </select>
+      <fieldset className = {styles.occupancyFilter}>
+        <legend>Occupancy</legend>
+        <ButtonGroup
+          options={["Any", "Empty", "Sparse", "Moderate+"]}
+          value={vals.occupancy || "Any"}
+          onChange={(v) => handleOccupancyChangeBtn(v === "Any" ? "" : v)}
+          leftClass={styles.leftBtn}
+          rightClass={styles.rightBtn}
+        />
       </fieldset>
 
-      {/* Accessibility feature checkboxes */}
-      <fieldset>
-        <legend>Accessibility Features</legend>
-        {[
-          "Wheelchair Accessible",
-          "Adjustable Desks",
-          "Hearing Assistance",
-          "Visual Assistance",
-          "Elevator Access",
-        ].map((feature) => (
-          <label key={feature}>
-            <input
-              type="checkbox"
-              value={feature}
-              checked={vals.accessibility.includes(feature)}
-              onChange={() => handleAccessibilityChange(feature)}
+      <fieldset className = {styles.environmentFilter}>
+        <button
+          type="button"
+          className={styles.collapseBtn}
+          aria-expanded={showEnvironmentFilters}
+          aria-controls="environment-filters"
+          onClick={() => setShowEnvironmentFilters((prev) => !prev)}
+        >
+          Environment Filters {showEnvironmentFilters ? <img src = {chevronUp} alt = "▲" /> : <img src = {chevronDown} alt="▼"/>}
+        </button>
+
+        {showEnvironmentFilters && (
+          <div id="environment-filters" className={styles.environmentFilters}>
+            <RangeFilter
+              label="Temperature"
+              reading="temp"
+              vals={vals}
+              setVals={setVals}
+              min={10}
+              max={40}
+              step={1}
+              unit="°C"
             />
-            {feature}
-          </label>
-        ))}
+            <RangeFilter
+              label="Humidity"
+              reading="humidity"
+              vals={vals}
+              setVals={setVals}
+              min={10}
+              max={100}
+              step={1}
+              unit="%"
+            />
+          </div>
+        )}
+      </fieldset>
+      <fieldset className = {styles.accessibilityFilter}>
+        <button
+          type="button"
+          className={styles.collapseBtn}
+          aria-expanded={showAccessibilityFilters}
+          aria-controls="accessibility-filters"
+          onClick={() => setShowAccessibilityFilters((prev) => !prev)}
+        >
+          Accessibility Filters {showAccessibilityFilters ? <img src = {chevronUp} alt = "▲" /> : <img src = {chevronDown} alt="▼"/>}
+        </button>
+
+        {showAccessibilityFilters && (
+          <div id="accessibility-filters" className={styles.accessibilityFeats}>
+            {[
+              "Wheelchair Accessible",
+              "Adjustable Desks",
+              "Hearing Assistance",
+              "Visual Assistance",
+              "Elevator Access",
+            ].map((feature) => (
+              <label key={feature}>
+                <input
+                  type="checkbox"
+                  value={feature}
+                  checked={vals.accessibility.includes(feature)}
+                  onChange={() => handleAccessibilityChange(feature)}
+                />
+                {feature}
+              </label>
+            ))}
+          </div>
+        )}
       </fieldset>
 
-      <button type="submit">Apply Filters</button>
-      <button type="button" onClick={handleReset} aria-label="Reset all filters">
-        Reset Filters
-      </button>
+      <span className = {styles.submitSpan}>
+        <button type="submit">Apply Filters</button>
+        <button type="button" onClick={handleReset} aria-label="Reset all filters">
+          Reset Filters
+        </button>
+      </span>
 
       <p aria-live="polite">{filteredRooms?.length || 0} rooms match your filters</p>
     </form>
   );
-}
-
-// Reusable range slider for numeric filter values
-function RangeFilter({ label, reading, vals, setVals, min, max, step, unit }: RangeFilterProps) {
-    const handleRangeChange = (index: number, value: string) => {
-        setVals((prevVals) => {
-            const newReading = [...prevVals[reading]] as [number, number];
-            newReading[index] = Number(value);
-
-            // Clamp min/max to prevent crossing over each other
-            if (index === 0 && newReading[0] > newReading[1]) newReading[0] = newReading[1];
-            if (index === 1 && newReading[1] < newReading[0]) newReading[1] = newReading[0];
-
-            return { ...prevVals, [reading]: newReading };
-        });
-    };
-
-    return (
-        <div>
-            <label id={`${reading}-label`}>{label}:</label>
-            <div role="group" aria-labelledby={`${reading}-label`}>
-                <input type="range" min={min} max={max} step={step} value={vals[reading][0]}
-                    onChange={(e) => handleRangeChange(0, e.target.value)} aria-label={`Minimum ${label}`} />
-                <input type="range" min={min} max={max} step={step} value={vals[reading][1]}
-                    onChange={(e) => handleRangeChange(1, e.target.value)} aria-label={`Maximum ${label}`} />
-                <p>{vals[reading][0]}{unit} - {vals[reading][1]}{unit}</p>
-            </div>
-        </div>
-    );
 }

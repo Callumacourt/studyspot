@@ -2,7 +2,7 @@ import axios from "axios";
 
 const TB_URL = (process.env.THINGSBOARD_URL || "").replace(/\/$/, "");
 const TB_TOKEN = process.env.THINGSBOARD_TOKEN;
-if (!TB_URL || !TB_TOKEN) throw new Error("Missing thingsboard .env data")
+// disbaled briefly for dev --  if (!TB_URL || !TB_TOKEN) throw new Error("Missing thingsboard .env data")
 
 export type TbPoint = {ts: number; value: string};
 export type TbTelemetry = Record<string, TbPoint[]>;

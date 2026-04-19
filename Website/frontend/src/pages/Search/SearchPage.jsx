@@ -4,13 +4,10 @@ import RoomFilter from "../../components/RoomFilter/RoomFilter";
 import RoomCard from "../../components/RoomCard/RoomCard.jsx";
 import { useState, useEffect } from "react";
 import axios from "axios";
-import chevronDown from "../../assets/icons/chevron-down.svg";
-import chevronUp from "../../assets/icons/chevron-up.svg";
 import RoomSearcher from "../../components/RoomSearcher/RoomSearcher";
 
 export default function SearchPage() {
   const navigate = useNavigate();
-  const [filterExpanded, setFilterExpanded] = useState(false);
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -69,7 +66,7 @@ export default function SearchPage() {
       "hearingAssistance",
     ].forEach((k) => next.delete(k));
 
-    // Re-add active filters
+    // re add active filters
     if (filters.temp[0] > 10) next.set("tempMin", String(filters.temp[0]));
     if (filters.temp[1] < 40) next.set("tempMax", String(filters.temp[1]));
     if (filters.humidity[0] > 10) next.set("humidityMin", String(filters.humidity[0]));
@@ -91,50 +88,53 @@ export default function SearchPage() {
 
   const goToRoom = (roomId) => navigate(`/room/${roomId}`);
 
+  // group rooms by building name for rendering
+  const groupedRooms = rooms.reduce((acc, room) => {
+    const b = room.building?.name || "Other";
+    if (!acc[b]) acc[b] = [];
+    acc[b].push(room);
+    return acc;
+  }, {});
+
   return (
     <main className={styles.content}>
       <section className={styles.navButtons}>
         <div className={styles.paddedSection}>
-          <button>Find me a quiet spot</button>
-          <button
-            className={styles.filterExpandBtn}
-            onClick={() => setFilterExpanded((v) => !v)}
-            aria-expanded={filterExpanded}
-          >
-            <span>Filter rooms</span>
-            <img src={filterExpanded ? chevronDown : chevronUp} alt="" aria-hidden="true" />
-          </button>
           <span>
             <div className={styles.searchBtn}>
-              <span>Search for a room</span>
+              <span>Filter</span>
               <RoomSearcher onSearch={handleSearch} />
             </div>
           </span>
-
-          <section className={styles.filterExpanded}>
-            {filterExpanded && (
-              <RoomFilter onFilterChange={handleFilterChange} onReset={handleReset} filteredRooms={rooms} />
-            )}
-          </section>
+          <RoomFilter onFilterChange={handleFilterChange} onReset={handleReset} filteredRooms={rooms} />
         </div>
       </section>
 
       <section className={styles.campusMap}>
-        <h2>Explore Study Spaces</h2>
+        <div className = {styles.navSection}>
+          <h2>Find A Study Space</h2>
+        </div>
+
         {loading && <p>Loading rooms...</p>}
         {error && <p>{error}</p>}
 
-        <div className={styles.roomGrid}>
-          {rooms.map((room) => (
-            <RoomCard
-              key={room.id}
-              name={room.name}
-              building={room.building?.name}
-              metrics={room.metrics}
-              onClick={() => goToRoom(room.id)}
-            />
-          ))}
-        </div>
+        {/* render grouped by building */}
+        {Object.entries(groupedRooms).map(([buildingName, roomsInBuilding]) => (
+          <section key={buildingName} className={styles.buildingSection}>
+            <h3 className={styles.buildingHeader}>{buildingName}</h3>
+            <div className={styles.roomGrid}>
+              {roomsInBuilding.map((room) => (
+                <RoomCard
+                  key={room.id}
+                  name={room.name}
+                  building={null} // already shown in header
+                  metrics={room.metrics}
+                  onClick={() => goToRoom(room.id)}
+                />
+              ))}
+            </div>
+          </section>
+        ))}
       </section>
     </main>
   );

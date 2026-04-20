@@ -1,0 +1,158 @@
+.filterForm {
+    color: black;
+    max-height: fit-content;
+    gap: 1rem;
+}
+
+.filterForm legend {
+    margin-right: 5px;
+    margin-bottom: 1vh;
+}
+
+.filterForm fieldset {
+  border: 0;
+  padding: 0;
+}
+
+.filterForm img {
+  margin-left: 1vw;
+}
+
+.filterForm button:active {
+  outline: none;
+}
+
+.noiseFilter, .occupancyFilter {
+    margin-bottom: 4vh;
+}
+
+.environmentFilter, .accessibilityFilter {
+  margin-bottom: 3vh;
+}
+
+
+.noiseBtns {
+    display: flex;
+    border: 1px solid black;
+    border-radius: 25px;
+    padding: 0px;
+    height: fit-content;
+}
+
+.leftBtn {
+    border-top-left-radius: 25px !important;
+    border-bottom-left-radius: 25px !important;
+}
+
+.rightBtn {
+    border-top-right-radius: 25px !important;
+    border-bottom-right-radius: 25px !important;
+}
+
+.noiseBtns button {
+    background-color: white;
+    font-size: 0.9rem;
+    color: black;
+    display: flex;
+    border-radius: 0px;
+    align-content: center;
+    text-align: center;
+    margin-bottom: 0px;
+}
+
+.clicked {
+    background-color: black !important;
+    color: white !important;
+}
+
+.rangeWrapper {
+  padding: 0.75rem 1.25rem; 
+  display: flex;
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+
+  overflow: visible;
+}
+
+.track {
+  height: 1dvh;
+  width: 100%;
+  border-radius: 4px;
+  background: #ddd;
+  position: relative;
+  overflow: visible;
+}
+
+.thumb {
+  height: 22px;
+  width: 22px;
+  border-radius: 50%;
+  background-color: #fff;
+  border: 2px solid #2a5c82; 
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.12);
+  z-index: 2; 
+}
+
+.thumbValue {
+  font-size: 10px;
+  color: black;
+  pointer-events: none;
+}
+
+.thumb:focus {
+  outline: none;
+}
+
+.accessibilityFeats {
+  display: flex;
+  padding: 0.5vh 1vw;
+  gap: 20px;
+  flex-direction: column;
+}
+
+.accessibilityFeats label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: black;
+  cursor: pointer;
+}
+
+.accessibilityFeats input[type="checkbox"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  border: 1.5px solid #000;
+  border-radius: 4px;
+  background: #fff;
+  display: inline-block;
+  vertical-align: middle;
+  position: relative;
+  margin: 0;
+  flex: 0 0 auto;
+  transition: box-shadow 120ms ease, border-color 120ms ease;
+}
+
+.accessibilityFeats input[type="checkbox"]:checked {
+  background-color: #fff;
+  background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='black' d='M6.173 10.59L3.53 7.948l-1.06 1.06L6.173 12.71l7.357-7.357-1.06-1.06z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 12px 12px;
+  border-color: #000;
+
+}
+
+.accessibilityFeats label span {
+  line-height: 1;
+}
+
+.submitSpan {
+  display: flex;
+}

@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import routes from './routes';
-import Header from './components/Header';
-import Footer from './components/Footer';
+import Header from './components/Header/Header';
+import Footer from './components/Footer/Footer';
 import './App.css'
 
 // Main app component to serve our router

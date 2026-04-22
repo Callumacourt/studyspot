@@ -52,5 +52,20 @@ export const SensorController = {
       return res.status(500).json({ success: false, error: error.message });
     }
   },
+
+  async getOccupancyAvgs(req: Request, res: Response) {
+    try {
+      const roomId = Number(req.params.id);
+      if (!roomId || !Number.isInteger(roomId)) {
+        return res.status(400).json({ success: false, error: `Invalid roomId: ${roomId}`})
+      }
+
+      const averages = await SensorService.getHourlyOccupancyAvg(roomId);
+      return res.status(200).json({success: true, data: averages});
+    } catch (error: any) {
+      console.error("[SensorController] getOccupancyAverages error:", error);
+      return res.status(500).json({success: false, error: error.message});
+    }
+  }
 };
 

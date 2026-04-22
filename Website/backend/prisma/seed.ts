@@ -18,8 +18,53 @@ const ROOM_NAMES = [
   "Abacws 4.18",
 ];
 
+// Realistic busy pattern per hour (0-23), values = avg people
+const HOURLY_PATTERN = [
+  0, 0, 0, 0, 0, 0,   // 0-5am  empty
+  0, 2, 5, 12, 18, 22, // 6-11am building up
+  25, 28, 24, 20, 18, 15, // 12-5pm busy
+  10, 6, 3, 1, 0, 0,  // 6-11pm dying down
+];
+
 const REAL_ROOM_NAME = "Real Room";
 const REAL_ROOM_DEVICE_ID = process.env.REAL_ROOM_DEVICE_ID;
+
+// writes occupancy readings for each hour across 2 weeks to every fake room
+// these are then used to calculate average occupancy for the dashboard
+async function seedMockOccupancyReadings(rooms: { id: number; name: string }[]) {
+  const DAYS = 14;
+  const now = Date.now();
+
+  for (const room of rooms) {
+    // wipe old mock occupancy so re-seeding is safe
+    await prisma.sensorReading.deleteMany({
+      where: { roomId: room.id, metricType: MetricType.OCCUPANCY },
+    });
+
+    const entries = [];
+
+    for (let day = 0; day < DAYS; day++) {
+      for (let hour = 0; hour < 24; hour++) {
+        const base = HOURLY_PATTERN[hour];
+        const jitter = Math.floor(Math.random() * 5) - 2; // ±2 natural variation
+        const value = Math.max(0, base + jitter);
+
+        const time = new Date(now - day * 86_400_000);
+        time.setUTCHours(hour, 0, 0, 0);
+
+        entries.push({
+          roomId: room.id,
+          metricType: MetricType.OCCUPANCY,
+          value,
+          time,
+        });
+      }
+    }
+
+    await prisma.sensorReading.createMany({ data: entries });
+    console.log(`[seed] ${entries.length} occupancy readings → ${room.name}`);
+  }
+}
 
 // Some initial data to test the database with
 async function main() {
@@ -136,6 +181,8 @@ async function main() {
       },
     },
   });
+
+  await seedMockOccupancyReadings([...createdRooms, realRoom]);
 }
 
 main()

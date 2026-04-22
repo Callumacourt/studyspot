@@ -3,6 +3,10 @@ import { Request, Response, Router } from "express";
 
 const router = Router();
 
+router.get("/sensordata/:id/occupancy-averages", (req: Request, res: Response) => {
+    SensorController.getOccupancyAvgs(req, res);
+})
+
 // Route for fetching sensor data by room ID 
 router.get("/sensordata/:id", (req: Request, res: Response) => SensorController.getSensorData(req, res));
 

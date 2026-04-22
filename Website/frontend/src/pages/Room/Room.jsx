@@ -7,6 +7,7 @@ import noiseIcn from "../../assets/icons/volume-2.svg";
 import peopleIcn from "../../assets/icons/user.svg";
 import chevronRightIcn from "../../assets/icons/chevron-right.svg"
 import { useSensorData } from "../../hooks/useSensorData";
+import BusyTimesChart from "../../components/BusyTimesChart/BusyTimesChart";
 import styles from "./Room.module.css";
 import axios from "axios";
 
@@ -32,6 +33,7 @@ export default function Room () {
     const isLoggedIn = Boolean(localStorage.getItem("token"));
     const [isFavourite, setIsFavourite] = useState(false); 
     const [roomData, setRoomData] = useState(null);
+    const [hourlyAverages, setHourlyAverages] = useState([]);
 
     // Redirect to login if not authenticated, otherwise toggle
     const handleFavouriteClick = () => {
@@ -50,8 +52,31 @@ export default function Room () {
         return () => { cancelled = true; };
     }, [roomId]);
 
+    useEffect(() => {
+        let cancelled = false;
+
+        async function fetchHourlyAverages() {
+            try {
+                const res = await axios.get(`/api/sensordata/${roomId}/occupancy-averages`);
+                const values = Array.isArray(res.data?.data) ? res.data.data : [];
+                const full24 = Array.from({ length: 24}, (_, i) => Number(values[i] ?? 0));
+                if (!cancelled) setHourlyAverages(full24);
+            } catch (err) {
+                if (!cancelled) setHourlyAverages(Array(24).fill(0));
+                console.log(err);
+            }
+        }
+
+        fetchHourlyAverages();
+        const id = setInterval(fetchHourlyAverages, 60000);
+
+        return () => {
+            cancelled = true;
+            clearInterval(id);
+        };
+    }, [roomId]);
+
     const { stats, loading, error } = useSensorData(roomId);
-    const tables = roomData?.tables ?? [];
 
     return (
         <main className={styles.page}>
@@ -111,40 +136,11 @@ export default function Room () {
                         </div>
                     )}
                 </aside>
-
-                <section className={styles.tableMap}>
-                    <h2>Table Map</h2>
-                    {tables.length > 0 ? (
-                        <div className={styles.tableGrid}>
-                            {tables.map((table) => {
-                                const free = table.total - table.occupied;
-                                return (
-                                    <article key={table.id} className={styles.tableCard}>
-                                        <div className={styles.tableTop}>
-                                            <strong>{table.id}</strong>
-                                            <span>{free} free</span>
-                                        </div>
-                                        <p>{table.occupied}/{table.total} occupied</p>
-                                        <div className={styles.seats}>
-                                            {Array.from({ length: table.total }).map((_, i) => (
-                                                <span
-                                                    key={i}
-                                                    className={`${styles.seat} ${i < table.occupied ? styles.occupied : styles.free}`}
-                                                />
-                                            ))}
-                                        </div>
-                                    </article>
-                                );
-                            })}
-                        </div>
-                    ) : (
-                        <p>No table data loaded.</p>
-                    )}
-                </section>
-
                 <section className={styles.busyTimes}>
                     <h2>Busy Times</h2>
-                    {/* TODO: display peak hours by day of week from OccupancyAverage */}
+                    <div className={styles.graphContainer}>
+                        <BusyTimesChart hourlyAverages={hourlyAverages} liveOccupancy={stats?.occupancy ?? null} />
+                    </div>
                 </section>
             </section>
         </main>

@@ -2,7 +2,6 @@ import { prisma } from "../prisma";
 import type { Sensor } from "../generated/prisma/client";
 import getTelemetry from "../utils/thingsboard";
 import {
-  METRIC_KEYS,
   METRIC_TYPE_MAP,
   normaliseTelemetry,
   THINGSBOARD_TELEMETRY_KEYS,
@@ -134,6 +133,24 @@ export const SensorService = {
       await this.saveSensorReadings(room.id);
     }
     console.log("[SensorService] Sync complete");
+  },
+
+  async getHourlyOccupancyAvg(roomId: number, days = 14): Promise<number[]> {
+    const rows: { hour: number; avg: number }[] = await prisma.$queryRaw`
+      SELECT (EXTRACT(HOUR FROM time AT TIME ZONE 'UTC'))::int AS hour,
+             AVG(value) AS avg
+      FROM "SensorReading"
+      WHERE "roomId" = ${roomId}
+        AND "metricType" = 'OCCUPANCY'
+        AND time >= NOW() - (${days} * INTERVAL '1 day')
+      GROUP BY hour
+      ORDER BY hour;
+    `;
+
+    const result = new Array(24).fill(0);
+    for (const r of rows) result[r.hour] = Number(r.avg ?? 0);
+    console.log(result);
+    return result;
   },
 };
 

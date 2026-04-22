@@ -1,8 +1,19 @@
 import { MetricType } from "../generated/prisma/client";
 import type { TbTelemetry } from "./thingsboard";
 
-export const METRIC_KEYS = ["temperature", "humidity", "noise", "occupancy"] as const;
+export const METRIC_KEYS = ["temperature", "humidity", "noise", "occupancy", "light"] as const;
 export type MetricKey = (typeof METRIC_KEYS)[number];
+export const THINGSBOARD_TELEMETRY_KEYS = [
+  "temperature",
+  "temp",
+  "humidity",
+  "noise",
+  "sound_level",
+  "occupied",
+  "occupancy",
+  "light",
+  "light_level",
+] as const;
 
 export type NormalisedPoint = { ts: number; value: number | boolean | string | null };
 export type SensorReading = { metricKey: MetricKey; timeseries: NormalisedPoint[] };
@@ -13,10 +24,14 @@ export const KEY_MAP: Record<string, MetricKey> = {
   temp: "temperature",
   humidity: "humidity",
   noise: "noise",
+  sound_level: "noise",
+  occupied: "occupancy",
   occupancy: "occupancy",
+  light: "light",
+  light_level: "light",
 };
 
-export const METRIC_TYPE_MAP: Record<MetricKey, MetricType> = {
+export const METRIC_TYPE_MAP: Partial<Record<MetricKey, MetricType>> = {
   temperature: "TEMP",
   humidity: "HUMIDITY",
   noise: "NOISE",
@@ -37,17 +52,25 @@ export function normaliseValue(v: string): number | boolean | string | null {
 
 // convert thingsboard telemetry into expected format
 export function normaliseTelemetry(data: TbTelemetry): SensorReading[] {
-  const out: SensorReading[] = [];
+  const grouped = new Map<MetricKey, NormalisedPoint[]>();
 
   for (const [rawKey, rawSeries] of Object.entries(data)) {
     const metricKey = KEY_MAP[rawKey.toLowerCase()];
     if (!metricKey) continue; // ignore unknown keys
 
-    const timeseries = (Array.isArray(rawSeries) ? rawSeries : []).map((p) => ({
-      ts: Number(p.ts),
-      value: normaliseValue(p.value),
-    }));
-    out.push({ metricKey, timeseries });
+    const timeseries = (Array.isArray(rawSeries) ? rawSeries : [])
+      .map((p) => ({
+        ts: Number(p.ts),
+        value: normaliseValue(p.value),
+      }))
+      .filter((p) => p.value !== null);
+
+    const existing = grouped.get(metricKey) ?? [];
+    grouped.set(metricKey, [...existing, ...timeseries]);
   }
-  return out;
+
+  return Array.from(grouped.entries()).map(([metricKey, timeseries]) => ({
+    metricKey,
+    timeseries: timeseries.sort((a, b) => b.ts - a.ts),
+  }));
 }

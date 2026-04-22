@@ -10,6 +10,21 @@ import { useSensorData } from "../../hooks/useSensorData";
 import styles from "./Room.module.css";
 import axios from "axios";
 
+function LightIcon() {
+    return (
+        <svg className={styles.inlineStatIcon} viewBox="0 0 24 24" aria-hidden="true">
+            <path
+                d="M9 18h6m-5 3h4m-6.2-6.5C6.68 13.4 6 11.98 6 10.4 6 6.87 8.69 4 12 4s6 2.87 6 6.4c0 1.58-.68 3-1.8 4.1-.71.69-1.2 1.28-1.45 1.9h-5.5c-.25-.62-.74-1.21-1.45-1.9Z"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            />
+        </svg>
+    );
+}
+
 export default function Room () {
     const { roomId } = useParams();
     const navigate = useNavigate();
@@ -78,7 +93,7 @@ export default function Room () {
                         <img src={reportIcn} className={styles.reportIcon} alt="An icon of a flag" />
                     </button>
                 </span>
-                <Link className={styles.backLink} to="/">← Back to map</Link>
+                <Link className={styles.backLink} to="/search">← Back to map</Link>
             </section>
 
             <section className={styles.content}>
@@ -92,6 +107,7 @@ export default function Room () {
                             <span><img src={tempIcn} alt="Temperature Icon"/>{stats?.temp ?? "No temperature data"}</span>
                             <span><img src={humidityIcn} alt="Humidity Icon"/>{stats?.humidity ?? "No humidity data"}</span>
                             <span><img src={noiseIcn} alt="Noise Icon"/>{stats?.noise ?? "No noise data"}</span>
+                            <span><LightIcon />{stats?.light ?? "No light data"}</span>
                         </div>
                     )}
                 </aside>

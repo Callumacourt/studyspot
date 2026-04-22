@@ -7,6 +7,7 @@ import SuccessPage from "./pages/Success/SuccessPage";
 import Room from './pages/Room/Room';
 import SearchPage from './pages/Search/SearchPage';
 import PrivacyPage from './pages/Privacy/PrivacyPage';
+import ContactPage from './pages/Contact/ContactPage';
 
 /**
  * Here we define the respective component for each route path
@@ -21,6 +22,7 @@ const routes = [
   { path: "/signup", element: <SignUpPage /> },
   { path: "/success", element: <SuccessPage /> },
   { path: "/privacy", element: <PrivacyPage/> },
+  { path: "/contactus", element: <ContactPage/> },
   { path: '*', element: <ErrorPage /> },
 ];
 

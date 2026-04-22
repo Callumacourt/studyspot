@@ -192,6 +192,16 @@
     padding: 0.5vmin;
 }
 
+.inlineStatIcon {
+    width: 24px;
+    height: 24px;
+    background-color: white;
+    border-radius: 15px;
+    padding: 0.5vmin;
+    color: #1a202c;
+    flex-shrink: 0;
+}
+
 @media (max-width: 900px) {
     .content {
         grid-template-columns: 1fr;

@@ -18,6 +18,9 @@ const ROOM_NAMES = [
   "Abacws 4.18",
 ];
 
+const REAL_ROOM_NAME = "Real Room";
+const REAL_ROOM_DEVICE_ID = process.env.REAL_ROOM_DEVICE_ID;
+
 // Some initial data to test the database with
 async function main() {
   const uni = await prisma.university.upsert({
@@ -86,6 +89,38 @@ async function main() {
     });
 
     createdRooms.push(room);
+  }
+
+  const realRoom = await prisma.room.upsert({
+    where: {
+      buildingId_name: {
+        buildingId: building.id,
+        name: REAL_ROOM_NAME,
+      },
+    },
+    update: {},
+    create: {
+      name: REAL_ROOM_NAME,
+      buildingId: building.id,
+    },
+  });
+
+  if (REAL_ROOM_DEVICE_ID) {
+    await prisma.sensor.deleteMany({
+      where: { roomId: realRoom.id },
+    });
+
+    await prisma.sensor.create({
+      data: {
+        roomId: realRoom.id,
+        name: "real-room-main",
+        deviceId: REAL_ROOM_DEVICE_ID,
+      },
+    });
+
+    console.log(`[seed] Linked "${REAL_ROOM_NAME}" to device ${REAL_ROOM_DEVICE_ID}`);
+  } else {
+    console.warn(`[seed] Created "${REAL_ROOM_NAME}" with no linked ThingsBoard device`);
   }
 
   const hashedPassword = await bcrypt.hash("password", 10);

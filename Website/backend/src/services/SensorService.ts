@@ -5,8 +5,33 @@ import {
   METRIC_KEYS,
   METRIC_TYPE_MAP,
   normaliseTelemetry,
+  THINGSBOARD_TELEMETRY_KEYS,
   type SensorData,
 } from "../utils/sensorNormaliser";
+
+function resolveDeviceId(sensor: Sensor): string | null {
+  const realRoomSensorId = Number(process.env.REAL_ROOM_SENSOR_ID ?? 9);
+  const realRoomDeviceId = process.env.REAL_ROOM_DEVICE_ID;
+
+  if (sensor.sensorId === realRoomSensorId && realRoomDeviceId) {
+    return realRoomDeviceId;
+  }
+
+  return sensor.deviceId;
+}
+
+function toNumericValue(value: number | boolean | string | null): number | null {
+  if (typeof value === "number") return value;
+  if (typeof value === "boolean") return value ? 1 : 0;
+  if (typeof value === "string") {
+    const lower = value.trim().toLowerCase();
+    if (lower === "true") return 1;
+    if (lower === "false") return 0;
+    const parsed = Number(value);
+    return Number.isNaN(parsed) ? null : parsed;
+  }
+  return null;
+}
 
 export const SensorService = {
 
@@ -15,11 +40,12 @@ export const SensorService = {
     // find sensor in database from id
     const sensor = await prisma.sensor.findUnique({ where: { sensorId } });
     if (!sensor) throw new Error("Sensor not found");
-    if (!sensor.deviceId) throw new Error("No ThingsBoard deviceId linked to sensor");
+    const deviceId = resolveDeviceId(sensor);
+    if (!deviceId) throw new Error("No ThingsBoard deviceId linked to sensor");
 
     // query thingsboard for telemetry belonging to that sensor id (for metric in metric keys)
-    const data = await getTelemetry(sensor.deviceId, METRIC_KEYS, 1);
-    return { sensorId: sensor.sensorId, deviceId: sensor.deviceId, readings: normaliseTelemetry(data) };
+    const data = await getTelemetry(deviceId, THINGSBOARD_TELEMETRY_KEYS, 1);
+    return { sensorId: sensor.sensorId, deviceId, readings: normaliseTelemetry(data) };
   },
 
   // Get all sensor data for a room
@@ -28,19 +54,20 @@ export const SensorService = {
       const sensors = await prisma.sensor.findMany({ where: { roomId } });
       if (sensors.length === 0) return [];
 
-      const sensorsWithDevice = sensors.filter((s: Sensor) => !!s.deviceId);
-      if (sensorsWithDevice.length === 0) return [];
+      const sensorsToQuery = sensors.filter((s: Sensor) => !!resolveDeviceId(s));
+      if (sensorsToQuery.length === 0) return [];
 
       const settled = await Promise.allSettled(
-        sensorsWithDevice.map(async (s: Sensor) => {
-          const data = await getTelemetry(s.deviceId as string, METRIC_KEYS, 1);
-          return { sensorId: s.sensorId, deviceId: s.deviceId, readings: normaliseTelemetry(data) };
+        sensorsToQuery.map(async (s: Sensor) => {
+          const deviceId = resolveDeviceId(s) as string;
+          const data = await getTelemetry(deviceId, THINGSBOARD_TELEMETRY_KEYS, 1);
+          return { sensorId: s.sensorId, deviceId, readings: normaliseTelemetry(data) };
         })
       );
 
       settled.forEach((r, i) => {
         if (r.status === "rejected") {
-          console.error(`[SensorService] sensor ${sensorsWithDevice[i].sensorId} failed:`, r.reason);
+          console.error(`[SensorService] sensor ${sensorsToQuery[i].sensorId} failed:`, r.reason);
         }
       });
 
@@ -64,24 +91,29 @@ export const SensorService = {
 
     for (const sensor of sensors) {
       try {
-        if (!sensor.deviceId) {
+        const deviceId = resolveDeviceId(sensor);
+
+        if (!deviceId) {
           console.warn(`[SensorService] Sensor ${sensor.sensorId} has no deviceId`);
           continue;
         }
 
-        const readings = normaliseTelemetry(await getTelemetry(sensor.deviceId, METRIC_KEYS, 1));
+        const readings = normaliseTelemetry(await getTelemetry(deviceId, THINGSBOARD_TELEMETRY_KEYS, 1));
 
         for (const reading of readings) {
           if (reading.timeseries.length === 0) continue; // no data
+          const metricType = METRIC_TYPE_MAP[reading.metricKey];
+          if (!metricType) continue;
           const { ts, value } = reading.timeseries[0];
-          if (typeof value !== "number") continue; // invalid format
+          const numericValue = toNumericValue(value);
+          if (numericValue === null) continue; // invalid format
 
-          // add new entry to db
+          // add new entry to db 
           await prisma.sensorReading.create({
             data: {
               roomId,
-              metricType: METRIC_TYPE_MAP[reading.metricKey],
-              value,
+              metricType,
+              value: numericValue,
               time: new Date(ts),
             },
           });

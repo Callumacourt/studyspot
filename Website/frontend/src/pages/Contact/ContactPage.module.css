@@ -1,12 +1,7 @@
 .contactPage {
-    width: 100%;
     background-color: #ffffff;
     padding: 48px 24px 72px;
-}
-
-.container {
-    max-width: 900px;
-    margin: 0 auto;
+    min-height: 100dvh;
 }
 
 .title {

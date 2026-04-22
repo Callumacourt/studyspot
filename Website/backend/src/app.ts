@@ -21,16 +21,34 @@ app.use("/users", registerRoute);
 app.use("/users", loginRoute);
 app.use("/api/rooms", roomRoute);
 
-// Sync sensor data every 60 seconds
-setInterval(async () => {
-  try {
-    console.log("[App] Starting sensor sync...");
-    await SensorService.syncAllSensors();
-  } catch (error) {
-    console.error("[App] Sensor sync failed:", error);
-  }
-}, 60_000); // 1 minute
+if (process.env.NODE_ENV !== "test") {
+  const syncIntervalMs = Number(process.env.SENSOR_SYNC_INTERVAL_MS ?? 60_000);
+  let syncInProgress = false;
 
-app.listen(port, () => {
+  const runSync = async () => {
+    if (syncInProgress) {
+      console.warn("[App] Sensor sync skipped (previous run still in progress)");
+      return;
+    }
+
+    syncInProgress = true;
+    try {
+      console.log("[App] Starting sensor sync...");
+      await SensorService.syncAllSensors();
+    } catch (error) {
+      console.error("[App] Sensor sync failed:", error);
+    } finally {
+      syncInProgress = false;
+    }
+  };
+
+  // Do one sync at startup, then repeat
+  void runSync();
+  setInterval(runSync, syncIntervalMs);
+
+  app.listen(port, () => {
     console.log(`Server listening at http://localhost:${port}`);
-});
+  });
+}
+
+export default app;

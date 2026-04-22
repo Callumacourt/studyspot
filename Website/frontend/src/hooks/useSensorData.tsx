@@ -16,7 +16,8 @@ type Stats = {
     occupancy: number | null;
     temp: string | null;
     humidity: string | null;
-    noise: number | null;
+    noise: string | null;
+    light: string | null;
 };
 
 // Helper to get the latest value from a timeseries array
@@ -26,7 +27,7 @@ function latestValue(timeseries: Timeseries): MetricValue {
 }
 
 function parseStats(data: SensorReading[]): Stats {
-    const stats: Stats = { occupancy: null, temp: null, humidity: null, noise: null };
+    const stats: Stats = { occupancy: null, temp: null, humidity: null, noise: null, light: null };
 
     for (const sensor of data) {
         for (const reading of sensor.readings) {
@@ -39,10 +40,13 @@ function parseStats(data: SensorReading[]): Stats {
                     stats.humidity = val != null ? `${val}%` : null;
                     break;
                 case "noise":
-                    stats.noise = typeof val === "number" ? val : null;
+                    stats.noise = typeof val === "number" ? `${val} dB` : null;
                     break;
                 case "occupancy":
                     stats.occupancy = typeof val === "number" ? val : null;
+                    break;
+                case "light":
+                    stats.light = typeof val === "number" ? `${val} lux` : null;
                     break;
             }
         }
@@ -76,8 +80,8 @@ export function useSensorData(roomId: string | undefined) {
         };
 
         fetchData();
-        // Poll every 30 seconds 
-        const interval = setInterval(fetchData, 30000);
+        // Poll every 60 seconds
+        const interval = setInterval(fetchData, 60000);
         return () => clearInterval(interval);
     }, [roomId]);
 

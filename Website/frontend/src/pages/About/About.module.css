@@ -1,8 +1,5 @@
 .aboutPage {
-    width: 100%;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 48px 8px 64px;
+    padding: 5vmin;
     background-color: #ffffff;
 }
 

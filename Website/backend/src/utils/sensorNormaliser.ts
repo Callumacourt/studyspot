@@ -20,6 +20,21 @@ export type NormalisedPoint = { ts: number; value: number | boolean | string | n
 export type SensorReading = { metricKey: MetricKey; timeseries: NormalisedPoint[] };
 export type SensorData = { sensorId: number; deviceId: string; readings: SensorReading[] };
 
+// single source of truth: map DB MetricType -> app MetricKey
+export const METRIC_TYPE_TO_KEY: Partial<Record<MetricType, MetricKey>> = {
+  TEMP: "temperature",
+  HUMIDITY: "humidity",
+  NOISE: "noise",
+  OCCUPANCY: "occupancy",
+};
+
+// derived maps
+export const DB_METRIC_KEY_MAP: Partial<Record<MetricType, MetricKey>> = METRIC_TYPE_TO_KEY;
+
+export const METRIC_TYPE_MAP: Partial<Record<MetricKey, MetricType>> = Object.fromEntries(
+  Object.entries(METRIC_TYPE_TO_KEY).map(([metricType, metricKey]) => [metricKey, metricType])
+) as Partial<Record<MetricKey, MetricType>>;
+
 export const KEY_MAP: Record<string, MetricKey> = {
   temperature: "temperature",
   temp: "temperature",
@@ -31,13 +46,6 @@ export const KEY_MAP: Record<string, MetricKey> = {
   occupancy: "occupancy",
   light: "light",
   light_level: "light",
-};
-
-export const METRIC_TYPE_MAP: Partial<Record<MetricKey, MetricType>> = {
-  temperature: "TEMP",
-  humidity: "HUMIDITY",
-  noise: "NOISE",
-  occupancy: "OCCUPANCY",
 };
 
 

@@ -7,6 +7,7 @@ const prismaMock = {
   },
   sensorReading: {
     create: vi.fn(),
+    findFirst: vi.fn(),
   },
   room: {
     findMany: vi.fn(),
@@ -127,6 +128,60 @@ describe("SensorService", () => {
     await SensorService.getSensorData(42);
 
     expect(getTelemetryMock).toHaveBeenCalledWith("real-device-xyz", expect.any(Array), 1);
+  });
+
+  it("returns DB readings for placeholder sensors and never calls ThingsBoard", async () => {
+    prismaMock.sensor.findMany.mockResolvedValue([
+      { sensorId: 3, roomId: 2, deviceId: "TB_DEVICE_UUID_2" },
+    ]);
+
+    const now = Date.now();
+    prismaMock.sensorReading.findFirst
+      .mockResolvedValueOnce({ metricType: "TEMP", value: 21.5, time: new Date(now - 1000) })
+      .mockResolvedValueOnce({ metricType: "HUMIDITY", value: 55, time: new Date(now - 2000) })
+      .mockResolvedValueOnce({ metricType: "NOISE", value: 42, time: new Date(now - 3000) })
+      .mockResolvedValueOnce({ metricType: "OCCUPANCY", value: 12, time: new Date(now - 4000) });
+
+    const { SensorService } = await import("../services/SensorService");
+    const result = await SensorService.getSensorDataByRoom(2);
+
+    expect(getTelemetryMock).not.toHaveBeenCalled();
+    expect(result).toHaveLength(1);
+    expect(result[0].readings.map((r) => r.metricKey).sort()).toEqual([
+      "humidity",
+      "light",
+      "noise",
+      "occupancy",
+      "temperature",
+    ]);
+    expect(result[0].readings.find((r) => r.metricKey === "temperature")?.timeseries[0].value).toBe(21.5);
+    expect(result[0].readings.find((r) => r.metricKey === "light")?.timeseries[0].value).toEqual(expect.any(Number));
+  });
+
+  it("uses only non-future DB readings for placeholder sensors", async () => {
+    prismaMock.sensor.findMany.mockResolvedValue([
+      { sensorId: 8, roomId: 4, deviceId: "TB_DEVICE_UUID_4" },
+    ]);
+
+    prismaMock.sensorReading.findFirst
+      .mockResolvedValueOnce({ metricType: "TEMP", value: 22, time: new Date() })
+      .mockResolvedValueOnce({ metricType: "HUMIDITY", value: 48, time: new Date() })
+      .mockResolvedValueOnce({ metricType: "NOISE", value: 39, time: new Date() })
+      .mockResolvedValueOnce({ metricType: "OCCUPANCY", value: 18, time: new Date() });
+
+    const { SensorService } = await import("../services/SensorService");
+    await SensorService.getSensorDataByRoom(4);
+
+    expect(prismaMock.sensorReading.findFirst).toHaveBeenCalled();
+    for (const call of prismaMock.sensorReading.findFirst.mock.calls) {
+      expect(call[0]).toMatchObject({
+        where: {
+          roomId: 4,
+          time: { lte: expect.any(Date) },
+        },
+        orderBy: { time: "desc" },
+      });
+    }
   });
 
   it("uses REAL_ROOM_DEVICE_ID when REAL_ROOM_ID matches sensor.roomId", async () => {

@@ -3,6 +3,8 @@ import axios from "axios";
 const TB_URL = (process.env.THINGSBOARD_URL || "").replace(/\/$/, "");
 const TB_TOKEN_RAW = process.env.THINGSBOARD_TOKEN || "";
 const TB_REFRESH_TOKEN = process.env.THINGSBOARD_REFRESH_TOKEN || "";
+const TB_EMAIL = process.env.THINGSBOARD_EMAIL || "";
+const TB_PASSWORD = process.env.THINGSBOARD_PASSWORD || "";
 // disbaled briefly for dev --  if (!TB_URL || !TB_TOKEN) throw new Error("Missing thingsboard .env data")
 
 export type TbPoint = {ts: number; value: string};
@@ -10,6 +12,10 @@ export type TbTelemetry = Record<string, TbPoint[]>;
 
 let cachedAccessToken: string | null = extractAccessToken(TB_TOKEN_RAW);
 let cachedRefreshToken: string | null = TB_REFRESH_TOKEN || extractRefreshToken(TB_TOKEN_RAW);
+
+function hasLoginCredentials(): boolean {
+  return !!TB_EMAIL && !!TB_PASSWORD;
+}
 
 function decodeJwtPayload(token: string): any | null {
   try {
@@ -87,9 +93,49 @@ async function refreshAccessToken(): Promise<string> {
   return cachedAccessToken;
 }
 
+async function loginAccessToken(): Promise<string> {
+  if (!TB_URL) throw new Error("THINGSBOARD_URL not configured");
+  if (!hasLoginCredentials()) {
+    throw new Error("THINGSBOARD_USERNAME/THINGSBOARD_PASSWORD not configured");
+  }
+
+  const url = `${TB_URL}/api/auth/login`;
+  const resp = await axios.post<{ token: string; refreshToken?: string }>(
+    url,
+    { username: TB_EMAIL, password: TB_PASSWORD },
+    { timeout: 10000 }
+  );
+
+  cachedAccessToken = resp.data?.token ?? null;
+  if (resp.data?.refreshToken) cachedRefreshToken = resp.data.refreshToken;
+
+  if (!cachedAccessToken) throw new Error("ThingsBoard login returned no access token");
+  return cachedAccessToken;
+}
+
 async function getValidAccessToken(forceRefresh = false): Promise<string> {
   if (forceRefresh || !cachedAccessToken || tokenExpiresSoon(cachedAccessToken)) {
-    return refreshAccessToken();
+    try {
+      // If refresh token is clearly expired and login creds exist, skip refresh call.
+      if (cachedRefreshToken && tokenExpiresSoon(cachedRefreshToken) && hasLoginCredentials()) {
+        return await loginAccessToken();
+      }
+      return await refreshAccessToken();
+    } catch (err: any) {
+      const status = err?.response?.status;
+      const message = String(err?.response?.data?.message ?? err?.message ?? "").toLowerCase();
+      const refreshExpired =
+        status === 401 ||
+        message.includes("token has expired") ||
+        message.includes("expired") ||
+        message.includes("refresh");
+
+      if (refreshExpired && hasLoginCredentials()) {
+        return loginAccessToken();
+      }
+
+      throw err;
+    }
   }
   return cachedAccessToken;
 }
@@ -110,8 +156,8 @@ async function getValidAccessToken(forceRefresh = false): Promise<string> {
  */
 export default async function getTelemetry(deviceId: string, keys: readonly string[], limit = 1): Promise<TbTelemetry> {
   if (!TB_URL) throw new Error("THINGSBOARD_URL not configured");
-  if (!cachedAccessToken && !cachedRefreshToken) {
-    throw new Error("THINGSBOARD_TOKEN/THINGSBOARD_REFRESH_TOKEN not configured");
+  if (!cachedAccessToken && !cachedRefreshToken && !hasLoginCredentials()) {
+    throw new Error("THINGSBOARD auth not configured (set token/refresh token or username/password)");
   }
 
   const url = `${TB_URL}/api/plugins/telemetry/DEVICE/${encodeURIComponent(

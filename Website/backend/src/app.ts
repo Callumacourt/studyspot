@@ -12,6 +12,11 @@ const port = 3000;
 
 app.use(express.json());
 app.use(cors());
+app.disable("x-powered-by");
+
+app.get("/healthz", (_req: any, res: any) => {
+  return res.status(200).json({ success: true, status: "ok", ts: Date.now() });
+});
 
 console.log("DATABASE_URL:", process.env.DATABASE_URL);
 

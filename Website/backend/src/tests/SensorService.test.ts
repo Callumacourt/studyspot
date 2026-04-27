@@ -11,6 +11,7 @@ const prismaMock = {
   room: {
     findMany: vi.fn(),
   },
+  $queryRaw: vi.fn(),
 };
 
 const getTelemetryMock = vi.fn();
@@ -26,6 +27,8 @@ vi.mock("../utils/thingsboard", () => ({
 describe("SensorService", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    delete process.env.REAL_ROOM_SENSOR_ID;
+    delete process.env.REAL_ROOM_DEVICE_ID;
   });
 
   afterEach(() => {
@@ -97,5 +100,118 @@ describe("SensorService", () => {
       },
     });
     expect(logSpy).toHaveBeenCalledWith("[SensorService] Saved readings for sensor 4 in room 7");
+  });
+
+  // edge cases / non functional tests
+
+  it("getSensorData throws when sensor not found", async () => {
+    prismaMock.sensor.findUnique.mockResolvedValue(null);
+    const { SensorService } = await import("../services/SensorService");
+    await expect(SensorService.getSensorData(123)).rejects.toThrow("Sensor not found");
+  });
+
+  it("getSensorData throws when sensor has no deviceId", async () => {
+    prismaMock.sensor.findUnique.mockResolvedValue({ sensorId: 5, deviceId: null });
+    const { SensorService } = await import("../services/SensorService");
+    await expect(SensorService.getSensorData(5)).rejects.toThrow("No ThingsBoard deviceId linked to sensor");
+  });
+
+  it("uses REAL_ROOM_DEVICE_ID when REAL_ROOM_SENSOR_ID matches", async () => {
+    process.env.REAL_ROOM_SENSOR_ID = "42";
+    process.env.REAL_ROOM_DEVICE_ID = "real-device-xyz";
+
+    prismaMock.sensor.findUnique.mockResolvedValue({ sensorId: 42, deviceId: "ignored" });
+    getTelemetryMock.mockResolvedValue({ temperature: [{ ts: 1, value: "0" }] });
+
+    const { SensorService } = await import("../services/SensorService");
+    await SensorService.getSensorData(42);
+
+    expect(getTelemetryMock).toHaveBeenCalledWith("real-device-xyz", expect.any(Array), 1);
+  });
+
+  it("uses REAL_ROOM_DEVICE_ID when REAL_ROOM_ID matches sensor.roomId", async () => {
+    process.env.REAL_ROOM_SENSOR_ID = "999";
+    process.env.REAL_ROOM_ID = "9";
+    process.env.REAL_ROOM_DEVICE_ID = "real-device-by-room";
+
+    prismaMock.sensor.findUnique.mockResolvedValue({
+      sensorId: 10,
+      roomId: 9,
+      deviceId: "stale-device-id",
+    });
+    getTelemetryMock.mockResolvedValue({ temperature: [{ ts: 1, value: "24.0" }] });
+
+    const { SensorService } = await import("../services/SensorService");
+    await SensorService.getSensorData(10);
+
+    expect(getTelemetryMock).toHaveBeenCalledWith("real-device-by-room", expect.any(Array), 1);
+  });
+
+  it("getSensorDataByRoom handles many concurrent telemetry calls promptly", async () => {
+    const sensorCount = 60;
+    prismaMock.sensor.findMany.mockResolvedValue(
+      Array.from({ length: sensorCount }, (_, i) => ({ sensorId: i + 1, roomId: 99, deviceId: `device-${i}` }))
+    );
+
+    // immediate resolution for all telemetry calls
+    getTelemetryMock.mockResolvedValue({ temperature: [{ ts: 1, value: "1" }] });
+
+    const { SensorService } = await import("../services/SensorService");
+    const t0 = Date.now();
+    const results = await SensorService.getSensorDataByRoom(99);
+    const dur = Date.now() - t0;
+
+    expect(results.length).toBe(sensorCount);
+    expect(getTelemetryMock).toHaveBeenCalledTimes(sensorCount);
+    expect(dur).toBeLessThan(2000); // reasonable upper bound for local CI
+  });
+
+  it("saveSensorReadings continues when prisma.create fails for one reading", async () => {
+    prismaMock.sensor.findMany.mockResolvedValue([
+      { sensorId: 10, roomId: 5, deviceId: "d-10" },
+      { sensorId: 11, roomId: 5, deviceId: "d-11" },
+    ]);
+
+    // first sensor returns one valid reading, second returns one valid reading
+    getTelemetryMock
+      .mockResolvedValueOnce({ temperature: [{ ts: 1000, value: "10" }] })
+      .mockResolvedValueOnce({ temperature: [{ ts: 2000, value: "20" }] });
+
+    // fail the first create, succeed the second
+    let call = 0;
+    prismaMock.sensorReading.create.mockImplementation(async (args: any) => {
+      call += 1;
+      if (call === 1) throw new Error("db write failed");
+      return { id: call };
+    });
+
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const { SensorService } = await import("../services/SensorService");
+
+    await SensorService.saveSensorReadings(5);
+
+    expect(prismaMock.sensorReading.create).toHaveBeenCalled();
+    expect(errorSpy).toHaveBeenCalledWith(
+      `[SensorService] Failed for sensor 10:`,
+      expect.any(Error)
+    );
+    // ensure second sensor still saved
+    expect(prismaMock.sensorReading.create).toHaveBeenCalledTimes(2);
+  });
+
+  it("getHourlyOccupancyAvg maps db rows into 24-length array", async () => {
+    (prismaMock as any).$queryRaw.mockResolvedValue([
+      { hour: 0, avg: "1.5" },
+      { hour: 12, avg: "3.25" },
+      { hour: 23, avg: null },
+    ]);
+
+    const { SensorService } = await import("../services/SensorService");
+    const result = await SensorService.getHourlyOccupancyAvg(7, 7);
+
+    expect(result.length).toBe(24);
+    expect(result[0]).toBe(1.5);
+    expect(result[12]).toBe(3.25);
+    expect(result[23]).toBe(0);
   });
 });

@@ -2,7 +2,8 @@
   "scripts": {
     "test": "vitest run --config src/config/vitest.config.ts",
     "test:watch": "vitest --config src/config/vitest.config.ts",
-    "test:integration": "vitest run --config src/config/vitest.config.ts src/tests/**/*.integration.test.ts"
+    "test:integration": "vitest run --config src/config/vitest.config.ts src/tests/**/*.integration.test.ts",
+    "test:nfr": "vitest run --config src/config/vitest.config.ts src/tests/NFR.test.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.5.0",
@@ -16,7 +17,9 @@
     "zxcvbn": "^4.4.2"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^25.5.0",
     "@types/supertest": "^6.0.3",
     "dotenv": "^17.3.1",

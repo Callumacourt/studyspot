@@ -20,37 +20,52 @@ type Stats = {
     light: string | null;
 };
 
-// Helper to get the latest value from a timeseries array
-function latestValue(timeseries: Timeseries): MetricValue {
-    if (!timeseries || timeseries.length === 0) return null;
-    return timeseries[0].value;
+type LatestByMetric = {
+    ts: number;
+    value: MetricValue;
+};
+
+function asNumber(value: MetricValue): number | null {
+    if (typeof value === "number") return Number.isFinite(value) ? value : null;
+    if (typeof value === "string") {
+        const parsed = Number(value);
+        return Number.isNaN(parsed) ? null : parsed;
+    }
+    return null;
 }
 
 function parseStats(data: SensorReading[]): Stats {
     const stats: Stats = { occupancy: null, temp: null, humidity: null, noise: null, light: null };
+    const latest: Partial<Record<string, LatestByMetric>> = {};
 
     for (const sensor of data) {
         for (const reading of sensor.readings) {
-            const val = latestValue(reading.timeseries as Timeseries);
-            switch (reading.metricKey) {
-                case "temperature":
-                    stats.temp = val != null ? `${val}°C` : null;
-                    break;
-                case "humidity":
-                    stats.humidity = val != null ? `${val}%` : null;
-                    break;
-                case "noise":
-                    stats.noise = typeof val === "number" ? `${val} dB` : null;
-                    break;
-                case "occupancy":
-                    stats.occupancy = typeof val === "number" ? val : null;
-                    break;
-                case "light":
-                    stats.light = typeof val === "number" ? `${val} lux` : null;
-                    break;
+            const point = Array.isArray(reading.timeseries)
+                ? reading.timeseries
+                      .filter((p) => Number.isFinite(p.ts))
+                      .sort((a, b) => b.ts - a.ts)[0]
+                : undefined;
+
+            if (!point) continue;
+
+            const existing = latest[reading.metricKey];
+            if (!existing || point.ts > existing.ts) {
+                latest[reading.metricKey] = { ts: point.ts, value: point.value };
             }
         }
     }
+
+    const tempVal = latest.temperature?.value;
+    const humidityVal = latest.humidity?.value;
+    const noiseVal = asNumber(latest.noise?.value ?? null);
+    const occupancyVal = asNumber(latest.occupancy?.value ?? null);
+    const lightVal = asNumber(latest.light?.value ?? null);
+
+    stats.temp = tempVal != null ? `${tempVal}°C` : null;
+    stats.humidity = humidityVal != null ? `${humidityVal}%` : null;
+    stats.noise = noiseVal != null ? `${noiseVal} dB` : null;
+    stats.occupancy = occupancyVal;
+    stats.light = lightVal != null ? `${lightVal} lux` : null;
 
     return stats;
 }

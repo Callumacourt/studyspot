@@ -38,6 +38,19 @@ describe("Auth", () => {
         expect(res.body.success).toBe(true);
     });
 
+      it("stores password as a hash (not plaintext)", async () => {
+        const rawPassword = "AVeryStrongPassword!£$";
+        await request(app).post("/users/register").send({
+          email: "hashcheck@cardiff.ac.uk",
+          password: rawPassword
+        });
+
+        const user = await prisma.user.findUnique({ where: { email: "hashcheck@cardiff.ac.uk" } });
+        expect(user).toBeTruthy();
+        expect(user!.password).not.toBe(rawPassword);
+        expect(user!.password.length).toBeGreaterThan(20);
+      });
+
     it("rejects duplicate registration", async () => {
         const res = await request(app).post("/users/register").send({
             email: "testemail@cardiff.ac.uk",

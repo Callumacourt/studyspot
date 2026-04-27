@@ -10,9 +10,15 @@ import {
 
 function resolveDeviceId(sensor: Sensor): string | null {
   const realRoomSensorId = Number(process.env.REAL_ROOM_SENSOR_ID ?? 9);
+  const realRoomId = Number(process.env.REAL_ROOM_ID ?? 9);
   const realRoomDeviceId = process.env.REAL_ROOM_DEVICE_ID;
 
   if (sensor.sensorId === realRoomSensorId && realRoomDeviceId) {
+    return realRoomDeviceId;
+  }
+
+  // Fallback for seeded data where sensor ids can shift but the real room id is stable.
+  if (sensor.roomId === realRoomId && realRoomDeviceId) {
     return realRoomDeviceId;
   }
 
@@ -21,11 +27,11 @@ function resolveDeviceId(sensor: Sensor): string | null {
 
 function toNumericValue(value: number | boolean | string | null): number | null {
   if (typeof value === "number") return value;
-  if (typeof value === "boolean") return value ? 1 : 0;
+  // Treat booleans and boolean-like strings as non-numeric telemetry
+  if (typeof value === "boolean") return null;
   if (typeof value === "string") {
     const lower = value.trim().toLowerCase();
-    if (lower === "true") return 1;
-    if (lower === "false") return 0;
+    if (lower === "true" || lower === "false") return null;
     const parsed = Number(value);
     return Number.isNaN(parsed) ? null : parsed;
   }

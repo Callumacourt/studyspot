@@ -61,7 +61,7 @@
 }
 
 .clicked {
-    background-color: black !important;
+    background-color: navy !important;
     color: white !important;
 }
 
@@ -155,4 +155,13 @@
 
 .submitSpan {
   display: flex;
+  gap: 20px;
+}
+
+.submitSpan button {
+  background-color: white;
+  display: flex;
+  justify-content: center;
+  padding: 1.5vh 0px;
+  border-radius: 25px;
 }

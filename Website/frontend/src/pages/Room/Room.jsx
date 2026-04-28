@@ -5,6 +5,7 @@ import humidityIcn from "../../assets/icons/humidity.svg";
 import tempIcn from "../../assets/icons/thermometer.svg";
 import noiseIcn from "../../assets/icons/volume-2.svg";
 import chevronRightIcn from "../../assets/icons/chevron-right.svg"
+import DirectionIcn from "../../assets/icons/map.svg"
 import roomImg from "../../assets/Images/study-room.jpg";
 import { useSensorData } from "../../hooks/useSensorData";
 import BusyTimesChart from "../../components/BusyTimesChart/BusyTimesChart";
@@ -22,14 +23,6 @@ function LightIcon() {
                 strokeLinecap="round"
                 strokeLinejoin="round"
             />
-        </svg>
-    );
-}
-
-function DirectionsIcon() {
-    return (
-        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-            <path d="M12 2C8 6 5 9 5 12a7 7 0 0014 0c0-3-3-6-7-10zm0 12a3 3 0 110-6 3 3 0 010 6z" fill="currentColor" />
         </svg>
     );
 }
@@ -92,6 +85,21 @@ export default function Room () {
         return () => { cancelled = true; };
     }, [roomId]);
 
+    // helper to get a usable building name from the room payload
+    function getBuildingName() {
+        const b = roomData?.building;
+        if (!b) return roomData?.buildingName ?? (roomData?.buildingId ? `Building ${roomData.buildingId}` : "");
+        if (typeof b === "string") return b;
+        return b.name ?? b.displayName ?? "";
+    }
+
+    function openGoogleMaps() {
+        const query = getBuildingName() || roomData?.name || "";
+        if (!query) return;
+        const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+        window.open(url, "_blank", "noopener,noreferrer");
+    }
+
     useEffect(() => {
         let cancelled = false;
 
@@ -125,16 +133,16 @@ export default function Room () {
                     <ul>
                         <li><a href="#">Cardiff Uni</a></li>
                         <li className={styles.seperator}><img src={chevronRightIcn} alt=">" /></li>
-                        <li><a href="#">Building X</a></li>
+                        <li><a href="#">{getBuildingName() || "Building"}</a></li>
                         <li className={styles.seperator}><img src={chevronRightIcn} alt=">"/></li>
-                        <li className="current">Room A102</li>
+                        <li className="current">{roomData?.name ?? `Room ${roomId}`}</li>
                     </ul>
                 </nav>
                 <Link className={styles.backLink} to="/search">← Back to map</Link>
             </section>
 
             <section className={styles.content}>
-                <section className={styles.roomImageCard}>
+                <section className={styles.roomImageCard} onClick={openGoogleMaps} role="button" tabIndex={0} title="Open building in Google Maps" onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") openGoogleMaps(); }}>
                     <img
                         src={roomImg}
                         alt={roomData?.name ? `${roomData.name} study space` : "Study room"}
@@ -151,13 +159,13 @@ export default function Room () {
                         <div className={styles.roomTitle}>{roomData?.name ?? `Room ${roomId}`}</div>
                         <div className={styles.statsActions}>
                             <a
-                                href={roomData ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(roomData.name)}` : '#'}
+                                href={roomData ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(getBuildingName() || roomData.name || "")}` : '#'}
                                 target="_blank"
                                 rel="noreferrer"
                                 className={styles.iconButton}
                                 aria-label="Directions to room"
                             >
-                                <DirectionsIcon />
+                                <img src={DirectionIcn} alt="Directions to" />
                             </a>
 
                             <button

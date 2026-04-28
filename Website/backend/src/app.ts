@@ -3,6 +3,7 @@ import sensorRoute from "./routes/sensorRoute";
 import loginRoute from "./routes/LoginRoute";
 import registerRoute from "./routes/RegisterRoute";
 import roomRoute from "./routes/RoomRoute";
+import universityRoute from "./routes/UniversityRoute";
 import { SensorService } from "./services/SensorService";
 import cors from "cors";
 
@@ -25,6 +26,7 @@ app.use("/api", sensorRoute);
 app.use("/users", registerRoute);
 app.use("/users", loginRoute);
 app.use("/api/rooms", roomRoute);
+app.use("/api/universities", universityRoute);
 
 if (process.env.NODE_ENV !== "test") {
   const syncIntervalMs = Number(process.env.SENSOR_SYNC_INTERVAL_MS ?? 60_000);

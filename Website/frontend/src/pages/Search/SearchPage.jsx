@@ -5,6 +5,9 @@ import RoomCard from "../../components/RoomCard/RoomCard.jsx";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import RoomSearcher from "../../components/RoomSearcher/RoomSearcher";
+import chevronUp from "../../assets/icons/chevron-up.svg";
+import chevronDown from "../../assets/icons/chevron-down.svg";
+import Select from "react-select";
 
 export default function SearchPage() {
   const navigate = useNavigate();
@@ -12,6 +15,37 @@ export default function SearchPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [urlParams, setUrlParams] = useSearchParams();
+  const [collapsedBuildings, setCollapsedBuildings] = useState({});
+  const [universities, setUniversities] = useState([]);
+
+  // fetch available universities for the dropdown
+  useEffect(() => {
+    axios.get("/api/universities")
+      .then((res) => {
+        const list = res.data?.universities ?? [];
+        setUniversities(list);
+        // pre-select Cardiff University if nothing is already in the URL
+        if (!urlParams.get("universityId")) {
+          const cardiff = list.find((u) =>
+            u.name.toLowerCase().includes("cardiff")
+          );
+          if (cardiff) {
+            const next = new URLSearchParams(urlParams);
+            next.set("universityId", String(cardiff.id));
+            setUrlParams(next, { replace: true });
+          }
+        }
+      })
+      .catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleUniversityChange = (option) => {
+    const next = new URLSearchParams(urlParams);
+    if (option?.value) next.set("universityId", String(option.value));
+    else next.delete("universityId");
+    setUrlParams(next);
+  };
 
   const handleSearch = (query) => {
     const next = new URLSearchParams(urlParams);
@@ -86,6 +120,10 @@ export default function SearchPage() {
     setUrlParams(new URLSearchParams());
   };
 
+  const toggleBuilding = (buildingName) => {
+    setCollapsedBuildings((prev) => ({ ...prev, [buildingName]: !prev[buildingName] }));
+  };
+
   const goToRoom = (roomId) => navigate(`/room/${roomId}`);
 
   // group rooms by building name for rendering
@@ -111,8 +149,30 @@ export default function SearchPage() {
       </section>
 
       <section className={styles.campusMap}>
-        <div className = {styles.navSection}>
+        <div className={styles.navSection}>
           <h2>Find A Study Space</h2>
+          {universities.length > 0 && (
+            <Select
+              inputId="uni-select"
+              options={[
+                { value: "", label: "All universities" },
+                ...universities.map((u) => ({ value: u.id, label: u.name })),
+              ]}
+              value={
+                (() => {
+                  const id = urlParams.get("universityId");
+                  if (!id) return { value: "", label: "All universities" };
+                  const u = universities.find((u) => String(u.id) === id);
+                  return u ? { value: u.id, label: u.name } : { value: "", label: "All universities" };
+                })()
+              }
+              onChange={handleUniversityChange}
+              isSearchable
+              placeholder="Select university…"
+              classNamePrefix="uniSelect"
+              className={styles.uniSelectControl}
+            />
+          )}
         </div>
 
         {loading && <p>Loading rooms...</p>}
@@ -121,18 +181,32 @@ export default function SearchPage() {
         {/* render grouped by building */}
         {Object.entries(groupedRooms).map(([buildingName, roomsInBuilding]) => (
           <section key={buildingName} className={styles.buildingSection}>
-            <h3 className={styles.buildingHeader}>{buildingName}</h3>
-            <div className={styles.roomGrid}>
-              {roomsInBuilding.map((room) => (
-                <RoomCard
-                  key={room.id}
-                  name={room.name}
-                  building={null} // already shown in header
-                  metrics={room.metrics}
-                  onClick={() => goToRoom(room.id)}
-                />
-              ))}
-            </div>
+            <button
+              type="button"
+              className={styles.buildingHeader}
+              onClick={() => toggleBuilding(buildingName)}
+              aria-expanded={!collapsedBuildings[buildingName]}
+            >
+              {buildingName}
+              <img
+                src={collapsedBuildings[buildingName] ? chevronDown : chevronUp}
+                alt={collapsedBuildings[buildingName] ? "Expand" : "Collapse"}
+                className={styles.buildingChevron}
+              />
+            </button>
+            {!collapsedBuildings[buildingName] && (
+              <div className={styles.roomGrid}>
+                {roomsInBuilding.map((room) => (
+                  <RoomCard
+                    key={room.id}
+                    name={room.name}
+                    building={null}
+                    metrics={room.metrics}
+                    onClick={() => goToRoom(room.id)}
+                  />
+                ))}
+              </div>
+            )}
           </section>
         ))}
       </section>

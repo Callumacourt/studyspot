@@ -15,6 +15,7 @@ export const RoomController = {
     try {
       const q = req.query;
       const params = {
+        universityId: q.universityId ? Number(q.universityId) : undefined,
         buildingId: q.buildingId ? Number(q.buildingId) : undefined,
         noise: q.noise ? String(q.noise) : undefined,
         occupancy: q.occupancy ? String(q.occupancy) : undefined,

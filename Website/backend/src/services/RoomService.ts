@@ -2,6 +2,7 @@ import { prisma } from "../prisma";
 import { buildMetricFilters, metricsMatchFilters, type RoomMetrics } from "../utils/RoomFilters";
 
 type RoomFilterParams = {
+  universityId?: number;
   buildingId?: number;
   wheelchairAccessible?: boolean;
   hasAdjustableDesks?: boolean;
@@ -50,6 +51,7 @@ export const RoomService = {
   async getRoomsByFilter(params: RoomFilterParams) {
     const rooms = await prisma.room.findMany({
       where: {
+        ...(params.universityId && { building: { universityId: params.universityId } }),
         ...(params.buildingId && { buildingId: params.buildingId }),
         ...(params.wheelchairAccessible !== undefined && { wheelchairAccessible: params.wheelchairAccessible }),
         ...(params.hasAdjustableDesks !== undefined && { hasAdjustableDesks: params.hasAdjustableDesks }),

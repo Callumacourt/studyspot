@@ -4,8 +4,8 @@ import reportIcn from "../../assets/icons/flag.svg";
 import humidityIcn from "../../assets/icons/humidity.svg";
 import tempIcn from "../../assets/icons/thermometer.svg";
 import noiseIcn from "../../assets/icons/volume-2.svg";
-import peopleIcn from "../../assets/icons/user.svg";
 import chevronRightIcn from "../../assets/icons/chevron-right.svg"
+import roomImg from "../../assets/Images/study-room.jpg";
 import { useSensorData } from "../../hooks/useSensorData";
 import BusyTimesChart from "../../components/BusyTimesChart/BusyTimesChart";
 import styles from "./Room.module.css";
@@ -22,6 +22,46 @@ function LightIcon() {
                 strokeLinecap="round"
                 strokeLinejoin="round"
             />
+        </svg>
+    );
+}
+
+function DirectionsIcon() {
+    return (
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+            <path d="M12 2C8 6 5 9 5 12a7 7 0 0014 0c0-3-3-6-7-10zm0 12a3 3 0 110-6 3 3 0 010 6z" fill="currentColor" />
+        </svg>
+    );
+}
+
+function WheelchairIcon() {
+    return (
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+            <path d="M13 7a3 3 0 11-2.83 4H9v2h2.17A3.001 3.001 0 1113 7zM6 20a2 2 0 100-4 2 2 0 000 4zm12 0a4 4 0 100-8 4 4 0 000 8zM8 11v6h2v-4h2v-2H8z" fill="currentColor" />
+        </svg>
+    );
+}
+
+function DeskIcon() {
+    return (
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+            <path d="M3 7h18v2H3V7zm2 4h14v6H5v-6zM7 19v2h2v-2H7zm8 0v2h2v-2h-2z" fill="currentColor" />
+        </svg>
+    );
+}
+
+function GroundIcon() {
+    return (
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+            <path d="M12 2L2 7v2c0 5 4 9 10 13 6-4 10-8 10-13V7l-10-5z" fill="currentColor" />
+        </svg>
+    );
+}
+
+function HearIcon() {
+    return (
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+            <path d="M12 3v2a7 7 0 017 7 7 7 0 01-7 7v2a9 9 0 009-9 9 9 0 00-9-9zM3 12a9 9 0 0112.9-8.36L14 7a5 5 0 00-6 5 5 5 0 006 5l1.9 3.36A9 9 0 013 12z" fill="currentColor" />
         </svg>
     );
 }
@@ -90,54 +130,133 @@ export default function Room () {
                         <li className="current">Room A102</li>
                     </ul>
                 </nav>
-
-                <h2>Room {roomId}</h2>
-                <span className={styles.tools}>
-                    <button
-                        type="button"
-                        className={`${styles.favBtn} ${isFavourite ? styles.favActive : ""}`}
-                        onClick={handleFavouriteClick}
-                        title={isLoggedIn ? "Toggle favourite" : "Log in to favourite rooms"}
-                        aria-label={isFavourite ? "Remove from favourites" : "Add to favourites"}
-                    >
-                        <svg className={styles.favIcon} viewBox="0 0 24 24">
-                            <path
-                                d="M12 2.5l2.94 5.96 6.58.96-4.76 4.64 1.12 6.56L12 17.52 6.12 20.62l1.12-6.56L2.48 9.42l6.58-.96L12 2.5z"
-                                fill={isFavourite ? "currentColor" : "none"}
-                                stroke="currentColor"
-                                strokeWidth="1.8"
-                                strokeLinejoin="round"
-                            />
-                        </svg>
-                    </button>
-
-                    <button
-                        title="Report an issue with this room"
-                        aria-label="Report an issue with this room"
-                    >
-                        <img src={reportIcn} className={styles.reportIcon} alt="An icon of a flag" />
-                    </button>
-                </span>
                 <Link className={styles.backLink} to="/search">← Back to map</Link>
             </section>
 
             <section className={styles.content}>
+                <section className={styles.roomImageCard}>
+                    <img
+                        src={roomImg}
+                        alt={roomData?.name ? `${roomData.name} study space` : "Study room"}
+                        className={styles.roomImage}
+                    />
+                    <div className={styles.roomImageOverlay}>
+                        <h3>{roomData?.name ?? `Room ${roomId}`}</h3>
+                        <p>Quiet study zone • Live monitored</p>
+                    </div>
+                </section>
+
                 <aside className={styles.stats}>
-                    <h2>Live Stats</h2>
+                    <div className={styles.statsNav}>
+                        <div className={styles.roomTitle}>{roomData?.name ?? `Room ${roomId}`}</div>
+                        <div className={styles.statsActions}>
+                            <a
+                                href={roomData ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(roomData.name)}` : '#'}
+                                target="_blank"
+                                rel="noreferrer"
+                                className={styles.iconButton}
+                                aria-label="Directions to room"
+                            >
+                                <DirectionsIcon />
+                            </a>
+
+                            <button
+                                type="button"
+                                className={`${styles.favBtn} ${isFavourite ? styles.favActive : ""}`}
+                                onClick={handleFavouriteClick}
+                                title={isLoggedIn ? "Toggle favourite" : "Log in to favourite rooms"}
+                                aria-label={isFavourite ? "Remove from favourites" : "Add to favourites"}
+                            >
+                                <svg className={styles.favIcon} viewBox="0 0 24 24">
+                                    <path
+                                        d="M12 2.5l2.94 5.96 6.58.96-4.76 4.64 1.12 6.56L12 17.52 6.12 20.62l1.12-6.56L2.48 9.42l6.58-.96L12 2.5z"
+                                        fill={isFavourite ? "currentColor" : "none"}
+                                        stroke="currentColor"
+                                        strokeWidth="1.8"
+                                        strokeLinejoin="round"
+                                    />
+                                </svg>
+                            </button>
+
+                            <button
+                                type="button"
+                                className={styles.iconButton}
+                                title="Report an issue with this room"
+                                aria-label="Report an issue with this room"
+                            >
+                                <img src={reportIcn} className={styles.reportIcon} alt="Report" />
+                            </button>
+                        </div>
+                    </div>
+
                     {loading && <p>Loading sensor data...</p>}
                     {error && <p>Error: {error}</p>}
-                    {!loading && !error && (
+
+                    <div className={styles.statsContent}>
+                        <h4>Enviroment Metrics</h4>
                         <div className={styles.sensorData}>
-                            <span><img src={peopleIcn} alt="Person Icon"/>{stats?.occupancy ?? "No occupancy data"}</span>
-                            <span><img src={tempIcn} alt="Temperature Icon"/>{stats?.temp ?? "No temperature data"}</span>
-                            <span><img src={humidityIcn} alt="Humidity Icon"/>{stats?.humidity ?? "No humidity data"}</span>
-                            <span><img src={noiseIcn} alt="Noise Icon"/>{stats?.noise ?? "No noise data"}</span>
-                            <span><LightIcon />{stats?.light ?? "No light data"}</span>
+                            <div className={styles.metric}>
+                                <div className={styles.metricTitle}>Temperature</div>
+                                <div className={styles.metricValue}>
+                                    <img src={tempIcn} alt="Temperature Icon" />
+                                    {stats?.temp ?? "No temperature data"}
+                                </div>
+                            </div>
+
+                            <div className={styles.metric}>
+                                <div className={styles.metricTitle}>Humidity</div>
+                                <div className={styles.metricValue}>
+                                    <img src={humidityIcn} alt="Humidity Icon" />
+                                    {stats?.humidity ?? "No humidity data"}
+                                </div>
+                            </div>
+
+                            <div className={styles.metric}>
+                                <div className={styles.metricTitle}>Noise</div>
+                                <div className={styles.metricValue}>
+                                    <img src={noiseIcn} alt="Noise Icon" />
+                                    {stats?.noise ?? "No noise data"}
+                                </div>
+                            </div>
+
+                            <div className={styles.metric}>
+                                <div className={styles.metricTitle}>Light</div>
+                                <div className={styles.metricValue}>
+                                    <LightIcon />
+                                    {stats?.light ?? "No light data"}
+                                </div>
+                            </div>
                         </div>
-                    )}
+                        <h4>Room Accessibility</h4>
+                        <div className={styles.accessibility}>
+                            <div className={styles.accessItem}>
+                                <div className={styles.accessIcon}><WheelchairIcon /></div>
+                                <div className={styles.accessLabel}>Wheelchair</div>
+                                <div className={styles.accessFlag}>{roomData?.wheelchairAccessible ? 'Yes' : 'No'}</div>
+                            </div>
+                            <div className={styles.accessItem}>
+                                <div className={styles.accessIcon}><DeskIcon /></div>
+                                <div className={styles.accessLabel}>Adjustable desks</div>
+                                <div className={styles.accessFlag}>{roomData?.hasAdjustableDesks ? 'Yes' : 'No'}</div>
+                            </div>
+                            <div className={styles.accessItem}>
+                                <div className={styles.accessIcon}><GroundIcon /></div>
+                                <div className={styles.accessLabel}>Ground floor</div>
+                                <div className={styles.accessFlag}>{roomData?.groundFloor ? 'Yes' : 'No'}</div>
+                            </div>
+                            <div className={styles.accessItem}>
+                                <div className={styles.accessIcon}><HearIcon /></div>
+                                <div className={styles.accessLabel}>Hearing assistance</div>
+                                <div className={styles.accessFlag}>{roomData?.hearingAssistance ? 'Yes' : 'No'}</div>
+                            </div>
+                        </div>
+                    </div>
+
                 </aside>
                 <section className={styles.busyTimes}>
+                    <nav className = {styles.roomNav}>
                     <h2>Busy Times</h2>
+                    </nav>
                     <div className={styles.graphContainer}>
                         <BusyTimesChart hourlyAverages={hourlyAverages} liveOccupancy={stats?.occupancy ?? null} />
                     </div>

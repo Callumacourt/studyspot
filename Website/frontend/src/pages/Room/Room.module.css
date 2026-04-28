@@ -107,52 +107,195 @@
 
 .content {
     display: grid;
-    grid-template-columns: minmax(260px, 320px);
+    grid-template-columns: 1fr 2fr;
+    grid-template-rows: 0.75fr 1fr;
     flex: 1;
     min-height: 0;
-    overflow: hidden; 
+    overflow: hidden;
     padding: 0.5rem;
-    gap: 1rem;
+    gap: 0.75rem;
     color: black;
 }
 
+.roomImageCard,
 .stats,
 .busyTimes {
     border-radius: 12px;
-    padding: 1rem;
-    border: 1px black #E2E8F0;
+    border: 1px solid #E2E8F0;
     min-height: 0;
-    overflow: hidden; 
+    overflow: hidden;
     min-width: 0;
-    grid-column: 2 / -1; 
-    grid-row: 1;
     height: 100%;
-    min-height: 120px; 
+    background: white;
+}
+
+.roomImageCard {
+    position: relative;
+    grid-column: 1;
+    grid-row: 1;
+    min-width: 200px;
+    width: 100%;
+    height: 220px;
+    max-height: 220px;
+    align-self: start;
+    justify-self: stretch;
+}
+
+.roomImage {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.roomImageOverlay {
+    position: absolute;
+    inset: auto 0 0 0;
+    padding: 0.9rem 1rem;
+    color: white;
+    background: linear-gradient(to top, rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.15));
+}
+
+.roomImageOverlay h3 {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: 0.01em;
+}
+
+.roomImageOverlay p {
+    margin: 0.25rem 0 0;
+    font-size: 0.88rem;
+    line-height: 1.3;
+    color: #e6eef7;
+    opacity: 0.95;
 }
 
 .graphContainer {
-    height: 85%;
+    height: calc(100% - 4rem);
     width: 100%;
     background-color: white;
-    padding: 2vmin;
-    border-radius: 25px;
+    padding: 0.75rem;
+    border-radius: 14px;
     display: flex;
     align-items: flex-end;
+    box-sizing: border-box;
 }
 
 .stats {
-    min-width: 260px;
     grid-column: 1;
+    grid-row: 2;
     background-color: white;
-    grid-row: 1 / -1;
+    padding: 0.5rem;
+    box-sizing: border-box;
+    width: 100%;
+    height: fit-content;
+    max-width: none;
 }
 
 .stats h2 {
     justify-self: center;
+    font-size: 1.125rem;
+    font-weight: 600;
+    line-height: 1.25;
+    letter-spacing: 0.01em;
 }
 
 .stats {
-    min-height: 45vh;
+    min-height: 0;
+}
+
+.statsNav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.4rem 0.5rem;
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+    gap: 0.3rem;
+    font-size: 0.95rem;
+    color: #253344;
+}
+
+.roomTitle {
+    font-weight: 700;
+    font-size: 1.125rem;
+    line-height: 1.2;
+    letter-spacing: 0.01em;
+}
+
+.statsActions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.iconButton {
+    background: transparent;
+    border: none;
+    padding: 0.25rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: inherit;
+}
+
+.statsContent {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.3rem 0.35rem 0.4rem;
+    align-items: flex-start;
+    height: 100%;
+    box-sizing: border-box;
+    justify-content: space-between;
+}
+
+.statsContent h4 {
+    margin-bottom: 1.5vh;
+}
+
+.accessibility {
+    display: grid;
+    width: 100%;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.25rem;
+    min-width: auto;
+    align-items: flex-start;
+}
+
+.accessItem {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    background: #f8fafc;
+    padding: 0.3rem 0.45rem;
+    border-radius: 8px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.accessIcon {
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #1a202c;
+}
+
+.accessLabel {
+    font-size: 0.88rem;
+    color: #263241;
+    line-height: 1.2;
+}
+
+.accessFlag {
+    margin-left: auto;
+    font-weight: 700;
+    font-size: 0.82rem;
+    color: #0b6b62;
+    letter-spacing: 0.01em;
 }
 
 .statItem {
@@ -160,6 +303,8 @@
     justify-content: space-between;
     align-items: center;
     padding: 0.65rem 0.25rem;
+    font-size: 0.95rem;
+    line-height: 1.25;
 }
 
 .tableGrid {
@@ -172,18 +317,25 @@
     padding: 0.8rem;
     border-radius: 10px;
     background: white;
+    font-size: 0.95rem;
+    line-height: 1.3;
 }
 
 .sensorData {
     display: flex;
-    flex-direction: column;
-    gap: 2.5vh;
+    gap: 2rem;
+    flex: 0;
+    min-width: 0;
+    width: 100%;
 }
 
 .sensorData span {
     display: flex;
     align-items: center;
-    gap: 0.5vw;
+    gap: 0.35rem;
+    font-size: 0.96rem;
+    color: #1f2d3a;
+    line-height: 1.2;
 }
 
 .sensorData span img {
@@ -193,22 +345,90 @@
 }
 
 .inlineStatIcon {
-    width: 24px;
-    height: 24px;
-    background-color: white;
-    border-radius: 15px;
-    padding: 0.5vmin;
-    color: #1a202c;
-    flex-shrink: 0;
+  padding: 0;
+  margin: 0;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.roomNav {
+    background-color: rgb(42, 92, 130);
+    color: white;
+    padding: 0.65rem 0.85rem;
+}
+
+.roomNav h2 {
+    margin: 0px;
+    font-size: 1.05rem;
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: 0.01em;
+}
+
+.busyTimes {
+    grid-column: 2;
+    grid-row: 1 / -1;
+    padding: 0;
+    min-height: 0;
+}
+
+.metric {
+  min-width: 0;
+}
+
+.metricValue {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 10px;
+  white-space: nowrap;     
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.metricValue svg,
+.metricValue img {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+}
+
+
+@media (max-width: 420px) {
+  .metricValue {
+    white-space: normal;
+  }
 }
 
 @media (max-width: 900px) {
     .content {
         grid-template-columns: 1fr;
+        grid-template-rows: auto auto minmax(300px, 1fr);
+        overflow: auto;
+    }
+
+    .roomImageCard {
+        grid-column: 1;
+        grid-row: 1;
+        min-height: 180px;
+    }
+
+    .stats {
+        grid-column: 1;
+        grid-row: 2;
     }
 
     .stats,
     .busyTimes {
         grid-column: 1;
+    }
+
+    .busyTimes {
+        grid-row: 3;
+    }
+
+    .statsContent {
+        flex-direction: column;
+        height: auto;
     }
 }

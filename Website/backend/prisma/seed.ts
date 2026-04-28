@@ -92,6 +92,14 @@ async function main() {
     const noise = rand(35, 85);      // dB
     const occupancy = rand(5, 95);   // %
 
+    // deterministic accessibility flags so re-seeding is repeatable
+    const accessibility = {
+      wheelchairAccessible: i % 3 === 0,
+      hasAdjustableDesks: i % 4 === 0,
+      groundFloor: i % 5 === 0,
+      hearingAssistance: i % 6 === 0,
+    };
+
     const room = await prisma.room.upsert({
       where: {
         buildingId_name: {
@@ -109,6 +117,11 @@ async function main() {
             { metricType: MetricType.OCCUPANCY, value: occupancy, time: new Date(now - i * 60_000 - 3_000) },
           ],
         },
+        // keep accessibility flags up-to-date on reseed
+        wheelchairAccessible: accessibility.wheelchairAccessible,
+        hasAdjustableDesks: accessibility.hasAdjustableDesks,
+        groundFloor: accessibility.groundFloor,
+        hearingAssistance: accessibility.hearingAssistance,
       },
       create: {
         name: ROOM_NAMES[i],
@@ -130,6 +143,11 @@ async function main() {
             { metricType: MetricType.OCCUPANCY, value: occupancy, time: new Date(now - i * 60_000 - 3_000) },
           ],
         },
+        // set accessibility for new rooms
+        wheelchairAccessible: accessibility.wheelchairAccessible,
+        hasAdjustableDesks: accessibility.hasAdjustableDesks,
+        groundFloor: accessibility.groundFloor,
+        hearingAssistance: accessibility.hearingAssistance,
       },
     });
 

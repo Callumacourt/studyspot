@@ -29,7 +29,7 @@ export default function SignUpPage() {
 
     try {
       const response = await axios.post(
-        "http://localhost:3000/users/register",
+        "http://localhost:3000/users/register", // will need to change this route when we run on actual server
       {
         email: formData.email,
         password: formData.password,
@@ -85,7 +85,7 @@ export default function SignUpPage() {
               id="fullName"
               name="fullName"
               type="text"
-              placeholder="John Smith"
+              placeholder="Josh Brown"
               value={formData.fullName}
               onChange={handleChange}
               className={styles.input}
@@ -100,7 +100,7 @@ export default function SignUpPage() {
               id="email"
               name="email"
               type="email"
-              placeholder="youremail@cardiff.ac.uk"
+              placeholder="Josh03@cardiff.ac.uk"
               value={formData.email}
               onChange={handleChange}
               className={styles.input}

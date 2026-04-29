@@ -6,15 +6,19 @@ import time
 import json
 import serial
 import threading
+import smbus
 import paho.mqtt.client as mqtt
 import grovepi
 
+# ── Camera / Vision imports ───────────────────────────────────────
 try:
-    import grove_rgb_lcd
-    LCD_AVAILABLE = True
-except ImportError:
-    LCD_AVAILABLE = False
-    print("WARNING: LCD not available")
+    from camera import Camera
+    from obj_detector import ObjectDetector
+    CAMERA_AVAILABLE = True
+    print("✓ Camera module loaded")
+except ImportError as e:
+    CAMERA_AVAILABLE = False
+    print(f"WARNING: Camera not available — {e}")
 
 # ── ThingsBoard Config ────────────────────────────────────────────
 THINGSBOARD_HOST = 'thingsboard.cs.cf.ac.uk'
@@ -28,40 +32,105 @@ BT_BAUD = 9600
 US1_PIN = 3   # D3 — outside sensor
 US2_PIN = 4   # D4 — inside sensor
 
-# Trigger distance — object closer than this = detected
-TRIGGER_CM = 50
-
-# How long to wait for second sensor after first triggers (ms)
+# ── Occupancy Config ──────────────────────────────────────────────
+TRIGGER_CM           = 50
 DIRECTION_WINDOW_MS  = 2000
-
-# Minimum time between crossings (ms)
 CROSSING_COOLDOWN_MS = 2000
 
+# ── Camera Config ─────────────────────────────────────────────────
+CAMERA_INTERVAL = 30   # take a photo every 30 seconds
+IMAGE_PATH      = 'images/'
+IMAGE_FILE      = 'current.jpg'
+
+# ── LCD Config ────────────────────────────────────────────────────
+LCD_RGB_ADDR  = 0x62
+LCD_TEXT_ADDR = 0x3e
+LCD_CYCLE     = 8
+
 # ── Shared State ──────────────────────────────────────────────────
-occupancyCount = 0
+occupancyCount  = 0
+cameraCount     = 0    # last person count from camera
 telemetry = {
-    'temperature': 0,
-    'humidity':    0,
-    'sound':       0,
-    'light':       0,
-    'occupancy':   0,
+    'temperature':  0,
+    'humidity':     0,
+    'sound':        0,
+    'light':        0,
+    'occupancy':    0,
+    'camera_count': 0,   # published separately so ThingsBoard can show both
 }
 telemetry_lock = threading.Lock()
 
-# ── LCD Helpers ───────────────────────────────────────────────────
-def lcd_set_text(text):
-    if not LCD_AVAILABLE: return
+# ── LCD Setup ─────────────────────────────────────────────────────
+try:
+    _bus = smbus.SMBus(1)
+    LCD_AVAILABLE = True
+except Exception as e:
+    print(f"SMBus init error: {e}")
+    LCD_AVAILABLE = False
+
+def lcd_init():
+    if not LCD_AVAILABLE:
+        return False
     try:
-        grove_rgb_lcd.setText(text)
+        _bus.write_byte_data(LCD_RGB_ADDR, 0x00, 0x00)
+        time.sleep(0.01)
+        _bus.write_byte_data(LCD_RGB_ADDR, 0x01, 0x00)
+        time.sleep(0.01)
+        _bus.write_byte_data(LCD_RGB_ADDR, 0x08, 0xaa)
+        time.sleep(0.01)
+        _bus.write_byte_data(LCD_TEXT_ADDR, 0x80, 0x01)
+        time.sleep(0.05)
+        _bus.write_byte_data(LCD_TEXT_ADDR, 0x80, 0x08 | 0x04)
+        time.sleep(0.01)
+        _bus.write_byte_data(LCD_TEXT_ADDR, 0x80, 0x28)
+        time.sleep(0.01)
+        _bus.write_byte_data(LCD_TEXT_ADDR, 0x80, 0x06)
+        time.sleep(0.01)
+        print("✓ LCD initialised")
+        return True
+    except Exception as e:
+        print(f"LCD init error: {e}")
+        return False
+
+def lcd_set_rgb(r, g, b):
+    if not LCD_AVAILABLE:
+        return
+    try:
+        _bus.write_byte_data(LCD_RGB_ADDR, 0x04, r)
+        time.sleep(0.005)
+        _bus.write_byte_data(LCD_RGB_ADDR, 0x03, g)
+        time.sleep(0.005)
+        _bus.write_byte_data(LCD_RGB_ADDR, 0x02, b)
+        time.sleep(0.005)
     except:
         pass
 
-def lcd_set_rgb(r, g, b):
-    if not LCD_AVAILABLE: return
+def lcd_write_char(char):
+    if not LCD_AVAILABLE:
+        return
     try:
-        grove_rgb_lcd.setRGB(r, g, b)
+        _bus.write_byte_data(LCD_TEXT_ADDR, 0x40, ord(char))
+        time.sleep(0.002)
     except:
         pass
+
+def lcd_set_text(line1, line2=''):
+    if not LCD_AVAILABLE:
+        return
+    try:
+        _bus.write_byte_data(LCD_TEXT_ADDR, 0x80, 0x01)
+        time.sleep(0.05)
+        line1 = line1[:16].ljust(16)
+        for char in line1:
+            lcd_write_char(char)
+        _bus.write_byte_data(LCD_TEXT_ADDR, 0x80, 0xc0)
+        time.sleep(0.01)
+        line2 = line2[:16].ljust(16)
+        for char in line2:
+            lcd_write_char(char)
+    except Exception as e:
+        print(f"LCD text error: {e} — reinitialising")
+        lcd_init()
 
 def get_lcd_colour(occ):
     if occ == 0:     return (0, 0, 255)
@@ -76,21 +145,32 @@ def update_lcd(screen):
         s   = telemetry['sound']
         l   = telemetry['light']
         occ = telemetry['occupancy']
+        cam = telemetry['camera_count']
+
+    if l < 200:   light_str = "Dark"
+    elif l < 500: light_str = "Dim"
+    else:         light_str = "Bright"
+
+    if s < 40:    sound_str = "Quiet"
+    elif s < 60:  sound_str = "Moderate"
+    else:         sound_str = "Loud"
+
     r, g, b = get_lcd_colour(occ)
     lcd_set_rgb(r, g, b)
+
     if screen == 0:
-        lcd_set_text(f"Temp: {t:.1f}C\nHumid: {h:.1f}%")
+        lcd_set_text(f"Temp:{t:.1f}C", f"Humid:{h:.0f}%")
     elif screen == 1:
-        lcd_set_text(f"Occupancy: {occ}\nSound: {s}dB")
+        lcd_set_text(f"Occ:{occ} Cam:{cam}", f"Sound:{sound_str}")
     else:
-        lcd_set_text(f"Light: {l}lux\n")
+        lcd_set_text(f"Light:{light_str}", f"Occ:{occ}")
 
 # ── MQTT Setup ────────────────────────────────────────────────────
 def on_connect(client, userdata, flags, rc, *extra):
-    print('ThingsBoard connected, rc=' + str(rc))
+    print(f"ThingsBoard connected, rc={rc}")
 
 def on_publish(client, userdata, result):
-    print('✓ Published to ThingsBoard')
+    print("✓ Published to ThingsBoard")
 
 client = mqtt.Client()
 client.username_pw_set(ACCESS_TOKEN)
@@ -99,16 +179,47 @@ client.on_publish = on_publish
 client.connect(THINGSBOARD_HOST, 1883, 60)
 client.loop_start()
 
-# ── Dual Ultrasonic Occupancy Thread ─────────────────────────────
-#
-#  State machine:
-#    IDLE      → waiting for either sensor to trigger
-#    US1_FIRED → US1 triggered first (possible entry)
-#    US2_FIRED → US2 triggered first (possible exit)
-#
-#  Entry: US1 triggers → US2 triggers within window → count++
-#  Exit:  US2 triggers → US1 triggers within window → count--
+# ── Camera Vision Thread ──────────────────────────────────────────
+# Runs every CAMERA_INTERVAL seconds, takes a photo and counts
+# people using TFLite object detection model (class 0 = person).
+# Result is published to ThingsBoard as camera_count alongside
+# the ultrasonic occupancy count for comparison/validation.
 
+def camera_thread():
+    global cameraCount
+
+    if not CAMERA_AVAILABLE:
+        print("Camera thread not started — module unavailable")
+        return
+
+    try:
+        picamera       = Camera(res_x=300, res_y=300, save_p=IMAGE_PATH, filename=IMAGE_FILE)
+        person_detector = ObjectDetector(conf_thres=0.5)
+        print("✓ Camera and detector initialised")
+    except Exception as e:
+        print(f"Camera init error: {e}")
+        return
+
+    while True:
+        try:
+            print("[CAM] Taking photo...")
+            image_path = picamera.std_cap()
+            people     = person_detector.detect_object(image_p=image_path, obj_class=0)
+            cameraCount = people
+            print(f"[CAM] Detected {people} people in frame")
+
+            with telemetry_lock:
+                telemetry['camera_count'] = cameraCount
+
+        except Exception as e:
+            print(f"Camera error: {e}")
+
+        time.sleep(CAMERA_INTERVAL)
+
+cam_thread = threading.Thread(target=camera_thread, daemon=True)
+cam_thread.start()
+
+# ── Occupancy Thread ──────────────────────────────────────────────
 def occupancy_thread():
     global occupancyCount
 
@@ -124,31 +235,29 @@ def occupancy_thread():
         try:
             now_ms = int(time.time() * 1000)
 
-            # Read both sensors
             try:
-                d1 = grovepi.ultrasonicRead(US1_PIN)
+                d1  = grovepi.ultrasonicRead(US1_PIN)
                 us1 = (0 < d1 < TRIGGER_CM)
             except:
                 us1 = False
+                d1  = -1
 
             try:
-                d2 = grovepi.ultrasonicRead(US2_PIN)
+                d2  = grovepi.ultrasonicRead(US2_PIN)
                 us2 = (0 < d2 < TRIGGER_CM)
             except:
                 us2 = False
+                d2  = -1
 
-            # Rising edge detection
             us1_rising = (us1 and not lastUs1)
             us2_rising = (us2 and not lastUs2)
             lastUs1 = us1
             lastUs2 = us2
 
-            # Cooldown guard
             if (now_ms - lastCrossingTime) < CROSSING_COOLDOWN_MS:
                 time.sleep(0.05)
                 continue
 
-            # State machine
             if doorState == 'IDLE':
                 if us1_rising and not us2:
                     doorState      = 'US1_FIRED'
@@ -161,7 +270,6 @@ def occupancy_thread():
 
             elif doorState == 'US1_FIRED':
                 if us2_rising:
-                    # Entry confirmed
                     occupancyCount += 1
                     lastCrossingTime = now_ms
                     doorState = 'IDLE'
@@ -174,7 +282,6 @@ def occupancy_thread():
 
             elif doorState == 'US2_FIRED':
                 if us1_rising:
-                    # Exit confirmed
                     occupancyCount = max(0, occupancyCount - 1)
                     lastCrossingTime = now_ms
                     doorState = 'IDLE'
@@ -186,7 +293,7 @@ def occupancy_thread():
                     print("[US2] Timeout — reset")
 
         except Exception as e:
-            print(f'Occupancy error: {e}')
+            print(f"Occupancy error: {e}")
 
         time.sleep(0.05)
 
@@ -198,7 +305,7 @@ def bluetooth_reader():
     while True:
         try:
             bt = serial.Serial(BT_PORT, BT_BAUD, timeout=5)
-            print(f'✓ Bluetooth connected on {BT_PORT}')
+            print(f"✓ Bluetooth connected on {BT_PORT}")
             while True:
                 raw = bt.readline().decode('utf-8', errors='ignore').strip()
                 if not raw:
@@ -215,7 +322,7 @@ def bluetooth_reader():
                 except json.JSONDecodeError:
                     pass
         except serial.SerialException as e:
-            print(f'Bluetooth error: {e} — retrying in 5s')
+            print(f"Bluetooth error: {e} — retrying in 5s")
             time.sleep(5)
 
 bt_thread = threading.Thread(target=bluetooth_reader, daemon=True)
@@ -223,11 +330,11 @@ bt_thread.start()
 
 # ── Main Loop ─────────────────────────────────────────────────────
 PUBLISH_INTERVAL = 5
-LCD_CYCLE        = 3
 next_publish     = time.time()
 next_lcd         = time.time()
 lcd_screen       = 0
 
+lcd_init()
 print("Starting main loop...")
 
 try:
@@ -243,18 +350,20 @@ try:
             with telemetry_lock:
                 payload = dict(telemetry)
             client.publish('v1/devices/me/telemetry', json.dumps(payload), 1)
-            print(f'Published → {payload}')
+            print(f"Published → {payload}")
             next_publish = now + PUBLISH_INTERVAL
 
-        time.sleep(0.1)
+        time.sleep(0.5)
 
 except KeyboardInterrupt:
     try:
-        lcd_set_text('')
+        lcd_set_text('StudySpot', 'Offline')
+        time.sleep(1)
         lcd_set_rgb(0, 0, 0)
+        lcd_set_text('', '')
     except:
         pass
     client.loop_stop()
     client.disconnect()
-    print('Terminated.')
+    print("Terminated.")
     os._exit(0)

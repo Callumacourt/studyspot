@@ -72,4 +72,24 @@ export const UserRoomController = {
       return respondError(error, res);
     }
   },
+
+  async getMyBookings(req: Request, res: Response) {
+    try {
+      const bookings = await UserRoomService.getMyBookings(getUserId(req));
+      return res.status(200).json({ success: true, bookings });
+    } catch (error) {
+      return respondError(error, res);
+    }
+  },
+
+  async cancelBooking(req: Request, res: Response) {
+    try {
+      const bookingId = Number(req.params.bookingId);
+      if (!Number.isInteger(bookingId) || bookingId <= 0) throw new Error("Invalid booking id");
+      const booking = await UserRoomService.cancelBooking(bookingId, getUserId(req));
+      return res.status(200).json({ success: true, booking });
+    } catch (error) {
+      return respondError(error, res);
+    }
+  },
 };

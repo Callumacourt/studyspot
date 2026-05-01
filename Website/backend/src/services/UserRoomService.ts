@@ -99,4 +99,32 @@ export const UserRoomService = {
 
     return report;
   },
+
+  async getMyBookings(userId: number) {
+    return prisma.roomBooking.findMany({
+      where: { bookedByUserId: userId },
+      include: {
+        room: {
+          select: {
+            id: true,
+            name: true,
+            building: { select: { id: true, name: true } },
+          },
+        },
+      },
+      orderBy: { startTime: "asc" },
+    });
+  },
+
+  async cancelBooking(bookingId: number, userId: number) {
+    const booking = await prisma.roomBooking.findUnique({ where: { id: bookingId } });
+    if (!booking) throw new Error("Booking not found");
+    if (booking.bookedByUserId !== userId) throw new Error("Not authorised to cancel this booking");
+    if (booking.status === "CANCELLED") throw new Error("Booking is already cancelled");
+
+    return prisma.roomBooking.update({
+      where: { id: bookingId },
+      data: { status: "CANCELLED" },
+    });
+  },
 };

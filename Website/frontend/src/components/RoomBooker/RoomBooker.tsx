@@ -17,50 +17,61 @@ type Props = {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-/** Format "YYYY-MM-DD" for a local Date (avoids UTC shift from toISOString). */
+const pad = (n: number) => String(n).padStart(2, "0");
+
+/** "YYYY-MM-DD" for a local Date. */
 function toLocalDate(d: Date): string {
-    const pad = (n: number) => String(n).padStart(2, "0");
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
-/** Today as YYYY-MM-DD local. */
-const TODAY = toLocalDate(new Date());
+/** The next 7 days starting from today as { dateStr, label } */
+function buildWeek(): { dateStr: string; label: string }[] {
+    const days: { dateStr: string; label: string }[] = [];
+    const now = new Date();
+    for (let i = 0; i < 7; i++) {
+        const d = new Date(now);
+        d.setDate(now.getDate() + i);
+        const dateStr = toLocalDate(d);
+        const label = i === 0
+            ? "Today"
+            : i === 1
+            ? "Tomorrow"
+            : d.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" });
+        days.push({ dateStr, label });
+    }
+    return days;
+}
 
-/**
- * Build a list of full-hour slot labels (e.g. "09:00") between open and close.
- * openHour / closeHour are ISO strings stored in DB — we only care about the
- * UTC hour component (seeds set them to 08:00Z / 22:00Z).
- */
+/** Slot hours between open and close (UTC hours from ISO strings). */
 function buildSlots(openIso: string | null | undefined, closeIso: string | null | undefined): number[] {
     const open  = openIso  ? new Date(openIso).getUTCHours()  : 8;
     const close = closeIso ? new Date(closeIso).getUTCHours() : 22;
     return Array.from({ length: close - open }, (_, i) => open + i);
 }
 
-/** Given existing bookings, mark which hours are taken for a given date. */
+/** Hours already taken by confirmed/pending bookings on a given date. */
 function buildTakenSet(bookings: Booking[], dateStr: string): Set<number> {
     const taken = new Set<number>();
-    const prefix = dateStr; // "YYYY-MM-DD"
     for (const b of bookings) {
         const start = new Date(b.startTime);
         const end   = new Date(b.endTime);
-        // mark every full hour that is covered by this booking
-        for (let h = start.getUTCHours(); h < end.getUTCHours(); h++) {
-            if (toLocalDate(start) === prefix || toLocalDate(end) === prefix) taken.add(h);
+        if (toLocalDate(start) === dateStr || toLocalDate(end) === dateStr) {
+            for (let h = start.getUTCHours(); h < end.getUTCHours(); h++) taken.add(h);
         }
     }
     return taken;
 }
 
-/** Format a UTC hour (0–23) as "HH:00". */
-function fmtHour(h: number) { return `${String(h).padStart(2, "0")}:00`; }
+/** Format a UTC hour as "HH:00". */
+function fmtHour(h: number) { return `${pad(h)}:00`; }
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function RoomBooker({ roomId, openHour, closeHour, maxBookingDurationMinutes, onSuccess }: Props) {
     const isLoggedIn = Boolean(localStorage.getItem("token"));
+    const week       = useMemo(buildWeek, []);
 
-    const [selectedDate,  setSelectedDate]  = useState(TODAY);
+    const [selectedDate,  setSelectedDate]  = useState(week[0].dateStr);
     const [bookings,      setBookings]      = useState<Booking[]>([]);
     const [loadingSlots,  setLoadingSlots]  = useState(false);
     const [selectedStart, setSelectedStart] = useState<number | null>(null);
@@ -68,11 +79,21 @@ export default function RoomBooker({ roomId, openHour, closeHour, maxBookingDura
     const [submitting,    setSubmitting]    = useState(false);
     const [message,       setMessage]       = useState<{ text: string; ok: boolean } | null>(null);
 
-    const slots  = useMemo(() => buildSlots(openHour, closeHour), [openHour, closeHour]);
-    const taken  = useMemo(() => buildTakenSet(bookings, selectedDate), [bookings, selectedDate]);
-    const maxDur = maxBookingDurationMinutes ? maxBookingDurationMinutes / 60 : null;
+    const allSlots = useMemo(() => buildSlots(openHour, closeHour), [openHour, closeHour]);
+    const taken    = useMemo(() => buildTakenSet(bookings, selectedDate), [bookings, selectedDate]);
+    const maxDur   = maxBookingDurationMinutes ? maxBookingDurationMinutes / 60 : null;
 
-    // Fetch existing bookings whenever the date changes
+    // Current local hour — slots at or before this hour on today are in the past
+    const currentHour = new Date().getHours(); // local time
+    const isToday     = selectedDate === week[0].dateStr;
+
+    /** Slots visible to the user: hide past hours on today */
+    const visibleSlots = useMemo(
+        () => isToday ? allSlots.filter((h) => h > currentHour) : allSlots,
+        [allSlots, isToday, currentHour]
+    );
+
+    // Fetch bookings when date changes
     useEffect(() => {
         let cancelled = false;
         setLoadingSlots(true);
@@ -88,61 +109,40 @@ export default function RoomBooker({ roomId, openHour, closeHour, maxBookingDura
         return () => { cancelled = true; };
     }, [roomId, selectedDate]);
 
-    // ── Slot selection logic ──────────────────────────────────────────────────
+    // ── Slot selection ────────────────────────────────────────────────────────
 
-    /** Whether a given hour slot can be part of a selection. */
-    const isSelectable = (h: number) => !taken.has(h) && selectedDate >= TODAY;
+    const isSelectable = (h: number) => !taken.has(h);
 
-    /**
-     * Clicking a slot:
-     * - No selection → set as start
-     * - Start set, clicking same → deselect
-     * - Start set, clicking after → set end (validate range, duration)
-     * - Otherwise → restart from clicked slot
-     */
     const handleSlotClick = (h: number) => {
         if (!isSelectable(h)) return;
         setMessage(null);
 
         if (selectedStart === null) {
-            setSelectedStart(h);
-            setSelectedEnd(null);
-            return;
+            setSelectedStart(h); setSelectedEnd(null); return;
         }
-
         if (h === selectedStart) {
-            setSelectedStart(null);
-            setSelectedEnd(null);
-            return;
+            setSelectedStart(null); setSelectedEnd(null); return;
         }
 
-        // Always make lower = start, higher = end
         const start = Math.min(selectedStart, h);
-        const end   = Math.max(selectedStart, h) + 1; // end is exclusive hour
+        const end   = Math.max(selectedStart, h) + 1;
 
-        // Check no taken slots in range
         for (let i = start; i < end; i++) {
             if (taken.has(i)) {
-                setMessage({ text: "Selection includes a booked slot — please choose a gap.", ok: false });
-                setSelectedStart(null);
-                setSelectedEnd(null);
-                return;
+                setMessage({ text: "Selection spans a booked slot — choose a clear gap.", ok: false });
+                setSelectedStart(null); setSelectedEnd(null); return;
             }
         }
 
-        // Enforce max duration
         if (maxDur && end - start > maxDur) {
             setMessage({ text: `Max booking duration is ${maxBookingDurationMinutes} mins.`, ok: false });
-            setSelectedStart(h);
-            setSelectedEnd(null);
-            return;
+            setSelectedStart(h); setSelectedEnd(null); return;
         }
 
         setSelectedStart(start);
         setSelectedEnd(end);
     };
 
-    /** Slot visual state */
     const slotClass = (h: number) => {
         if (taken.has(h)) return styles.slotTaken;
         if (selectedStart !== null && selectedEnd !== null && h >= selectedStart && h < selectedEnd) return styles.slotSelected;
@@ -155,8 +155,7 @@ export default function RoomBooker({ roomId, openHour, closeHour, maxBookingDura
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (selectedStart === null || selectedEnd === null) {
-            setMessage({ text: "Pick a start and end slot first.", ok: false });
-            return;
+            setMessage({ text: "Pick a start and end slot first.", ok: false }); return;
         }
 
         const startISO = new Date(`${selectedDate}T${fmtHour(selectedStart)}:00Z`).toISOString();
@@ -170,13 +169,14 @@ export default function RoomBooker({ roomId, openHour, closeHour, maxBookingDura
                 { startTime: startISO, endTime: endISO },
                 { headers: getAuthHeaders() }
             );
-            setMessage({ text: `Booked ${fmtHour(selectedStart)}–${fmtHour(selectedEnd)} on ${selectedDate} ✓`, ok: true });
+            setMessage({ text: `Booked ${fmtHour(selectedStart)}\u2013${fmtHour(selectedEnd)} on ${selectedDate} \u2713`, ok: true });
             setSelectedStart(null);
             setSelectedEnd(null);
-            // refresh slots
             const res = await axios.get(`/api/rooms/${roomId}/bookings?date=${selectedDate}`);
-            setBookings(res.data?.bookings ?? []);            if (onSuccess) setTimeout(onSuccess, 1500);        } catch (err: any) {
-            setMessage({ text: err?.response?.data?.error || "Booking failed — please try again.", ok: false });
+            setBookings(res.data?.bookings ?? []);
+            if (onSuccess) setTimeout(onSuccess, 1500);
+        } catch (err: any) {
+            setMessage({ text: err?.response?.data?.error || "Booking failed \u2014 please try again.", ok: false });
         } finally {
             setSubmitting(false);
         }
@@ -188,16 +188,19 @@ export default function RoomBooker({ roomId, openHour, closeHour, maxBookingDura
 
     return (
         <form className={styles.booker} onSubmit={handleSubmit} aria-label="Book this room">
-            <div className={styles.row}>
-                <label className={styles.label} htmlFor="booking-date">Date</label>
-                <input
-                    id="booking-date"
-                    type="date"
-                    className={styles.dateInput}
-                    value={selectedDate}
-                    min={TODAY}
-                    onChange={(e) => setSelectedDate(e.target.value)}
-                />
+            {/* Day strip */}
+            <div className={styles.dayStrip} role="group" aria-label="Select date">
+                {week.map(({ dateStr, label }) => (
+                    <button
+                        key={dateStr}
+                        type="button"
+                        className={`${styles.dayBtn} ${selectedDate === dateStr ? styles.dayBtnActive : ""}`}
+                        onClick={() => setSelectedDate(dateStr)}
+                        aria-pressed={selectedDate === dateStr}
+                    >
+                        {label}
+                    </button>
+                ))}
             </div>
 
             <p className={styles.hint}>
@@ -207,10 +210,12 @@ export default function RoomBooker({ roomId, openHour, closeHour, maxBookingDura
             </p>
 
             {loadingSlots ? (
-                <p className={styles.loading}>Loading availability…</p>
+                <p className={styles.loading}>Loading availability\u2026</p>
+            ) : visibleSlots.length === 0 ? (
+                <p className={styles.hint}>No more slots available today.</p>
             ) : (
                 <div className={styles.slotGrid} role="group" aria-label="Available time slots">
-                    {slots.map((h) => (
+                    {visibleSlots.map((h) => (
                         <button
                             key={h}
                             type="button"
@@ -226,7 +231,6 @@ export default function RoomBooker({ roomId, openHour, closeHour, maxBookingDura
                 </div>
             )}
 
-            {/* Summary + legend */}
             <div className={styles.legend}>
                 <span className={`${styles.dot} ${styles.dotFree}`}    /> Available
                 <span className={`${styles.dot} ${styles.dotSelected}`} /> Selected
@@ -235,7 +239,7 @@ export default function RoomBooker({ roomId, openHour, closeHour, maxBookingDura
 
             {hasSelection && (
                 <p className={styles.summary}>
-                    {fmtHour(selectedStart!)} – {fmtHour(selectedEnd!)} &nbsp;
+                    {fmtHour(selectedStart!)} \u2013 {fmtHour(selectedEnd!)} &nbsp;
                     ({selectedEnd! - selectedStart!}h)
                 </p>
             )}
@@ -250,7 +254,7 @@ export default function RoomBooker({ roomId, openHour, closeHour, maxBookingDura
                     className={styles.submitBtn}
                     disabled={!hasSelection || submitting}
                 >
-                    {submitting ? "Booking…" : "Confirm booking"}
+                    {submitting ? "Booking\u2026" : "Confirm booking"}
                 </button>
             )}
         </form>

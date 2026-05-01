@@ -24,6 +24,7 @@ export default function ProfileDropdown({ onSignOut, user }) {
                         <li><Link to="/admin/system">Platform admin</Link></li>
                     )}
                     <li><Link to="/favourites">Favourites</Link></li>
+                    <li><Link to="/my-bookings">My Bookings</Link></li>
                     <li><button onClick={handleSignOut} type="button">Sign Out</button></li>
                 </ul>
             </nav>

@@ -6,28 +6,35 @@
     border-top: 1px solid var(--border, #e0e0e0);
 }
 
-/* ── Date row ── */
-.row {
+/* ── Day strip ── */
+.dayStrip {
     display: flex;
-    align-items: center;
-    gap: 0.6rem;
+    gap: 0.4rem;
+    flex-wrap: wrap;
 }
 
-.label {
-    font-size: 0.82rem;
-    font-weight: 600;
-    color: var(--text-secondary, #555);
-    min-width: 3rem;
-}
-
-.dateInput {
-    flex: 1;
-    padding: 0.35rem 0.6rem;
-    border: 1px solid var(--border, #ccc);
-    border-radius: 6px;
-    font-size: 0.88rem;
-    background: var(--surface, #fafafa);
+.dayBtn {
+    flex: 1 1 auto;
+    padding: 0.4rem 0.6rem;
+    border-radius: 8px;
+    border: 1.5px solid var(--border, #d1d5db);
+    background: var(--surface, #f9fafb);
+    font-size: 0.78rem;
+    font-weight: 500;
     cursor: pointer;
+    color: var(--text-primary, #333);
+    white-space: nowrap;
+    transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+.dayBtn:hover:not(.dayBtnActive) {
+    background: #e8f0fe;
+    border-color: #93b4f8;
+}
+.dayBtnActive {
+    background: #1976d2;
+    border-color: #1565c0;
+    color: #fff;
+    font-weight: 600;
 }
 
 /* ── Hints ── */

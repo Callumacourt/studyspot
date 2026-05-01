@@ -259,11 +259,24 @@ export const AdminService = {
       hasAdjustableDesks?: unknown;
       groundFloor?: unknown;
       hearingAssistance?: unknown;
+      bookable?: unknown;
+      maxBookingDurationMinutes?: unknown;
+      openHour?: unknown;
+      closeHour?: unknown;
     }
   ) {
     const buildingId = ensurePositiveInt(payload.buildingId, "Building id");
     const universityId = await getUniversityIdForBuilding(buildingId);
     await assertCanManageUniversity(auth, universityId);
+
+    // helper: parse optional date value (accepts ISO string or Date or null/empty)
+    const parseDateOrNull = (v: unknown): Date | null | undefined => {
+      if (v === undefined) return undefined;
+      if (v === null || v === "") return null;
+      const d = new Date(String(v));
+      if (isNaN(d.getTime())) throw new AdminError("Invalid date/time provided");
+      return d;
+    };
 
     try {
       return await prisma.room.create({
@@ -274,6 +287,13 @@ export const AdminService = {
           hasAdjustableDesks: ensureBoolean(payload.hasAdjustableDesks),
           groundFloor: ensureBoolean(payload.groundFloor),
           hearingAssistance: ensureBoolean(payload.hearingAssistance),
+          bookable: ensureBoolean(payload.bookable),
+          maxBookingDurationMinutes:
+            payload.maxBookingDurationMinutes === undefined
+              ? undefined
+              : ensurePositiveInt(payload.maxBookingDurationMinutes, "Max booking duration"),
+          openHour: parseDateOrNull(payload.openHour) ?? undefined,
+          closeHour: parseDateOrNull(payload.closeHour) ?? undefined,
         },
         include: ROOM_ADMIN_INCLUDE,
       });
@@ -292,6 +312,10 @@ export const AdminService = {
       hasAdjustableDesks?: unknown;
       groundFloor?: unknown;
       hearingAssistance?: unknown;
+      bookable?: unknown;
+      maxBookingDurationMinutes?: unknown;
+      openHour?: unknown;
+      closeHour?: unknown;
     }
   ) {
     const targetBuildingId = ensurePositiveInt(payload.buildingId, "Building id");
@@ -300,6 +324,14 @@ export const AdminService = {
 
     await assertCanManageUniversity(auth, currentUniversityId);
     await assertCanManageUniversity(auth, targetUniversityId);
+
+    const parseDateOrNull = (v: unknown): Date | null | undefined => {
+      if (v === undefined) return undefined;
+      if (v === null || v === "") return null;
+      const d = new Date(String(v));
+      if (isNaN(d.getTime())) throw new AdminError("Invalid date/time provided");
+      return d;
+    };
 
     try {
       return await prisma.room.update({
@@ -311,6 +343,13 @@ export const AdminService = {
           hasAdjustableDesks: ensureBoolean(payload.hasAdjustableDesks),
           groundFloor: ensureBoolean(payload.groundFloor),
           hearingAssistance: ensureBoolean(payload.hearingAssistance),
+          bookable: payload.bookable === undefined ? undefined : ensureBoolean(payload.bookable),
+          maxBookingDurationMinutes:
+            payload.maxBookingDurationMinutes === undefined
+              ? undefined
+              : ensurePositiveInt(payload.maxBookingDurationMinutes, "Max booking duration"),
+          openHour: parseDateOrNull(payload.openHour) ?? undefined,
+          closeHour: parseDateOrNull(payload.closeHour) ?? undefined,
         },
         include: ROOM_ADMIN_INCLUDE,
       });

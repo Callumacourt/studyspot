@@ -23,6 +23,10 @@ export function mapRoomWithMetrics(room: {
   hasAdjustableDesks?: boolean;
   groundFloor?: boolean;
   hearingAssistance?: boolean;
+  bookable?: boolean;
+  openHour?: Date | null;
+  closeHour?: Date | null;
+  maxBookingDurationMinutes?: number | null;
 }) {
   return {
     id: room.id,
@@ -33,5 +37,9 @@ export function mapRoomWithMetrics(room: {
     hasAdjustableDesks: room.hasAdjustableDesks ?? false,
     groundFloor: room.groundFloor ?? false,
     hearingAssistance: room.hearingAssistance ?? false,
+    bookable: room.bookable ?? false,
+    openHour: room.openHour ?? null,
+    closeHour: room.closeHour ?? null,
+    maxBookingDurationMinutes: room.maxBookingDurationMinutes ?? null,
   };
 }

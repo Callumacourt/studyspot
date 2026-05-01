@@ -1,0 +1,92 @@
+import { useState, useEffect } from "react";
+import axios from "axios";
+import { getAuthHeaders } from "../../utils/auth";
+
+export function useRoomData(roomId) {
+    const isLoggedIn   = Boolean(localStorage.getItem("token"));
+    const authHeaders  = getAuthHeaders();
+
+    const [roomData,       setRoomData]       = useState(null);
+    const [hourlyAverages, setHourlyAverages] = useState(Array(24).fill(0));
+    const [isFavourite,    setIsFavourite]    = useState(false);
+    const [favLoading,     setFavLoading]     = useState(false);
+    const [actionMessage,  setActionMessage]  = useState("");
+
+    // Room metadata
+    useEffect(() => {
+        let cancelled = false;
+        axios.get(`/api/rooms/${roomId}`)
+            .then((res) => { if (!cancelled) setRoomData(res.data?.room ?? null); })
+            .catch(console.error);
+        return () => { cancelled = true; };
+    }, [roomId]);
+
+    // Favourite status
+    useEffect(() => {
+        if (!isLoggedIn) { setIsFavourite(false); return; }
+        let cancelled = false;
+        axios.get(`/api/rooms/${roomId}/favourite`, { headers: authHeaders })
+            .then((res) => { if (!cancelled) setIsFavourite(Boolean(res.data?.isFavourite)); })
+            .catch(() => { if (!cancelled) setIsFavourite(false); });
+        return () => { cancelled = true; };
+    }, [roomId, isLoggedIn]);
+
+    // Hourly occupancy averages — refreshed every 60s
+    useEffect(() => {
+        let cancelled = false;
+
+        async function fetch() {
+            try {
+                const res    = await axios.get(`/api/sensordata/${roomId}/occupancy-averages`);
+                const values = Array.isArray(res.data?.data) ? res.data.data : [];
+                if (!cancelled) setHourlyAverages(Array.from({ length: 24 }, (_, i) => Number(values[i] ?? 0)));
+            } catch {
+                if (!cancelled) setHourlyAverages(Array(24).fill(0));
+            }
+        }
+
+        fetch();
+        const id = setInterval(fetch, 60_000);
+        return () => { cancelled = true; clearInterval(id); };
+    }, [roomId]);
+
+    const toggleFavourite = async (navigate) => {
+        if (!isLoggedIn) { navigate("/login"); return; }
+        setFavLoading(true);
+        setActionMessage("");
+        try {
+            if (isFavourite) {
+                await axios.delete(`/api/rooms/${roomId}/favourite`, { headers: authHeaders });
+                setIsFavourite(false);
+                setActionMessage("Removed from favourites.");
+            } else {
+                await axios.post(`/api/rooms/${roomId}/favourite`, {}, { headers: authHeaders });
+                setIsFavourite(true);
+                setActionMessage("Added to favourites.");
+            }
+        } catch (err) {
+            setActionMessage(err?.response?.data?.error || "Could not update favourites.");
+        } finally {
+            setFavLoading(false);
+        }
+    };
+
+    const getBuildingName = () => {
+        const b = roomData?.building;
+        if (!b) return roomData?.buildingName ?? (roomData?.buildingId ? `Building ${roomData.buildingId}` : "");
+        if (typeof b === "string") return b;
+        return b.name ?? b.displayName ?? "";
+    };
+
+    return {
+        roomData,
+        hourlyAverages,
+        isFavourite,
+        favLoading,
+        actionMessage,
+        setActionMessage,
+        toggleFavourite,
+        getBuildingName,
+        isLoggedIn,
+    };
+}

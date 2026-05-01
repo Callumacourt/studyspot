@@ -54,6 +54,7 @@ model User {
   managedUniversity University? @relation("ManagedUniversityAdmins", fields: [managedUniversityId], references: [id])
   favouritedRooms Room[]
   roomReports RoomReport[]
+  bookings RoomBooking[]
 }
 
 model University {
@@ -102,6 +103,8 @@ model RoomBooking {
   id Int @id @default(autoincrement())
   roomId Int
   room Room @relation(fields: [roomId], references: [id])
+  bookedByUserId Int?
+  bookedByUser User? @relation(fields: [bookedByUserId], references: [userId])
   startTime DateTime
   endTime DateTime
   status BookingStatus @default(PENDING)

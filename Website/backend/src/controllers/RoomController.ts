@@ -1,9 +1,59 @@
 import { Request, Response } from "express";
+import type { AuthenticatedRequest } from "../middleware/auth";
 import { RoomService } from "../services/RoomService";
 
 // Controller for room related http requests
 // Delegates business logic to RoomService
 export const RoomController = {
+
+  /**
+   * GET /rooms/:id/bookings?date=YYYY-MM-DD
+   * Returns existing bookings for a room on a given date so the frontend
+   * can grey out unavailable slots.
+   */
+  async getBookings(req: Request, res: Response) {
+    try {
+      const id = Number(req.params.id);
+      if (Number.isNaN(id)) return res.status(400).json({ success: false, error: "Invalid room id" });
+
+      const dateStr = String(req.query.date ?? "");
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr))
+        return res.status(400).json({ success: false, error: "date query param required (YYYY-MM-DD)" });
+
+      const bookings = await RoomService.getBookingsForDate(id, dateStr);
+      return res.status(200).json({ success: true, bookings });
+    } catch (error: any) {
+      return res.status(500).json({ success: false, error: error.message });
+    }
+  },
+
+  /**
+   * POST /rooms/:id/book
+   * body: { startTime: ISO string, endTime: ISO string }
+   * Requires authentication — links booking to the requesting user.
+   */
+  async bookRoom(req: Request, res: Response) {
+    try {
+      const id = Number(req.params.id);
+      if (Number.isNaN(id)) return res.status(400).json({ success: false, error: "Invalid room id" });
+
+      const { startTime, endTime } = req.body;
+      if (!startTime || !endTime)
+        return res.status(400).json({ success: false, error: "startTime and endTime are required" });
+
+      const start = new Date(startTime);
+      const end   = new Date(endTime);
+      if (isNaN(start.getTime()) || isNaN(end.getTime()))
+        return res.status(400).json({ success: false, error: "Invalid startTime or endTime" });
+
+      const userId = (req as AuthenticatedRequest).auth?.userId;
+      const booking = await RoomService.bookRoom(id, start, end, userId);
+      return res.status(201).json({ success: true, booking });
+    } catch (error: any) {
+      const status = error.message?.includes("not bookable") || error.message?.includes("conflicts") ? 409 : 500;
+      return res.status(status).json({ success: false, error: error.message });
+    }
+  },
 
   /** 
   // GET /rooms
@@ -66,19 +116,4 @@ export const RoomController = {
     }
   },
 
-  async bookRoom (req: Request, res: Response) {
-    try {
-      const roomId = Number(req.params.roomId);
-      if (Number.isNaN(roomId)) return res.status(400).json({ success: false, error: "Invalid room id for booking" });
-
-      // only available rooms will be shown on front end this is double security
-      const available = RoomService.checkAvailability(roomId);
-      if (!available) return res.status(400).json({success: false, message: "Room not available at selected times"})
-
-      await RoomService.bookRoom(roomId);
-      return res.status(200).json({success: true, message: "Room booked successfully"})
-    } catch (error: any) {
-        return res.status(500).json({ success: false, error: error.message });
-    }
-  }
 };

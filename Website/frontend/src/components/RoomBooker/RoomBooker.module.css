@@ -1,0 +1,140 @@
+.booker {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem 1.25rem;
+    border-top: 1px solid var(--border, #e0e0e0);
+}
+
+/* ── Date row ── */
+.row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-secondary, #555);
+    min-width: 3rem;
+}
+
+.dateInput {
+    flex: 1;
+    padding: 0.35rem 0.6rem;
+    border: 1px solid var(--border, #ccc);
+    border-radius: 6px;
+    font-size: 0.88rem;
+    background: var(--surface, #fafafa);
+    cursor: pointer;
+}
+
+/* ── Hints ── */
+.hint {
+    font-size: 0.78rem;
+    color: var(--text-secondary, #888);
+    margin: 0;
+}
+
+.loading {
+    font-size: 0.82rem;
+    color: var(--text-secondary, #888);
+}
+
+/* ── Slot grid ── */
+.slotGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(3.8rem, 1fr));
+    gap: 0.35rem;
+}
+
+.slot {
+    padding: 0.35rem 0.2rem;
+    border-radius: 6px;
+    border: 1.5px solid transparent;
+    font-size: 0.78rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: filter 0.1s, transform 0.1s;
+    text-align: center;
+}
+
+.slot:not(:disabled):hover {
+    filter: brightness(0.92);
+    transform: scale(1.04);
+}
+
+.slot:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+}
+
+.slotFree {
+    background: #e8f5e9;
+    border-color: #a5d6a7;
+    color: #2e7d32;
+}
+
+.slotSelected,
+.slotStart {
+    background: #1976d2;
+    border-color: #1565c0;
+    color: #fff;
+}
+
+.slotTaken {
+    background: #fce4e4;
+    border-color: #ef9a9a;
+    color: #c62828;
+    cursor: not-allowed;
+}
+
+/* ── Legend ── */
+.legend {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.76rem;
+    color: var(--text-secondary, #666);
+}
+
+.dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 3px;
+}
+
+.dotFree     { background: #a5d6a7; }
+.dotSelected { background: #1976d2; }
+.dotTaken    { background: #ef9a9a; }
+
+/* ── Summary + messages ── */
+.summary {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-primary, #222);
+    margin: 0;
+}
+
+.msgOk  { font-size: 0.82rem; color: #2e7d32; margin: 0; }
+.msgErr { font-size: 0.82rem; color: #c62828; margin: 0; }
+
+/* ── Submit ── */
+.submitBtn {
+    padding: 0.55rem 1rem;
+    border-radius: 8px;
+    border: none;
+    background: #1976d2;
+    color: #fff;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+    align-self: flex-start;
+}
+
+.submitBtn:hover:not(:disabled) { background: #1565c0; }
+.submitBtn:disabled { opacity: 0.5; cursor: not-allowed; }

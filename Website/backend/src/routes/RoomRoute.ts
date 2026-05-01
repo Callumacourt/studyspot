@@ -20,6 +20,8 @@ router.get("/:id/favourite", requireAuth, (req, res) => UserRoomController.getFa
 router.post("/:id/favourite", requireAuth, (req, res) => UserRoomController.addFavourite(req, res));
 router.delete("/:id/favourite", requireAuth, (req, res) => UserRoomController.removeFavourite(req, res));
 router.post("/:id/reports", requireAuth, (req, res) => UserRoomController.reportRoom(req, res));
-router.get("/:id", (req, res) => RoomController.getRoomById(req, res)); 
+router.get("/:id/bookings", (req, res) => RoomController.getBookings(req, res));
+router.post("/:id/book", requireAuth, (req, res) => RoomController.bookRoom(req, res));
+router.get("/:id", (req, res) => RoomController.getRoomById(req, res));
 
 export default router;

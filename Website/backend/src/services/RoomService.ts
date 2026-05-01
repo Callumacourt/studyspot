@@ -123,6 +123,24 @@ export const RoomService = {
     return !overlapping;
   },
 
+  // Returns active bookings for a room on a specific calendar date (YYYY-MM-DD).
+  // Used by the frontend to build available time slot grid.
+  async getBookingsForDate(roomId: number, dateStr: string) {
+    const dayStart = new Date(`${dateStr}T00:00:00.000Z`);
+    const dayEnd   = new Date(`${dateStr}T23:59:59.999Z`);
+
+    return prisma.roomBooking.findMany({
+      where: {
+        roomId,
+        status: { not: "CANCELLED" },
+        startTime: { lte: dayEnd },
+        endTime:   { gte: dayStart },
+      },
+      select: { id: true, startTime: true, endTime: true, status: true },
+      orderBy: { startTime: "asc" },
+    });
+  },
+
   async bookRoom(roomId: number, startTime: Date, endTime: Date, bookedByUserId?: number) {
     if (startTime >= endTime) throw new Error("Invalid time range");
 

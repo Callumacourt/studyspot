@@ -12,6 +12,7 @@ import BusyTimesChart from "../../components/BusyTimesChart/BusyTimesChart";
 import styles from "./Room.module.css";
 import axios from "axios";
 
+// Inline icon for light metric where no asset file is used.
 function LightIcon() {
     return (
         <svg className={styles.inlineStatIcon} viewBox="0 0 24 24" aria-hidden="true">
@@ -59,6 +60,7 @@ function HearIcon() {
     );
 }
 
+// Room details page with live metrics, accessibility flags, and busy-times chart.
 export default function Room () {
     const { roomId } = useParams();
     const navigate = useNavigate();
@@ -68,7 +70,7 @@ export default function Room () {
     const [roomData, setRoomData] = useState(null);
     const [hourlyAverages, setHourlyAverages] = useState([]);
 
-    // Redirect to login if not authenticated, otherwise toggle
+    // Require login before toggling favourites.
     const handleFavouriteClick = () => {
         if (!isLoggedIn) {
             navigate("/login");
@@ -79,13 +81,14 @@ export default function Room () {
 
     useEffect(() => {
         let cancelled = false;
+        // Load static room metadata for current route id.
         axios.get(`/api/rooms/${roomId}`)
           .then((res) => { if (!cancelled) setRoomData(res.data?.room ?? null); })
           .catch(console.error);
         return () => { cancelled = true; };
     }, [roomId]);
 
-    // helper to get a usable building name from the room payload
+    // Normalize building name across possible payload shapes.
     function getBuildingName() {
         const b = roomData?.building;
         if (!b) return roomData?.buildingName ?? (roomData?.buildingId ? `Building ${roomData.buildingId}` : "");
@@ -94,6 +97,7 @@ export default function Room () {
     }
 
     function openGoogleMaps() {
+        // Open room/building query in Google Maps.
         const query = getBuildingName() || roomData?.name || "";
         if (!query) return;
         const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
@@ -116,6 +120,7 @@ export default function Room () {
         }
 
         fetchHourlyAverages();
+        // Refresh chart series periodically.
         const id = setInterval(fetchHourlyAverages, 60000);
 
         return () => {

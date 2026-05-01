@@ -2,7 +2,14 @@ import { Request, Response } from "express";
 import { prisma } from "../prisma";
 import { SensorService } from "../services/SensorService";
 
+// Controller for sensor related http endpoints.
+// - Delegates business logic to SensorService / prisma
 export const SensorController = {
+  /**
+   * GET /sensors/:id/data
+   * Validate room id, fetch sensor readings for the room.
+   * Returns [] if room has no sensors (null from service).
+   */
   async getSensorData(req: Request, res: Response) {
     try {
       const roomId = Number(req.params.id);
@@ -23,7 +30,12 @@ export const SensorController = {
   },
 
 
-  // needs to be called on each sensor before used in db
+  /**
+   * POST /sensors/link
+   * Link an existing sensor to a room.
+   * - body: { sensorId, roomId }
+   * - Validates presence and existence of sensor & room, updates sensor.roomId
+   */
   async linkSensorToRoom(req: Request, res: Response) {
     try {
       const { sensorId, roomId } = req.body;
@@ -53,6 +65,10 @@ export const SensorController = {
     }
   },
 
+  /**
+   * GET /sensors/:id/occupancy-avgs
+   * Validate room id and return hourly occupancy averages for charting.
+   */
   async getOccupancyAvgs(req: Request, res: Response) {
     try {
       const roomId = Number(req.params.id);

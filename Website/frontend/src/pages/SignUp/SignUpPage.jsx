@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import styles from "./SignUpPage.module.css";
 import axios from "axios";
 
+// Sign-up page for creating a new account.
 export default function SignUpPage() {
   const navigate = useNavigate();
 
@@ -27,26 +28,7 @@ export default function SignUpPage() {
     event.preventDefault();
     setError("");
 
-    try {
-      const response = await axios.post(
-        "http://localhost:3000/users/register", // will need to change this route when we run on actual server
-      {
-        email: formData.email,
-        password: formData.password,
-      });
-
-      navigate("/success", {
-      state: {
-        title: "Sign Up Successful",
-        message: `Your account has been created for ${formData.email}`,
-      },
-    });
-    } catch (err) {
-      setError(
-        err.response?.data?.error || "Registration failed. Please try again."
-      )
-    }
-
+    // Basic client-side validation for immediate feedback.
     if (
       !formData.fullName ||
       !formData.email ||
@@ -65,6 +47,26 @@ export default function SignUpPage() {
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match.");
       return;
+    }
+
+    try {
+      await axios.post(
+        "http://localhost:3000/users/register", // will need to change this route when we run on actual server
+      {
+        email: formData.email,
+        password: formData.password,
+      });
+
+      navigate("/success", {
+      state: {
+        title: "Sign Up Successful",
+        message: `Your account has been created for ${formData.email}`,
+      },
+    });
+    } catch (err) {
+      setError(
+        err.response?.data?.error || "Registration failed. Please try again."
+      )
     }
   }
 
@@ -85,7 +87,7 @@ export default function SignUpPage() {
               id="fullName"
               name="fullName"
               type="text"
-              placeholder="Josh Brown"
+              placeholder="John Smith"
               value={formData.fullName}
               onChange={handleChange}
               className={styles.input}
@@ -100,7 +102,7 @@ export default function SignUpPage() {
               id="email"
               name="email"
               type="email"
-              placeholder="Josh03@cardiff.ac.uk"
+              placeholder="youremail@cardiff.ac.uk"
               value={formData.email}
               onChange={handleChange}
               className={styles.input}

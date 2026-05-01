@@ -15,6 +15,7 @@ enum MetricType {
   HUMIDITY
   NOISE
   OCCUPANCY
+  LIGHT
 }
 
 model User {

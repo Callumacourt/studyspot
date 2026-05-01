@@ -4,6 +4,7 @@ import userIcn from "../../assets/icons/user.svg";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 
+// Global header with nav links and auth/profile actions.
 export default function Header() {
     const navigate = useNavigate();
     const [isHovering, setIsHovering] = useState(false);
@@ -12,11 +13,13 @@ export default function Header() {
     );
 
     useEffect(() => {
+        // Sync header auth state when login/logout happens in this tab.
         const onAuth = () => setIsLoggedIn(Boolean(localStorage.getItem("token")));
         window.addEventListener("authChanged", onAuth);
         return () => window.removeEventListener("authChanged", onAuth);
     }, []);
 
+    // Callback passed to profile dropdown.
     function handleSignedOut() {
         setIsLoggedIn(false);
         setIsHovering(false);

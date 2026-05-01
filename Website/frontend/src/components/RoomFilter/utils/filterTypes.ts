@@ -1,3 +1,4 @@
+// Shared filter state shape used across room filter components.
 export type FiltersState = {
   temp: [number, number];
   humidity: [number, number];
@@ -6,6 +7,7 @@ export type FiltersState = {
   accessibility: string[];
 };
 
+// Props for a single range filter instance.
 export type RangeFilterProps = {
   label: string;
   reading: keyof FiltersState;
@@ -17,6 +19,7 @@ export type RangeFilterProps = {
   unit: string;
 };
 
+// Parent room filter component contract.
 export type RoomFilterProps = {
   onFilterChange: (filters: FiltersState) => void;
   onReset: () => void;

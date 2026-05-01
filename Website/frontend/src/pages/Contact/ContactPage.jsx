@@ -1,5 +1,6 @@
 import styles from "./ContactPage.module.css";
 
+// Static contact information and support channels.
 export default function ContactPage() {
     return (
         <main className={styles.contactPage}>

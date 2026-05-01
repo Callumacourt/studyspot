@@ -1,22 +1,31 @@
+// ThingsBoard telemetry helper.
+// - Builds requests to ThingsBoard timeseries API.
+// - Manages accessToken/refreshToken caching, refresh and optional login fallback.
+// - Returns mapping of metric key -> timeseries points.
+
 import axios from "axios";
 
-const TB_URL = (process.env.THINGSBOARD_URL || "").replace(/\/$/, "");
-const TB_TOKEN_RAW = process.env.THINGSBOARD_TOKEN || "";
+const TB_URL = (process.env.THINGSBOARD_URL || "").replace(/\/$/, ""); // base URL without trailing slash
+const TB_TOKEN_RAW = process.env.THINGSBOARD_TOKEN || ""; // raw token payload (string or JSON blob)
 const TB_REFRESH_TOKEN = process.env.THINGSBOARD_REFRESH_TOKEN || "";
-const TB_EMAIL = process.env.THINGSBOARD_EMAIL || "";
-const TB_PASSWORD = process.env.THINGSBOARD_PASSWORD || "";
-// disbaled briefly for dev --  if (!TB_URL || !TB_TOKEN) throw new Error("Missing thingsboard .env data")
+const TB_EMAIL = process.env.THINGSBOARD_EMAIL || ""; 
+const TB_PASSWORD = process.env.THINGSBOARD_PASSWORD || ""; 
 
-export type TbPoint = {ts: number; value: string};
+export type TbPoint = { ts: number; value: string };
 export type TbTelemetry = Record<string, TbPoint[]>;
 
+// cached tokens used for requests; extracted from TB_TOKEN_RAW when available
 let cachedAccessToken: string | null = extractAccessToken(TB_TOKEN_RAW);
 let cachedRefreshToken: string | null = TB_REFRESH_TOKEN || extractRefreshToken(TB_TOKEN_RAW);
 
+/* Helpers */
+
+// whether username/password login is available
 function hasLoginCredentials(): boolean {
   return !!TB_EMAIL && !!TB_PASSWORD;
 }
 
+// decode JWT payload (naive base64 decode) or return null on error
 function decodeJwtPayload(token: string): any | null {
   try {
     const parts = token.split(".");
@@ -29,6 +38,7 @@ function decodeJwtPayload(token: string): any | null {
   }
 }
 
+// detect if a JWT expires within `withinSeconds` to proactively refresh
 function tokenExpiresSoon(token: string, withinSeconds = 60): boolean {
   const payload = decodeJwtPayload(token);
   if (!payload?.exp) return false;
@@ -36,6 +46,10 @@ function tokenExpiresSoon(token: string, withinSeconds = 60): boolean {
   return Number(payload.exp) <= now + withinSeconds;
 }
 
+// extract access token from a raw env string which may be:
+//  - plain token
+//  - JSON string with { token, refreshToken }
+//  - concatenated 'token","refreshToken":"...' legacy format
 function extractAccessToken(raw: string): string | null {
   if (!raw) return null;
 
@@ -55,6 +69,7 @@ function extractAccessToken(raw: string): string | null {
   return raw;
 }
 
+// extract refresh token from raw env formats (see extractAccessToken)
 function extractRefreshToken(raw: string): string | null {
   if (!raw) return null;
 
@@ -75,6 +90,9 @@ function extractRefreshToken(raw: string): string | null {
   return null;
 }
 
+/* Token management */
+
+// Call ThingsBoard token refresh endpoint with cachedRefreshToken
 async function refreshAccessToken(): Promise<string> {
   if (!TB_URL) throw new Error("THINGSBOARD_URL not configured");
   if (!cachedRefreshToken) throw new Error("THINGSBOARD_REFRESH_TOKEN not configured");
@@ -93,6 +111,7 @@ async function refreshAccessToken(): Promise<string> {
   return cachedAccessToken;
 }
 
+// Login using TB_EMAIL/TB_PASSWORD to obtain new token when refresh not usable
 async function loginAccessToken(): Promise<string> {
   if (!TB_URL) throw new Error("THINGSBOARD_URL not configured");
   if (!hasLoginCredentials()) {
@@ -113,10 +132,12 @@ async function loginAccessToken(): Promise<string> {
   return cachedAccessToken;
 }
 
+// Return a valid access token, trying refresh then fallback to login when appropriate.
+// forceRefresh forces a refresh attempt even if token looks valid.
 async function getValidAccessToken(forceRefresh = false): Promise<string> {
   if (forceRefresh || !cachedAccessToken || tokenExpiresSoon(cachedAccessToken)) {
     try {
-      // If refresh token is clearly expired and login creds exist, skip refresh call.
+      // if refresh token itself is about to expire but login creds exist, perform login instead
       if (cachedRefreshToken && tokenExpiresSoon(cachedRefreshToken) && hasLoginCredentials()) {
         return await loginAccessToken();
       }
@@ -130,6 +151,7 @@ async function getValidAccessToken(forceRefresh = false): Promise<string> {
         message.includes("expired") ||
         message.includes("refresh");
 
+      // if refresh failed due to expiration and login creds exist, fall back to login
       if (refreshExpired && hasLoginCredentials()) {
         return loginAccessToken();
       }
@@ -140,20 +162,11 @@ async function getValidAccessToken(forceRefresh = false): Promise<string> {
   return cachedAccessToken;
 }
 
-/**
- * TbTelemetry / TbPoint
- * Types representing the raw JSON returned by ThingsBoard timeseries endpoint.
- */
-
-/**
- * getTelemetry
- * Fetch timeseries telemetry for a device from ThingsBoard.
- * @param deviceId - ThingsBoard device id
- * @param keys - telemetry keys to fetch
- * @param limit - number of points per key (default 1, latest first)
- * @returns mapping of telemetry key -> array of { ts, value }
- * @throws if TB_URL/TOKEN missing or request fails
- */
+/*  Fetch telemetry for a device
+   - Builds the timeseries URL with requested keys and limit.
+   - Uses getValidAccessToken to ensure an up to date Bearer token.
+   - On 401 and when a refresh token exists, retries once after forcing a token refresh.
+*/
 export default async function getTelemetry(deviceId: string, keys: readonly string[], limit = 1): Promise<TbTelemetry> {
   if (!TB_URL) throw new Error("THINGSBOARD_URL not configured");
   if (!cachedAccessToken && !cachedRefreshToken && !hasLoginCredentials()) {
@@ -171,6 +184,7 @@ export default async function getTelemetry(deviceId: string, keys: readonly stri
     return resp.data ?? {};
   } catch (err: any) {
     const status = err?.response?.status;
+    // If unauthorised and we have a refresh token, try once more after forcing refresh.
     if (status === 401 && cachedRefreshToken) {
       const refreshed = await getValidAccessToken(true);
       const retry = await axios.get<TbTelemetry>(url, {
@@ -180,6 +194,6 @@ export default async function getTelemetry(deviceId: string, keys: readonly stri
       return retry.data ?? {};
     }
 
-    throw new Error(`Failed to fetch telemetry for device ${deviceId}: ${(err as Error).message}`)
+    throw new Error(`Failed to fetch telemetry for device ${deviceId}: ${(err as Error).message}`);
   }
 }

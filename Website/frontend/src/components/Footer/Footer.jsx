@@ -1,7 +1,9 @@
 import styles from "./Footer.module.css";
 import { Link } from "react-router-dom";
 
+// Static site footer with helpful navigation links.
 export default function Footer() {
+    // Keep copyright year current automatically.
     const year = new Date().getFullYear();
 
     return (

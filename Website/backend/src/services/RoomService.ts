@@ -1,6 +1,7 @@
 import { prisma } from "../prisma";
 import { buildMetricFilters, metricsMatchFilters, type RoomMetrics } from "../utils/RoomFilters";
 
+// All potential parameters a roomfilter query can recieve, all are optional
 type RoomFilterParams = {
   universityId?: number;
   buildingId?: number;
@@ -17,7 +18,7 @@ type RoomFilterParams = {
   name?: string;
 };
 
-// extract latest metric values from readings.
+// parsse latest room sensor metrics into an object
 function extractMetrics(readings: any[]): RoomMetrics {
   const latest = new Map<string, number>();
   for (const r of readings) {
@@ -31,12 +32,18 @@ function extractMetrics(readings: any[]): RoomMetrics {
   };
 }
 
+// Service for fetching rooms and their latest sensor metrics.
+// - Queries prisma for rooms + recent readings, then extracts usable metrics.
+// - Provides search/filter helper used by API routes
 export const RoomService = {
+
+ // Return all rooms with building info and latest metrics.
+  // Limits readings fetched per room to recent 200 for performance.
   async getAllRooms() {
     const rooms = await prisma.room.findMany({
       include: {
         building: true,
-        readings: { orderBy: { time: "desc" }, take: 200 },
+        readings: { orderBy: { time: "desc" }, take: 200 }, // last 200 sensor readings sorted by latest
       },
     });
 
@@ -48,6 +55,8 @@ export const RoomService = {
     }));
   },
 
+  // Search rooms by provided filters (both static room fields and metric filters).
+  // Metric filters are applied in memory after fetching recent readings.
   async getRoomsByFilter(params: RoomFilterParams) {
     const rooms = await prisma.room.findMany({
       where: {
@@ -84,6 +93,7 @@ export const RoomService = {
       .filter((r) => metricsMatchFilters(r.metrics, metricFilters));
   },
 
+  // Find a room by name (case insensitive) or null if not found
   async getRoomByName(roomName: string) {
     const room = await prisma.room.findFirst({
       where: { name: { equals: roomName, mode: "insensitive" } },
@@ -103,6 +113,7 @@ export const RoomService = {
     };
   },
 
+  // Fetch a single room by numeric id, return null if missing.
   async getRoomById(id: number) {
     const room = await prisma.room.findUnique({
       where: { id },

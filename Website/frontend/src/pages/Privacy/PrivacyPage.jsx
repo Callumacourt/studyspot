@@ -1,5 +1,6 @@
 import styles from "./PrivacyPage.module.css";
 
+// Static privacy and cookie policy page.
 export default function PrivacyPage() {
     return (
         <main className={styles.privacyPage}>

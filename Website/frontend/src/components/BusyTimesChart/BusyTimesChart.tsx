@@ -10,6 +10,8 @@ import {
 } from "recharts";
 import styles from "./BusyTimesChart.module.css";
 
+// Accessible hourly occupancy bar chart used on room detail pages.
+
 type BusyTimesChartProps = {
   hourlyAverages: number[]; // length 24
   liveOccupancy?: number | null;
@@ -106,7 +108,7 @@ export default function BusyTimesChart({ hourlyAverages, liveOccupancy = null }:
         {ariaLabel}
       </div>
 
-      <ResponsiveContainer width="100%" height="100%" style={{ minWidth: "0" }}>
+      <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 8 }}>
           <XAxis
             dataKey="label"

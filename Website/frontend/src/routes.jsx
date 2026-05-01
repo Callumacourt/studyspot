@@ -10,7 +10,7 @@ import PrivacyPage from './pages/Privacy/PrivacyPage';
 import ContactPage from './pages/Contact/ContactPage';
 
 /**
- * Here we define the respective component for each route path
+ * Central route table used by App when rendering <Routes>.
  */
 
 const routes = [

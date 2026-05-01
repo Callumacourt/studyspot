@@ -5,6 +5,7 @@ type Props = {
     onSearch: (query : string) => void;
 }
 
+// Debounced input used to search rooms by name.
 export default function RoomSearcher ({onSearch} : Props) {
     const [query, setQuery] = useState("");
     const timer = useRef <number | null>(null)
@@ -16,6 +17,7 @@ export default function RoomSearcher ({onSearch} : Props) {
     function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
         const value = e.target.value;
         setQuery(value);
+        // Debounce typing so we don't trigger a fetch on every keystroke.
         if (timer.current) window.clearTimeout(timer.current);
         timer.current = window.setTimeout(() => triggerSearch(value), 400);
     }
@@ -26,6 +28,7 @@ export default function RoomSearcher ({onSearch} : Props) {
             triggerSearch(query);
         }
         if (e.key === "Escape") {
+            // Escape clears query and returns to unfiltered list.
             setQuery("");
             triggerSearch("");
         };

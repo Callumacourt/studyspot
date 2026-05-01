@@ -4,7 +4,7 @@ import Header from './components/Header/Header';
 import Footer from './components/Footer/Footer';
 import './App.css'
 
-// Main app component to serve our router
+// Top-level app shell: router + shared header/footer around route content.
 function App() {
     return (
         <Router>

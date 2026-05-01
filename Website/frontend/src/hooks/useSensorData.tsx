@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 
+// Hook for fetching, normalising, and polling room sensor telemetry.
+
 type MetricValue = number | boolean | string | null;
 type Timeseries = { ts: number; value: MetricValue }[];
 
@@ -34,6 +36,7 @@ function asNumber(value: MetricValue): number | null {
     return null;
 }
 
+// Convert raw per-sensor payloads into one latest-value snapshot per metric.
 function parseStats(data: SensorReading[]): Stats {
     const stats: Stats = { occupancy: null, temp: null, humidity: null, noise: null, light: null };
     const latest: Partial<Record<string, LatestByMetric>> = {};
@@ -95,7 +98,7 @@ export function useSensorData(roomId: string | undefined) {
         };
 
         fetchData();
-        // Poll every 60 seconds
+        // Poll every 60 seconds so displayed metrics stay current.
         const interval = setInterval(fetchData, 60000);
         return () => clearInterval(interval);
     }, [roomId]);

@@ -6,6 +6,7 @@ import type { FiltersState, RoomFilterProps } from "./utils/filterTypes";
 import chevronUp from "../../assets/icons/chevron-up.svg";
 import chevronDown from "../../assets/icons/chevron-down.svg";
 
+// Filter form that owns local filter values and emits updates to parent.
 export default function RoomFilter({ onFilterChange, onReset, filteredRooms = [] }: RoomFilterProps) {
   const defaultFilters: FiltersState = {
     temp: [10, 40],
@@ -19,6 +20,7 @@ export default function RoomFilter({ onFilterChange, onReset, filteredRooms = []
   const [showEnvironmentFilters, setShowEnvironmentFilters] = useState(false);
   const [showAccessibilityFilters, setShowAccessibilityFilters] = useState(false);
 
+  // Toggle semantics: selecting the same value again clears it.
   const handleNoiseChange = (noiseLvl: string) => {
     setVals((prev) => {
       const next = { ...prev, noise: prev.noise === noiseLvl ? "" : noiseLvl };
@@ -40,6 +42,7 @@ export default function RoomFilter({ onFilterChange, onReset, filteredRooms = []
   };
 
   const handleReset = () => {
+    // Reset local UI state and trigger parent reset logic.
     setVals(defaultFilters);
     onReset();
   };

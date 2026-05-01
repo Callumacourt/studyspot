@@ -4,6 +4,7 @@ import humidityIcn from "../../assets/icons/humidity.svg";
 import occupancyIcn from "../../assets/icons/user.svg";
 import mapIcn from "../../assets/icons/map.svg";
 
+// Search results card for a room; fully clickable to open room details.
 export default function RoomCard({ name, building, metrics, onClick }) {
   return (
     <div

@@ -11,23 +11,36 @@ const express = require('express');
 const app = express();
 const port = 3000;
 
+/* Basic middleware
+   - parse JSON bodies
+   - enable CORS for browser clients
+   - remove X Powered-By header to avoid leaking framework info */
 app.use(express.json());
 app.use(cors());
 app.disable("x-powered-by");
 
+/* Lightweight healthcheck used by probes and tests. */
 app.get("/healthz", (_req: any, res: any) => {
   return res.status(200).json({ success: true, status: "ok", ts: Date.now() });
 });
 
 console.log("DATABASE_URL:", process.env.DATABASE_URL);
 
-// Mount all sensor related API routes at /api
+/* Mount API routes
+   - /api          : sensor-related endpoints
+   - /users        : registration + login
+   - /api/rooms    : room listing and filters
+   - /api/universities : university metadata */
 app.use("/api", sensorRoute);
 app.use("/users", registerRoute);
 app.use("/users", loginRoute);
 app.use("/api/rooms", roomRoute);
 app.use("/api/universities", universityRoute);
 
+/* Periodic background sync of sensors (disabled during tests)
+   - guarded by NODE_ENV !== "test" to keep unit tests deterministic
+   - uses a simple mutex (syncInProgress) to avoid overlapping runs
+   - runs once on startup then at SENSOR_SYNC_INTERVAL_MS (default 60s) */
 if (process.env.NODE_ENV !== "test") {
   const syncIntervalMs = Number(process.env.SENSOR_SYNC_INTERVAL_MS ?? 60_000);
   let syncInProgress = false;
@@ -49,7 +62,7 @@ if (process.env.NODE_ENV !== "test") {
     }
   };
 
-  // Do one sync at startup, then repeat
+  // perform an immediate sync at startup, then schedule repeating syncs
   void runSync();
   setInterval(runSync, syncIntervalMs);
 

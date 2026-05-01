@@ -9,6 +9,7 @@ import chevronUp from "../../assets/icons/chevron-up.svg";
 import chevronDown from "../../assets/icons/chevron-down.svg";
 import Select from "react-select";
 
+// Search results page: URL-backed filters + grouped room cards.
 export default function SearchPage() {
   const navigate = useNavigate();
   const [rooms, setRooms] = useState([]);
@@ -18,7 +19,7 @@ export default function SearchPage() {
   const [collapsedBuildings, setCollapsedBuildings] = useState({});
   const [universities, setUniversities] = useState([]);
 
-  // fetch available universities for the dropdown
+  // Load universities once; default to Cardiff if URL has no selection.
   useEffect(() => {
     axios.get("/api/universities")
       .then((res) => {
@@ -41,6 +42,7 @@ export default function SearchPage() {
   }, []);
 
   const handleUniversityChange = (option) => {
+    // Persist selected university in query params.
     const next = new URLSearchParams(urlParams);
     if (option?.value) next.set("universityId", String(option.value));
     else next.delete("universityId");
@@ -48,6 +50,7 @@ export default function SearchPage() {
   };
 
   const handleSearch = (query) => {
+    // Persist room-name search in query params.
     const next = new URLSearchParams(urlParams);
     if (query && query.trim() !== "") next.set("name", query.trim());
     else next.delete("name");
@@ -87,7 +90,7 @@ export default function SearchPage() {
   const handleFilterChange = (filters) => {
     const next = new URLSearchParams(urlParams);
 
-    // clear filter related keys
+    // Clear filter keys first, then re-add active values.
     [
       "tempMin",
       "tempMax",
@@ -100,7 +103,7 @@ export default function SearchPage() {
       "hearingAssistance",
     ].forEach((k) => next.delete(k));
 
-    // re add active filters
+    // Re-add active filters.
     if (filters.temp[0] > 10) next.set("tempMin", String(filters.temp[0]));
     if (filters.temp[1] < 40) next.set("tempMax", String(filters.temp[1]));
     if (filters.humidity[0] > 10) next.set("humidityMin", String(filters.humidity[0]));
@@ -126,7 +129,7 @@ export default function SearchPage() {
 
   const goToRoom = (roomId) => navigate(`/room/${roomId}`);
 
-  // group rooms by building name for rendering
+  // Group rooms by building so sections can collapse independently.
   const groupedRooms = rooms.reduce((acc, room) => {
     const b = room.building?.name || "Other";
     if (!acc[b]) acc[b] = [];

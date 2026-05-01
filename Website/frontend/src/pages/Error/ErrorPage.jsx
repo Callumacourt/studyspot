@@ -1,4 +1,4 @@
-// TODO
+// Fallback page shown for unmatched routes.
 
 export default function ErrorPage () {
     return (

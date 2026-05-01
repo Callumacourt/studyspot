@@ -1,7 +1,14 @@
 import { Request, Response } from "express";
 import { RoomService } from "../services/RoomService";
 
+// Controller for room related http requests
+// Delegates business logic to RoomService
 export const RoomController = {
+
+  /** 
+  // GET /rooms
+  // Reutrn all rooms in the database
+  */
   async getAllRooms(req: Request, res: Response) {
     try {
       const rooms = await RoomService.getAllRooms();
@@ -10,7 +17,11 @@ export const RoomController = {
       return res.status(500).json({ success: false, error: "Internal Server Error" });
     }
   },
-
+  
+  /**
+   * GET /rooms/filter
+   * Parse query parameters into typed filter object, call service and return results
+  */
   async getRoomsByFilter(req: Request, res: Response) {
     try {
       const q = req.query;
@@ -37,6 +48,10 @@ export const RoomController = {
     }
   },
 
+  /** 
+   * GET /rooms/:id
+  // Valid route param and fetch single room with id from req
+  */
   async getRoomById(req: Request, res: Response) {
     try {
       const id = Number(req.params.id);

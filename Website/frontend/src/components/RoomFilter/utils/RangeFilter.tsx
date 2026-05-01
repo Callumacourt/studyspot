@@ -2,7 +2,7 @@ import { Range } from "react-range";
 import styles from "../RoomFilter.module.css";
 import type { RangeFilterProps } from "./filterTypes";
 
-// Reusable range slider for numeric filter values 
+// Reusable min/max slider for numeric filters.
 export default function RangeFilter({ label, reading, vals, setVals, min, max, step, unit }: RangeFilterProps) {
   const values = vals[reading] as [number, number];
 
@@ -19,6 +19,7 @@ export default function RangeFilter({ label, reading, vals, setVals, min, max, s
             setVals((prevVals) => ({ ...prevVals, [reading]: [Math.round(v[0]), Math.round(v[1])] }))
           }
           renderTrack={({ props, children }) => {
+            // Highlight selected range between the two thumbs.
             const leftPct = ((values[0] - min) / (max - min)) * 100;
             const rightPct = ((values[1] - min) / (max - min)) * 100;
             const gradient = `linear-gradient(to right, #ddd ${leftPct}%, #2a5c82 ${leftPct}%, #2a5c82 ${rightPct}%, #ddd ${rightPct}%)`;

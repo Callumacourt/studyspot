@@ -8,6 +8,7 @@ type ButtonGroupProps = {
   rightClass?: string;
 };
 
+// Generic segmented button row used by filter controls.
 export default function ButtonGroup({
   options,
   value,
@@ -18,6 +19,7 @@ export default function ButtonGroup({
   return (
     <div className={styles.noiseBtns}>
       {options.map((opt, idx) => {
+        // Build class names for left/right rounded buttons and active state.
         const cls =
           idx === 0
             ? `${leftClass ?? ""} ${value === opt ? styles.clicked : ""}`
@@ -33,6 +35,7 @@ export default function ButtonGroup({
             type="button"
             className={cls}
             aria-pressed={value === opt}
+            // Clicking the active option clears selection.
             onClick={() => onChange(value === opt ? "" : opt)}
           >
             {opt}

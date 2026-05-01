@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import styles from "./SuccessPage.module.css";
 
+// Generic success screen with optional route-provided title/message.
 export default function SuccessPage() {
   const location = useLocation();
 

@@ -3,6 +3,9 @@ import bcrypt from "bcrypt";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient, MetricType } from "../src/generated/prisma/client";
 
+// This file is responsible for initiating the database with mock data for the purposes of our presentation
+
+// Prisma client connecting via the Postgres adapter using DATABASE_URL
 const prisma = new PrismaClient({
   adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),
 });
@@ -51,6 +54,7 @@ const BUILDINGS: { name: string; devicePrefix: string; rooms: string[] }[] = [
 ];
 
 // The single real (ThingsBoard-linked) room lives in Abacws
+// REAL_ROOM_DEVICE_ID (env) links this room to an external device when present
 const REAL_ROOM_NAME = "Real Room";
 const REAL_ROOM_DEVICE_ID = process.env.REAL_ROOM_DEVICE_ID;
 
@@ -64,18 +68,31 @@ const HOURLY_PATTERN = [
 ];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
+
+// Returns a random number between min and max (1 decimal)
 const rand = (min: number, max: number) =>
   Number((Math.random() * (max - min) + min).toFixed(1));
 
+// Create a mock sensor reading for each sensor metric type
+// i is minutes ago; timestamps staggered by a few seconds to avoid exact duplicates
 function makeReadings(i: number, now: number) {
+  const hour = new Date(now).getHours();
+  const isDaytime = hour >= 8 && hour <= 18;
+  const syntheticLight = isDaytime
+    ? rand(1800, 4200)
+    : rand(150, 900);
+
   return [
     { metricType: MetricType.TEMP,      value: rand(16, 28), time: new Date(now - i * 60_000) },
     { metricType: MetricType.HUMIDITY,  value: rand(30, 75), time: new Date(now - i * 60_000 - 1_000) },
     { metricType: MetricType.NOISE,     value: rand(35, 85), time: new Date(now - i * 60_000 - 2_000) },
     { metricType: MetricType.OCCUPANCY, value: rand(5, 95),  time: new Date(now - i * 60_000 - 3_000) },
+    { metricType: MetricType.LIGHT,     value: syntheticLight, time: new Date(now - i * 60_000 - 4_000) },
   ];
 }
 
+// Used to randomly assign accessibility features to mock rooms
+// Deterministic based on index for reproducible variety
 function makeAccessibility(i: number) {
   return {
     wheelchairAccessible: i % 3 === 0,
@@ -85,11 +102,13 @@ function makeAccessibility(i: number) {
   };
 }
 
-// Writes 2 weeks of hourly occupancy readings for each room (overwrites old data)
+// Writes 2 weeks of hourly occupancy readings for each mock room
+// Uses HOURLY_PATTERN as per-hour baseline and adds small jitter
 async function seedMockOccupancyReadings(rooms: { id: number; name: string }[]) {
   const DAYS = 14;
   const now = Date.now();
 
+  // delete previous occupancy data if there is any
   for (const room of rooms) {
     await prisma.sensorReading.deleteMany({
       where: { roomId: room.id, metricType: MetricType.OCCUPANCY },
@@ -99,8 +118,8 @@ async function seedMockOccupancyReadings(rooms: { id: number; name: string }[]) 
     for (let day = 0; day < DAYS; day++) {
       for (let hour = 0; hour < 24; hour++) {
         const base = HOURLY_PATTERN[hour];
-        const jitter = Math.floor(Math.random() * 5) - 2;
-        const value = Math.max(0, base + jitter);
+        const jitter = Math.floor(Math.random() * 5) - 2; // dictates random variation from the base pattern
+        const value = Math.max(0, base + jitter); 
         const time = new Date(now - day * 86_400_000);
         time.setUTCHours(hour, 0, 0, 0);
         entries.push({ roomId: room.id, metricType: MetricType.OCCUPANCY, value, time });

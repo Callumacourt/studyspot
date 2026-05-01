@@ -2,6 +2,7 @@ import styles from "./About.module.css"
 import studyRoomImg from "../../assets/Images/study-group.jpg";
 import studentsImg from "../../assets/Images/study-room.jpg";
 
+// Static page explaining what StudySpot is and why it helps students.
 
 export default function About() {
     return (

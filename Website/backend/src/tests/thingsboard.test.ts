@@ -1,4 +1,5 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+// Tests for the ThingsBoard telemetry helper
+import { afterEach, describe, expect, it, vi } from "vitest";
 import axios from "axios";
 
 const prismaMock = {
@@ -15,8 +16,10 @@ const prismaMock = {
   $queryRaw: vi.fn(),
 };
 
+/* Stub for the telemetry helper to allow module reloading in tests. */
 const getTelemetryMock = vi.fn();
 
+/* Replace real prisma and the thingsboard helper with mocks so tests control I/O. */
 vi.mock("../prisma", () => ({
   prisma: prismaMock,
 }));
@@ -25,6 +28,7 @@ vi.mock("../utils/thingsboard", () => ({
   default: getTelemetryMock,
 }));
 
+/* Mock axios to intercept http calls made by the telemetry helper. */
 vi.mock("axios", () => ({
   default: {
     get: vi.fn(),
@@ -33,6 +37,7 @@ vi.mock("axios", () => ({
 
 describe("getTelemetry", () => {
   afterEach(() => {
+    // clear module cache and env to keep tests isolated.
     vi.resetModules();
     vi.clearAllMocks();
     delete process.env.THINGSBOARD_URL;
@@ -40,6 +45,7 @@ describe("getTelemetry", () => {
   });
 
   it("throws when THINGSBOARD_URL is missing", async () => {
+    // Ensure helper validates required env; missing URL should reject early.
     process.env.THINGSBOARD_TOKEN = "token";
 
     const { default: getTelemetry } = await import("../utils/thingsboard");
@@ -50,6 +56,7 @@ describe("getTelemetry", () => {
   });
 
   it("throws when THINGSBOARD_TOKEN is missing", async () => {
+    // Missing token should be rejected even if URL is present.
     process.env.THINGSBOARD_URL = "http://tb.local:8080";
 
     const { default: getTelemetry } = await import("../utils/thingsboard");
@@ -60,6 +67,7 @@ describe("getTelemetry", () => {
   });
 
   it("calls ThingsBoard with expected url and auth header", async () => {
+    // Validate URL encoding, query params, headers, timeout and returned payload shape.
     process.env.THINGSBOARD_URL = "http://tb.local:8080/";
     process.env.THINGSBOARD_TOKEN = "secret-token";
     vi.mocked(axios.get).mockResolvedValue({
@@ -90,9 +98,9 @@ describe("getTelemetry non-functional", () => {
   });
 
   it("completes a single request quickly", async () => {
+    // Simulate small network latency and assert helper returns promptly.
     process.env.THINGSBOARD_URL = "http://tb.local:8080/";
     process.env.THINGSBOARD_TOKEN = "secret-token";
-    // simulate small network latency
     vi.mocked(axios.get).mockImplementation(() =>
       new Promise((res) =>
         setTimeout(() => res({ data: { temperature: [{ ts: 1710000000000, value: "21.4" }] } }), 20)
@@ -107,14 +115,14 @@ describe("getTelemetry non-functional", () => {
 
     expect(result).toEqual({ temperature: [{ ts: 1710000000000, value: "21.4" }] });
     expect(vi.mocked(axios.get)).toHaveBeenCalled();
-    expect(dur).toBeLessThan(200);
+    expect(dur).toBeLessThan(200); // coarse latency bound for local CI
   });
 
   it("handles many concurrent requests without serial bottleneck", async () => {
+    // Ensure parallel calls complete and axios.get is invoked per call.
     process.env.THINGSBOARD_URL = "http://tb.local:8080/";
     process.env.THINGSBOARD_TOKEN = "secret-token";
 
-    // immediate resolution for each request
     vi.mocked(axios.get).mockResolvedValue({ data: { humidity: [{ ts: 1710000000000, value: "55" }] } } as never);
 
     const { default: getTelemetry } = await import("../utils/thingsboard");
@@ -133,14 +141,14 @@ describe("getTelemetry non-functional", () => {
   });
 
   it("performs a token refresh on 401 and retries without excessive delay", async () => {
+    // Simulate expired token: first GET returns 401, token refresh POST provides new token, then GET succeeds.
     process.env.THINGSBOARD_URL = "http://tb.local:8080/";
     process.env.THINGSBOARD_TOKEN = '{"token":"expired","refreshToken":"r1"}';
-    // first GET -> 401, second GET -> success
     vi.mocked(axios.get)
       .mockImplementationOnce(() => Promise.reject({ response: { status: 401 }, message: "unauthorized" }))
       .mockResolvedValue({ data: { pressure: [{ ts: 1710000000000, value: "101" }] } } as never);
 
-    // ensure POST (refresh) exists and returns new token
+    // Mock token refresh endpoint used by the helper.
     (axios as any).post = vi.fn().mockResolvedValue({ data: { token: "new-token", refreshToken: "r2" } });
 
     const { default: getTelemetry } = await import("../utils/thingsboard");
@@ -150,8 +158,8 @@ describe("getTelemetry non-functional", () => {
     const dur = Date.now() - t0;
 
     expect(result).toEqual({ pressure: [{ ts: 1710000000000, value: "101" }] });
-    expect((axios as any).post).toHaveBeenCalled();
-    expect(vi.mocked(axios.get)).toHaveBeenCalledTimes(2);
+    expect((axios as any).post).toHaveBeenCalled(); // refresh attempted
+    expect(vi.mocked(axios.get)).toHaveBeenCalledTimes(2); // initial + retry
     expect(dur).toBeLessThan(1000);
   });
 });

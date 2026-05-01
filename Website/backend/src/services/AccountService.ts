@@ -3,7 +3,7 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken"
 
-// Connect to our database
+// Connect to our database via DATABASE_URL env var 
 const prisma = new PrismaClient({
   adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL })
 });
@@ -21,6 +21,10 @@ export class WrongPasswordError extends Error {
     code = "WRONG_PASSWORD"
 }
 
+/**
+ * Service handling user register and login via interacting with the database
+ *  !! JWT secret must be set in process.env.JWT_SECRET. !!
+ */
 export const AccountService = {
     async registerUser(email : string, password : string) {
         // Check account already exists
@@ -69,7 +73,7 @@ export const AccountService = {
             include: { favouritedRooms: true}
         });
 
-        // Log in User by providing signed token
+        // Sign JWT for authentication. Ensure JWT_SECRET exists.
         const token = jwt.sign(
             { userId : account.userId, email: account.email },
             process.env.JWT_SECRET!,

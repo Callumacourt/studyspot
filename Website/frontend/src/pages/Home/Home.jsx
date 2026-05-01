@@ -3,6 +3,7 @@ import styles from "./Home.module.css";
 import searchIcon from "../../assets/icons/search.svg";
 import { useNavigate } from "react-router-dom";
 
+// Landing page with university autocomplete and recent searches.
 
 export default function Home () {
     const navigate = useNavigate();
@@ -14,7 +15,6 @@ export default function Home () {
         "Swansea University",
         "University of Manchester",
     ];
-
     const recentSearches = ["Cardiff University", "Bristol University"];
 
     const [searchTerm, setSearchTerm] = useState("");
@@ -39,6 +39,7 @@ export default function Home () {
     const handleSelectUniversity = (university) => {
         setSearchTerm(university);
         setShowSuggestions(false);
+        // Prototype route currently enabled for Cardiff.
         if (university === "Cardiff University") {
             navigate("/search");
         }
@@ -57,6 +58,7 @@ export default function Home () {
     };
 
     const handleBlur = () => {
+        // Delay close slightly so suggestion clicks still register.
         setTimeout(() => {
             setShowSuggestions(false);
         }, 150);

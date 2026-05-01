@@ -26,6 +26,7 @@ export const METRIC_TYPE_TO_KEY: Partial<Record<MetricType, MetricKey>> = {
   HUMIDITY: "humidity",
   NOISE: "noise",
   OCCUPANCY: "occupancy",
+  LIGHT: "light",
 };
 
 // derived maps

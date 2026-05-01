@@ -1,5 +1,6 @@
 import { prisma } from "../prisma";
 import { buildMetricFilters, metricsMatchFilters, type RoomMetrics } from "../utils/RoomFilters";
+import { extractMetrics, mapRoomWithMetrics } from "./roomMappers";
 
 // All potential parameters a roomfilter query can recieve, all are optional
 type RoomFilterParams = {
@@ -18,20 +19,6 @@ type RoomFilterParams = {
   name?: string;
 };
 
-// parsse latest room sensor metrics into an object
-function extractMetrics(readings: any[]): RoomMetrics {
-  const latest = new Map<string, number>();
-  for (const r of readings) {
-    if (!latest.has(r.metricType)) latest.set(r.metricType, r.value);
-  }
-  return {
-    temperature: latest.get("TEMP") ?? null,
-    humidity: latest.get("HUMIDITY") ?? null,
-    occupancy: latest.get("OCCUPANCY") ?? null,
-    noise: latest.get("NOISE") ?? null,
-  };
-}
-
 // Service for fetching rooms and their latest sensor metrics.
 // - Queries prisma for rooms + recent readings, then extracts usable metrics.
 // - Provides search/filter helper used by API routes
@@ -47,12 +34,7 @@ export const RoomService = {
       },
     });
 
-    return rooms.map((room) => ({
-      id: room.id,
-      name: room.name,
-      building: room.building,
-      metrics: extractMetrics(room.readings),
-    }));
+    return rooms.map((room) => mapRoomWithMetrics(room));
   },
 
   // Search rooms by provided filters (both static room fields and metric filters).
@@ -84,12 +66,7 @@ export const RoomService = {
     });
 
     return rooms
-      .map((room) => ({
-        id: room.id,
-        name: room.name,
-        building: room.building,
-        metrics: extractMetrics(room.readings),
-      }))
+      .map((room) => mapRoomWithMetrics(room))
       .filter((r) => metricsMatchFilters(r.metrics, metricFilters));
   },
 
@@ -105,12 +82,7 @@ export const RoomService = {
 
     if (!room) return null;
 
-    return {
-      id: room.id,
-      name: room.name,
-      building: room.building,
-      metrics: extractMetrics(room.readings),
-    };
+    return mapRoomWithMetrics(room);
   },
 
   // Fetch a single room by numeric id, return null if missing.
@@ -125,11 +97,6 @@ export const RoomService = {
 
     if (!room) return null;
 
-    return {
-      id: room.id,
-      name: room.name,
-      building: room.building,
-      metrics: extractMetrics(room.readings),
-    };
+    return mapRoomWithMetrics(room);
   },
 };

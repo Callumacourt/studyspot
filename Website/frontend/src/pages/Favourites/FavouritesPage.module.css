@@ -1,0 +1,82 @@
+.page {
+  min-height: 100%;
+  padding: 2rem var(--page-gutter);
+  background: #f5f7fb;
+  color: #162332;
+}
+
+.hero {
+  margin-bottom: 1rem;
+}
+
+.eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #607487;
+  font-size: 0.8rem;
+}
+
+.hero h1 {
+  margin: 0.35rem 0 0.3rem;
+  font-size: clamp(2rem, 4vw, 2.7rem);
+}
+
+.hero p {
+  margin: 0;
+  color: #4f6578;
+}
+
+.grid {
+  margin-top: 1rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 1rem;
+}
+
+.cardWrap {
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid #e1e8f0;
+  padding: 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.removeButton,
+.empty button {
+  background: #8b2f46;
+  color: #fff;
+  border: none;
+  width: fit-content;
+}
+
+.empty {
+  margin-top: 1rem;
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid #e1e8f0;
+  padding: 1.2rem;
+}
+
+.empty h2 {
+  margin: 0;
+}
+
+.error,
+.message {
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+}
+
+.error {
+  background: #fde6ea;
+  color: #8b2439;
+}
+
+.message {
+  background: #e6f8ef;
+  color: #1f6f49;
+}

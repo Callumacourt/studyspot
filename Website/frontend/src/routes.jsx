@@ -8,6 +8,7 @@ import Room from './pages/Room/Room';
 import SearchPage from './pages/Search/SearchPage';
 import PrivacyPage from './pages/Privacy/PrivacyPage';
 import ContactPage from './pages/Contact/ContactPage';
+import FavouritesPage from './pages/Favourites/FavouritesPage';
 import AdminPage from './pages/Admin/AdminPage';
 import PlatformAdminPage from './pages/PlatformAdmin/PlatformAdminPage';
 import RequireRole from './components/RequireRole/RequireRole';
@@ -21,6 +22,7 @@ const routes = [
   { path: '/search', element: <SearchPage />},
   { path: '/about', element: <About /> },
   { path: '/room/:roomId', element: <Room /> },
+  { path: '/favourites', element: <FavouritesPage /> },
   { path: '/login', element: <LoginPage />},
   { path: "/signup", element: <SignUpPage /> },
   { path: "/success", element: <SuccessPage /> },

@@ -1,5 +1,7 @@
 import { Router } from "express";
 import { RoomController } from "../controllers/RoomController";
+import { UserRoomController } from "../controllers/UserRoomController";
+import { requireAuth } from "../middleware/auth";
 
 const router = Router();
 
@@ -14,6 +16,10 @@ const router = Router();
  */
 router.get("/", (req, res) => RoomController.getAllRooms(req, res));
 router.get("/filter", (req, res) => RoomController.getRoomsByFilter(req, res));
+router.get("/:id/favourite", requireAuth, (req, res) => UserRoomController.getFavouriteStatus(req, res));
+router.post("/:id/favourite", requireAuth, (req, res) => UserRoomController.addFavourite(req, res));
+router.delete("/:id/favourite", requireAuth, (req, res) => UserRoomController.removeFavourite(req, res));
+router.post("/:id/reports", requireAuth, (req, res) => UserRoomController.reportRoom(req, res));
 router.get("/:id", (req, res) => RoomController.getRoomById(req, res)); 
 
 export default router;

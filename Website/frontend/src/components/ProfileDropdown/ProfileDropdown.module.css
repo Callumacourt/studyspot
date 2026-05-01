@@ -1,31 +1,64 @@
 .profileDropdown {
     position: absolute;
+    top: calc(100% + 0.45rem);
+    right: 0;
+    min-width: 220px;
+    max-width: min(280px, 80vw);
+    max-height: min(70vh, 420px);
+    overflow-y: auto;
     background-color: white;
-    border-radius: 25px;
+    border: 1px solid #dbe4ec;
+    border-radius: 18px;
+    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.14);
+    z-index: 50;
+}
+
+.profileDropdown::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -0.6rem;
+    height: 0.75rem;
 }
 
 .profileDropdown ul {
-    padding: 1vh 1vw;
+    margin: 0;
+    padding: 0.55rem;
 }
 
 .profileDropdown li {
-    line-height: 6vh;
     list-style: none;
 }
 
+.profileDropdown li + li {
+    margin-top: 0.2rem;
+}
+
 .profileDropdown a {
+    display: block;
+    width: 100%;
     color: black;
+    text-decoration: none;
+    padding: 0.8rem 0.95rem;
+    border-radius: 12px;
+    box-sizing: border-box;
 }
 
 .profileDropdown a:hover,
 .profileDropdown button:hover {
-    text-decoration: underline;
+    text-decoration: none;
+    background: #eef4f8;
 }
 
 .profileDropdown button {
     background-color: transparent;
     color: black;
-    padding: 0px;
+    padding: 0.8rem 0.95rem;
+    width: 100%;
+    text-align: left;
+    border-radius: 12px;
+    font: inherit;
 }
 
 .profileDropdown button:hover {
@@ -37,17 +70,18 @@
 @media (max-width: 768px) {
     .profileDropdown {
         right: 0;
-        min-width: 160px;
+        min-width: 190px;
         border-radius: 16px;
         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
     }
 
     .profileDropdown ul {
-        padding: 8px 16px;
+        padding: 0.45rem;
     }
 
-    .profileDropdown li {
-        line-height: 2.8rem;
+    .profileDropdown a,
+    .profileDropdown button {
         font-size: 0.95rem;
+        padding: 0.72rem 0.8rem;
     }
 }

@@ -9,6 +9,24 @@ import {
 } from "../Admin/adminApi";
 
 const emptyUniversityForm = { id: null, name: "" };
+const summaryCards = [
+  ["universities", "Universities"],
+  ["buildings", "Buildings"],
+  ["rooms", "Rooms"],
+  ["users", "Users"],
+];
+const roleOptions = [
+  ["USER", "User"],
+  ["UNIVERSITY_ADMIN", "University admin"],
+  ["SUPER_ADMIN", "Super admin"],
+];
+
+function getUniversityRoomCount(university) {
+  return (university.buildings ?? []).reduce(
+    (sum, building) => sum + (building._count?.rooms ?? 0),
+    0
+  );
+}
 
 export default function PlatformAdminPage() {
   const authHeaders = useMemo(() => getAuthHeaders(), []);
@@ -82,10 +100,7 @@ export default function PlatformAdminPage() {
 
   async function handleDeleteUniversity(university) {
     const buildingCount = university.buildings?.length ?? 0;
-    const roomCount = (university.buildings ?? []).reduce(
-      (sum, building) => sum + (building._count?.rooms ?? 0),
-      0
-    );
+    const roomCount = getUniversityRoomCount(university);
 
     const confirmed = window.confirm(
       `Delete ${university.name}? This will remove ${buildingCount} building(s) and ${roomCount} room(s).`
@@ -137,26 +152,16 @@ export default function PlatformAdminPage() {
       {message && <p className={styles.message}>{message}</p>}
 
       <section className={styles.kpis}>
-        <article className={styles.kpiCard}>
-          <span>Universities</span>
-          <strong>{summary?.counts?.universities ?? 0}</strong>
-        </article>
-        <article className={styles.kpiCard}>
-          <span>Buildings</span>
-          <strong>{summary?.counts?.buildings ?? 0}</strong>
-        </article>
-        <article className={styles.kpiCard}>
-          <span>Rooms</span>
-          <strong>{summary?.counts?.rooms ?? 0}</strong>
-        </article>
-        <article className={styles.kpiCard}>
-          <span>Users</span>
-          <strong>{summary?.counts?.users ?? 0}</strong>
-        </article>
+        {summaryCards.map(([key, label]) => (
+          <article key={key} className={styles.kpiCard}>
+            <span>{label}</span>
+            <strong>{summary?.counts?.[key] ?? 0}</strong>
+          </article>
+        ))}
       </section>
 
-      <section className={styles.grid}>
-        <article className={styles.panel}>
+      <section className={styles.dashboardGrid}>
+        <article className={`${styles.panel} ${styles.formPanel}`}>
           <div className={styles.panelHeader}>
             <h2>{universityForm.id ? "Edit university" : "Add university"}</h2>
             <button type="button" onClick={() => setUniversityForm(emptyUniversityForm)}>
@@ -180,20 +185,7 @@ export default function PlatformAdminPage() {
           </form>
         </article>
 
-        <article className={styles.panel}>
-          <div className={styles.panelHeader}>
-            <h2>Scalability rationale</h2>
-          </div>
-          <ul className={styles.bulletList}>
-            <li>Universities, buildings, and rooms are managed independently so the platform can grow campus by campus.</li>
-            <li>University admins are restricted to one institution, while super admins keep cross-campus control.</li>
-            <li>Deletion flows show impact clearly, making data cleanup safer during demos and real deployment.</li>
-          </ul>
-        </article>
-      </section>
-
-      <section className={styles.tableSection}>
-        <article className={styles.panel}>
+        <article className={`${styles.panel} ${styles.universitiesPanel}`}>
           <div className={styles.panelHeader}>
             <h2>Universities</h2>
             <span>{universities.length} total</span>
@@ -217,12 +209,7 @@ export default function PlatformAdminPage() {
                     <tr key={university.id}>
                       <td>{university.name}</td>
                       <td>{university.buildings?.length ?? 0}</td>
-                      <td>
-                        {(university.buildings ?? []).reduce(
-                          (sum, building) => sum + (building._count?.rooms ?? 0),
-                          0
-                        )}
-                      </td>
+                      <td>{getUniversityRoomCount(university)}</td>
                       <td>{university.administrators?.map((admin) => admin.email).join(", ") || "—"}</td>
                       <td className={styles.actions}>
                         <button type="button" onClick={() => setUniversityForm({ id: university.id, name: university.name })}>
@@ -240,7 +227,7 @@ export default function PlatformAdminPage() {
           )}
         </article>
 
-        <article className={styles.panel}>
+        <article className={`${styles.panel} ${styles.usersPanel}`}>
           <div className={styles.panelHeader}>
             <h2>User access management</h2>
             <span>{users.length} users</span>
@@ -278,9 +265,11 @@ export default function PlatformAdminPage() {
                               }))
                             }
                           >
-                            <option value="USER">User</option>
-                            <option value="UNIVERSITY_ADMIN">University admin</option>
-                            <option value="SUPER_ADMIN">Super admin</option>
+                            {roleOptions.map(([value, label]) => (
+                              <option key={value} value={value}>
+                                {label}
+                              </option>
+                            ))}
                           </select>
                         </td>
                         <td>

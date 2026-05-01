@@ -1,4 +1,5 @@
 .page {
+  --panel-gap: clamp(1rem, 2vw, 1.5rem);
   min-height: 100%;
   padding: 2rem var(--page-gutter);
   background: linear-gradient(180deg, #f7f9fc 0%, #eef4f9 100%);
@@ -30,7 +31,7 @@
 .kpis {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 1rem;
+  gap: var(--panel-gap);
   margin-bottom: 1.25rem;
 }
 
@@ -56,16 +57,37 @@
   font-size: 2rem;
 }
 
-.grid,
-.tableSection {
+.dashboardGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 1rem;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-areas:
+    "form users"
+    "universities users";
+  align-items: start;
+  column-gap: var(--panel-gap);
+  row-gap: var(--panel-gap);
   margin-bottom: 1rem;
+}
+
+.formPanel {
+  grid-area: form;
+  width: 100%;
+}
+
+.universitiesPanel {
+  grid-area: universities;
+  min-width: 0;
+}
+
+.usersPanel {
+  grid-area: users;
+  align-self: stretch;
+  min-width: 0;
 }
 
 .panel {
   padding: 1.1rem;
+  box-sizing: border-box;
 }
 
 .panelHeader {
@@ -85,6 +107,11 @@
   display: flex;
   flex-direction: column;
   gap: 0.85rem;
+}
+
+.form > button[type="submit"] {
+  align-self: flex-start;
+  min-width: 180px;
 }
 
 .form label {
@@ -107,16 +134,6 @@
   background: #173f67;
   color: white;
   border: none;
-}
-
-.bulletList {
-  margin: 0;
-  padding-left: 1.2rem;
-  color: #42596d;
-}
-
-.bulletList li + li {
-  margin-top: 0.5rem;
 }
 
 .tableWrapper {
@@ -177,5 +194,13 @@
 @media (max-width: 700px) {
   .page {
     padding: 1.25rem;
+  }
+
+  .dashboardGrid {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "form"
+      "universities"
+      "users";
   }
 }

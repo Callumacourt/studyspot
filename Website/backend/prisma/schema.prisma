@@ -18,6 +18,20 @@ enum MetricType {
   LIGHT
 }
 
+enum ReportStatus {
+  OPEN
+  IN_REVIEW
+  RESOLVED
+  DISMISSED
+}
+
+enum ReportCategory {
+  DATA_QUALITY
+  SAFETY
+  ACCESSIBILITY
+  OTHER
+}
+
 enum UserRole {
   USER
   UNIVERSITY_ADMIN
@@ -32,6 +46,7 @@ model User {
   managedUniversityId Int?
   managedUniversity University? @relation("ManagedUniversityAdmins", fields: [managedUniversityId], references: [id])
   favouritedRooms Room[]
+  roomReports RoomReport[]
 }
 
 model University {
@@ -60,6 +75,7 @@ model Room {
   occupancyAverages OccupancyAverage[]
   sensors Sensor []
   favouritedByUsers User []
+  reports RoomReport[]
 
   wheelchairAccessible Boolean @default(false)
   hasAdjustableDesks Boolean @default(false)
@@ -67,6 +83,22 @@ model Room {
   hearingAssistance Boolean @default(false)
 
   @@unique([buildingId, name])
+}
+
+model RoomReport {
+  id Int @id @default(autoincrement())
+  roomId Int
+  room Room @relation(fields: [roomId], references: [id])
+  reporterUserId Int?
+  reporterUser User? @relation(fields: [reporterUserId], references: [userId])
+  category ReportCategory @default(OTHER)
+  message String
+  status ReportStatus @default(OPEN)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([roomId, status])
+  @@index([reporterUserId])
 }
 
 model SensorReading {

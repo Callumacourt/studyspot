@@ -32,6 +32,21 @@ export async function fetchPlatformAdminData(headers) {
   };
 }
 
+export async function fetchAdminReports(headers, universityId) {
+  const params = universityId ? { universityId } : undefined;
+  const response = await axios.get("/api/admin/reports", { headers, params });
+  return response.data?.reports ?? [];
+}
+
+export async function updateAdminReportStatus(headers, reportId, status) {
+  const response = await axios.patch(
+    `/api/admin/reports/${reportId}/status`,
+    { status },
+    { headers }
+  );
+  return response.data?.report ?? null;
+}
+
 export function getApiErrorMessage(error, fallback) {
   return error?.response?.data?.error || fallback;
 }

@@ -2,32 +2,74 @@ import styles from "./Header.module.css";
 import ProfileDropdown from "../ProfileDropdown/ProfileDropdown";
 import userIcn from "../../assets/icons/user.svg";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getStoredUser, isAdminRole } from "../../utils/auth";
 
 // Global header with nav links and auth/profile actions.
 export default function Header() {
     const navigate = useNavigate();
-    const [isHovering, setIsHovering] = useState(false);
+    const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState(
         Boolean(localStorage.getItem("token"))
     );
     const [user, setUser] = useState(getStoredUser());
+    const profileMenuRef = useRef(null);
+    const closeTimerRef = useRef(null);
+
+    function clearCloseTimer() {
+        if (closeTimerRef.current) {
+            window.clearTimeout(closeTimerRef.current);
+            closeTimerRef.current = null;
+        }
+    }
+
+    function scheduleClose() {
+        clearCloseTimer();
+        closeTimerRef.current = window.setTimeout(() => {
+            setIsProfileOpen(false);
+        }, 180);
+    }
 
     useEffect(() => {
         // Sync header auth state when login/logout happens in this tab.
         const onAuth = () => {
             setIsLoggedIn(Boolean(localStorage.getItem("token")));
             setUser(getStoredUser());
+            if (!localStorage.getItem("token")) {
+                setIsProfileOpen(false);
+            }
         };
         window.addEventListener("authChanged", onAuth);
         return () => window.removeEventListener("authChanged", onAuth);
     }, []);
 
+    useEffect(() => {
+        function handlePointerDown(event) {
+            if (!profileMenuRef.current?.contains(event.target)) {
+                setIsProfileOpen(false);
+            }
+        }
+
+        function handleEscape(event) {
+            if (event.key === "Escape") {
+                setIsProfileOpen(false);
+            }
+        }
+
+        document.addEventListener("mousedown", handlePointerDown);
+        document.addEventListener("keydown", handleEscape);
+
+        return () => {
+            document.removeEventListener("mousedown", handlePointerDown);
+            document.removeEventListener("keydown", handleEscape);
+            clearCloseTimer();
+        };
+    }, []);
+
     // Callback passed to profile dropdown.
     function handleSignedOut() {
         setIsLoggedIn(false);
-        setIsHovering(false);
+        setIsProfileOpen(false);
         navigate("/login");
     }
 
@@ -70,18 +112,28 @@ export default function Header() {
                     <div className={styles.authArea}>
                         {isLoggedIn ? (
                             <div
+                                ref={profileMenuRef}
                                 className={styles.profileMenu}
-                                onMouseEnter={() => setIsHovering(true)}
-                                onMouseLeave={() => setIsHovering(false)}
+                                onMouseEnter={() => {
+                                    clearCloseTimer();
+                                    setIsProfileOpen(true);
+                                }}
+                                onMouseLeave={scheduleClose}
                             >
                                 <button
                                     className={styles.userBtn}
                                     aria-label="Account"
+                                    aria-expanded={isProfileOpen}
+                                    aria-haspopup="menu"
                                     type="button"
+                                    onClick={() => {
+                                        clearCloseTimer();
+                                        setIsProfileOpen((prev) => !prev);
+                                    }}
                                 >
                                     <img src={userIcn} alt="User" />
                                 </button>
-                                {isHovering && (
+                                {isProfileOpen && (
                                     <ProfileDropdown onSignOut={handleSignedOut} user={user} />
                                 )}
                             </div>

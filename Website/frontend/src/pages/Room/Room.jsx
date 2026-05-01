@@ -11,6 +11,7 @@ import { useSensorData } from "../../hooks/useSensorData";
 import BusyTimesChart from "../../components/BusyTimesChart/BusyTimesChart";
 import styles from "./Room.module.css";
 import axios from "axios";
+import { getAuthHeaders } from "../../utils/auth";
 
 // Inline icon for light metric where no asset file is used.
 function LightIcon() {
@@ -67,16 +68,77 @@ export default function Room () {
 
     const isLoggedIn = Boolean(localStorage.getItem("token"));
     const [isFavourite, setIsFavourite] = useState(false); 
+    const [isFavouriteLoading, setIsFavouriteLoading] = useState(false);
     const [roomData, setRoomData] = useState(null);
     const [hourlyAverages, setHourlyAverages] = useState([]);
+    const [actionMessage, setActionMessage] = useState("");
+    const [reportOpen, setReportOpen] = useState(false);
+    const [reportCategory, setReportCategory] = useState("OTHER");
+    const [reportMessage, setReportMessage] = useState("");
+    const [reportSubmitting, setReportSubmitting] = useState(false);
+
+    const authHeaders = getAuthHeaders();
 
     // Require login before toggling favourites.
-    const handleFavouriteClick = () => {
+    const handleFavouriteClick = async () => {
         if (!isLoggedIn) {
             navigate("/login");
             return;
         }
-        setIsFavourite((prev) => !prev);
+
+        setIsFavouriteLoading(true);
+        setActionMessage("");
+
+        try {
+            if (isFavourite) {
+                await axios.delete(`/api/rooms/${roomId}/favourite`, { headers: authHeaders });
+                setIsFavourite(false);
+                setActionMessage("Removed from favourites.");
+            } else {
+                await axios.post(`/api/rooms/${roomId}/favourite`, {}, { headers: authHeaders });
+                setIsFavourite(true);
+                setActionMessage("Added to favourites.");
+            }
+        } catch (err) {
+            setActionMessage(err?.response?.data?.error || "Could not update favourites.");
+        } finally {
+            setIsFavouriteLoading(false);
+        }
+    };
+
+    const handleReportClick = () => {
+        if (!isLoggedIn) {
+            navigate("/login");
+            return;
+        }
+        setReportOpen(true);
+    };
+
+    const submitReport = async (event) => {
+        event.preventDefault();
+        if (!reportMessage.trim()) {
+            setActionMessage("Please include a short report description.");
+            return;
+        }
+
+        setReportSubmitting(true);
+        setActionMessage("");
+
+        try {
+            await axios.post(
+                `/api/rooms/${roomId}/reports`,
+                { category: reportCategory, message: reportMessage.trim() },
+                { headers: authHeaders }
+            );
+            setReportOpen(false);
+            setReportCategory("OTHER");
+            setReportMessage("");
+            setActionMessage("Thanks — your report has been sent to admins.");
+        } catch (err) {
+            setActionMessage(err?.response?.data?.error || "Could not submit report.");
+        } finally {
+            setReportSubmitting(false);
+        }
     };
 
     useEffect(() => {
@@ -87,6 +149,29 @@ export default function Room () {
           .catch(console.error);
         return () => { cancelled = true; };
     }, [roomId]);
+
+    useEffect(() => {
+        if (!isLoggedIn) {
+            setIsFavourite(false);
+            return;
+        }
+
+        let cancelled = false;
+
+        async function fetchFavouriteStatus() {
+            try {
+                const response = await axios.get(`/api/rooms/${roomId}/favourite`, { headers: authHeaders });
+                if (!cancelled) setIsFavourite(Boolean(response.data?.isFavourite));
+            } catch {
+                if (!cancelled) setIsFavourite(false);
+            }
+        }
+
+        fetchFavouriteStatus();
+        return () => {
+            cancelled = true;
+        };
+    }, [roomId, isLoggedIn]);
 
     // Normalize building name across possible payload shapes.
     function getBuildingName() {
@@ -179,6 +264,7 @@ export default function Room () {
                                 onClick={handleFavouriteClick}
                                 title={isLoggedIn ? "Toggle favourite" : "Log in to favourite rooms"}
                                 aria-label={isFavourite ? "Remove from favourites" : "Add to favourites"}
+                                disabled={isFavouriteLoading}
                             >
                                 <svg className={styles.favIcon} viewBox="0 0 24 24">
                                     <path
@@ -196,11 +282,14 @@ export default function Room () {
                                 className={styles.iconButton}
                                 title="Report an issue with this room"
                                 aria-label="Report an issue with this room"
+                                onClick={handleReportClick}
                             >
                                 <img src={reportIcn} className={styles.reportIcon} alt="Report" />
                             </button>
                         </div>
                     </div>
+
+                    {actionMessage && <p className={styles.inlineMessage}>{actionMessage}</p>}
 
                     {loading && <p>Loading sensor data...</p>}
                     {error && <p>Error: {error}</p>}
@@ -275,6 +364,40 @@ export default function Room () {
                     </div>
                 </section>
             </section>
+
+            {reportOpen && (
+                <section className={styles.reportOverlay} role="dialog" aria-modal="true" aria-label="Report room issue">
+                    <form className={styles.reportCard} onSubmit={submitReport}>
+                        <h3>Report room issue</h3>
+                        <label>
+                            Category
+                            <select value={reportCategory} onChange={(e) => setReportCategory(e.target.value)}>
+                                <option value="DATA_QUALITY">Data quality</option>
+                                <option value="SAFETY">Safety</option>
+                                <option value="ACCESSIBILITY">Accessibility</option>
+                                <option value="OTHER">Other</option>
+                            </select>
+                        </label>
+                        <label>
+                            Description
+                            <textarea
+                                value={reportMessage}
+                                onChange={(e) => setReportMessage(e.target.value)}
+                                placeholder="Describe what is wrong with this room or its data"
+                                maxLength={1200}
+                                rows={5}
+                                required
+                            />
+                        </label>
+                        <div className={styles.reportActions}>
+                            <button type="button" onClick={() => setReportOpen(false)}>Cancel</button>
+                            <button type="submit" disabled={reportSubmitting}>
+                                {reportSubmitting ? "Submitting..." : "Submit report"}
+                            </button>
+                        </div>
+                    </form>
+                </section>
+            )}
         </main>
     );
 }

@@ -25,6 +25,19 @@ function isValidUserRole(role: string): role is UserRole {
   return role === "USER" || role === "UNIVERSITY_ADMIN" || role === "SUPER_ADMIN";
 }
 
+type ReportStatusValue = "OPEN" | "IN_REVIEW" | "RESOLVED" | "DISMISSED";
+
+function parseReportStatus(status: unknown): ReportStatusValue | undefined {
+  const value = String(status ?? "").trim().toUpperCase();
+  if (value === "OPEN") return "OPEN";
+  if (value === "IN_REVIEW") return "IN_REVIEW";
+  if (value === "RESOLVED") return "RESOLVED";
+  if (value === "DISMISSED") return "DISMISSED";
+  return undefined;
+}
+
+const roomReport = (prisma as any).roomReport;
+
 export const AdminService = {
   async getSummary(auth: AdminAuthContext) {
     const accessibleUniversityIds = resolveScopedUniversityIds(auth);
@@ -33,7 +46,7 @@ export const AdminService = {
       ? { id: { in: accessibleUniversityIds } }
       : undefined;
 
-    const [universities, buildingsCount, roomsCount, usersCount] = await Promise.all([
+    const [universities, buildingsCount, roomsCount, usersCount, openReportsCount] = await Promise.all([
       prisma.university.findMany({
         where: universityWhere,
         orderBy: { name: "asc" },
@@ -55,6 +68,14 @@ export const AdminService = {
             : undefined,
       }),
       auth.role === "SUPER_ADMIN" ? prisma.user.count() : Promise.resolve(undefined),
+      roomReport.count({
+        where: {
+          status: "OPEN",
+          ...(accessibleUniversityIds !== undefined
+            ? { room: { building: { universityId: { in: accessibleUniversityIds } } } }
+            : {}),
+        },
+      }),
     ]);
 
     return {
@@ -64,12 +85,13 @@ export const AdminService = {
         buildings: buildingsCount,
         rooms: roomsCount,
         users: usersCount ?? null,
+        openReports: openReportsCount,
       },
-      universities: universities.map((university) => ({
+      universities: universities.map((university: any) => ({
         id: university.id,
         name: university.name,
         buildingCount: university._count.buildings,
-        roomCount: university.buildings.reduce((sum, building) => sum + building._count.rooms, 0),
+        roomCount: university.buildings.reduce((sum: number, building: any) => sum + building._count.rooms, 0),
         administrators: university.administrators,
       })),
     };
@@ -352,6 +374,89 @@ export const AdminService = {
         managedUniversityId: role === "UNIVERSITY_ADMIN" ? managedUniversityId ?? null : null,
       },
       select: ADMIN_USER_SELECT,
+    });
+  },
+
+  async getReports(
+    auth: AdminAuthContext,
+    filters: { universityId?: number; status?: string; limit?: number }
+  ) {
+    if (auth.role !== "SUPER_ADMIN" && !auth.managedUniversityId) {
+      return [];
+    }
+
+    const scopedUniversityId = resolveScopedUniversityId(auth, filters.universityId);
+    if (scopedUniversityId) {
+      await assertCanManageUniversity(auth, scopedUniversityId);
+    }
+
+    const parsedStatus = parseReportStatus(filters.status);
+    const limit = Number.isInteger(filters.limit) && Number(filters.limit) > 0
+      ? Math.min(Number(filters.limit), 200)
+      : 100;
+
+    return roomReport.findMany({
+      where: {
+        ...(parsedStatus ? { status: parsedStatus } : {}),
+        ...(scopedUniversityId ? { room: { building: { universityId: scopedUniversityId } } } : {}),
+      },
+      orderBy: { createdAt: "desc" },
+      take: limit,
+      include: {
+        room: {
+          select: {
+            id: true,
+            name: true,
+            building: {
+              select: {
+                id: true,
+                name: true,
+                university: { select: { id: true, name: true } },
+              },
+            },
+          },
+        },
+        reporterUser: { select: { userId: true, email: true } },
+      },
+    });
+  },
+
+  async updateReportStatus(
+    auth: AdminAuthContext,
+    reportId: number,
+    payload: { status?: unknown }
+  ) {
+    const status = parseReportStatus(payload.status);
+    if (!status) throw new AdminError("Report status must be OPEN, IN_REVIEW, RESOLVED, or DISMISSED");
+
+    const report = await roomReport.findUnique({
+      where: { id: reportId },
+      include: { room: { select: { building: { select: { universityId: true } } } } },
+    });
+
+    if (!report) throw new AdminError("Report not found", 404);
+
+    await assertCanManageUniversity(auth, report.room.building.universityId);
+
+    return roomReport.update({
+      where: { id: reportId },
+      data: { status },
+      include: {
+        room: {
+          select: {
+            id: true,
+            name: true,
+            building: {
+              select: {
+                id: true,
+                name: true,
+                university: { select: { id: true, name: true } },
+              },
+            },
+          },
+        },
+        reporterUser: { select: { userId: true, email: true } },
+      },
     });
   },
 

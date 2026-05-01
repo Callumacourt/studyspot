@@ -26,4 +26,7 @@ router.delete("/rooms/:id", (req, res) => AdminController.deleteRoom(req, res));
 router.get("/users", (req, res) => AdminController.getUsers(req, res));
 router.patch("/users/:id/role", (req, res) => AdminController.updateUserRole(req, res));
 
+router.get("/reports", (req, res) => AdminController.getReports(req, res));
+router.patch("/reports/:id/status", (req, res) => AdminController.updateReportStatus(req, res));
+
 export default router;

@@ -106,4 +106,26 @@ export const AdminController = {
     const userId = Number(req.params.id);
     return run(res, () => AdminService.updateUserRole(getAuth(req), userId, req.body), "user");
   },
+
+  async getReports(req: Request, res: Response) {
+    return run(
+      res,
+      () =>
+        AdminService.getReports(getAuth(req), {
+          universityId: req.query.universityId ? Number(req.query.universityId) : undefined,
+          status: req.query.status ? String(req.query.status) : undefined,
+          limit: req.query.limit ? Number(req.query.limit) : undefined,
+        }),
+      "reports"
+    );
+  },
+
+  async updateReportStatus(req: Request, res: Response) {
+    const reportId = Number(req.params.id);
+    return run(
+      res,
+      () => AdminService.updateReportStatus(getAuth(req), reportId, req.body ?? {}),
+      "report"
+    );
+  },
 };

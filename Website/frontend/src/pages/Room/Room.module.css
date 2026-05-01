@@ -238,6 +238,85 @@
     align-items: center;
     justify-content: center;
     color: inherit;
+    cursor: pointer;
+}
+
+.inlineMessage {
+    margin: 0.5rem 0.6rem 0;
+    padding: 0.5rem 0.65rem;
+    font-size: 0.85rem;
+    background: #eef6ff;
+    border: 1px solid #c9def8;
+    border-radius: 10px;
+    color: #1d4469;
+}
+
+.reportOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(8, 15, 26, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1rem;
+}
+
+.reportCard {
+    width: min(520px, 100%);
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    color: #17212b;
+}
+
+.reportCard h3 {
+    margin: 0;
+}
+
+.reportCard label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    font-size: 0.9rem;
+}
+
+.reportCard select,
+.reportCard textarea {
+    border: 1px solid #ced8e3;
+    border-radius: 10px;
+    padding: 0.7rem 0.8rem;
+    font: inherit;
+}
+
+.reportCard textarea {
+    resize: vertical;
+}
+
+.reportActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.6rem;
+}
+
+.reportActions button {
+    border: none;
+    border-radius: 10px;
+    padding: 0.6rem 0.9rem;
+    cursor: pointer;
+}
+
+.reportActions button[type="button"] {
+    background: #edf2f7;
+    color: #1f2f3f;
+}
+
+.reportActions button[type="submit"] {
+    background: #2a5c82;
+    color: #ffffff;
 }
 
 .statsContent {

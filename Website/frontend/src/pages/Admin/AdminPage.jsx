@@ -5,8 +5,10 @@ import { getAuthHeaders, getStoredUser } from "../../utils/auth";
 import {
   buildBuildingPayload,
   buildRoomPayload,
+  fetchAdminReports,
   fetchAdminDashboard,
   getApiErrorMessage,
+  updateAdminReportStatus,
 } from "./adminApi";
 
 const emptyBuildingForm = { id: null, name: "", universityId: "" };
@@ -28,6 +30,7 @@ export default function AdminPage() {
   const [universities, setUniversities] = useState([]);
   const [buildings, setBuildings] = useState([]);
   const [rooms, setRooms] = useState([]);
+  const [reports, setReports] = useState([]);
   const [selectedUniversityId, setSelectedUniversityId] = useState("");
   const [buildingForm, setBuildingForm] = useState(emptyBuildingForm);
   const [roomForm, setRoomForm] = useState(emptyRoomForm);
@@ -43,8 +46,16 @@ export default function AdminPage() {
     setError("");
 
     try {
-      const { summary, universities: nextUniversities, buildings: nextBuildings, rooms: nextRooms } =
-        await fetchAdminDashboard(authHeaders, targetUniversityId);
+      const [dashboard, nextReports] = await Promise.all([
+        fetchAdminDashboard(authHeaders, targetUniversityId),
+        fetchAdminReports(authHeaders, targetUniversityId),
+      ]);
+      const {
+        summary,
+        universities: nextUniversities,
+        buildings: nextBuildings,
+        rooms: nextRooms,
+      } = dashboard;
       const resolvedUniversityId =
         targetUniversityId ||
         user?.managedUniversityId ||
@@ -55,6 +66,7 @@ export default function AdminPage() {
       setUniversities(nextUniversities);
       setBuildings(nextBuildings);
       setRooms(nextRooms);
+      setReports(nextReports);
       setSelectedUniversityId(String(resolvedUniversityId || ""));
 
       setBuildingForm((prev) => ({
@@ -159,6 +171,16 @@ export default function AdminPage() {
     }
   }
 
+  async function handleUpdateReportStatus(reportId, status) {
+    try {
+      await updateAdminReportStatus(authHeaders, reportId, status);
+      setMessage("Report status updated.");
+      await loadDashboard(selectedUniversityId);
+    } catch (err) {
+      setError(getApiErrorMessage(err, "Failed to update report status."));
+    }
+  }
+
   function startEditBuilding(building) {
     setBuildingForm({
       id: building.id,
@@ -223,6 +245,10 @@ export default function AdminPage() {
         <article className={styles.kpiCard}>
           <span>Rooms</span>
           <strong>{summary?.counts?.rooms ?? 0}</strong>
+        </article>
+        <article className={styles.kpiCard}>
+          <span>Open reports</span>
+          <strong>{summary?.counts?.openReports ?? 0}</strong>
         </article>
       </section>
 
@@ -402,6 +428,64 @@ export default function AdminPage() {
                         <button type="button" className={styles.danger} onClick={() => handleDeleteRoom(room)}>
                           Delete
                         </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </article>
+
+        <article className={styles.panel}>
+          <div className={styles.panelHeader}>
+            <h2>Room reports</h2>
+            <span>{reports.length} total</span>
+          </div>
+          {loading ? (
+            <p>Loading reports…</p>
+          ) : reports.length === 0 ? (
+            <p>No reports in this scope.</p>
+          ) : (
+            <div className={styles.tableWrapper}>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Room</th>
+                    <th>Category</th>
+                    <th>Message</th>
+                    <th>Reporter</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {reports.map((report) => (
+                    <tr key={report.id}>
+                      <td>
+                        <strong>{report.room?.name ?? "Unknown room"}</strong>
+                        <div>{report.room?.building?.name ?? ""}</div>
+                      </td>
+                      <td>{String(report.category || "OTHER").replaceAll("_", " ")}</td>
+                      <td>{report.message}</td>
+                      <td>{report.reporterUser?.email ?? "Unknown"}</td>
+                      <td>{String(report.status || "OPEN").replaceAll("_", " ")}</td>
+                      <td className={styles.actions}>
+                        {[
+                          ["OPEN", "Open"],
+                          ["IN_REVIEW", "In review"],
+                          ["RESOLVED", "Resolved"],
+                          ["DISMISSED", "Dismiss"],
+                        ].map(([value, label]) => (
+                          <button
+                            key={`${report.id}-${value}`}
+                            type="button"
+                            disabled={report.status === value}
+                            onClick={() => handleUpdateReportStatus(report.id, value)}
+                          >
+                            {label}
+                          </button>
+                        ))}
                       </td>
                     </tr>
                   ))}

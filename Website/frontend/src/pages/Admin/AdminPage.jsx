@@ -22,6 +22,11 @@ const emptyRoomForm = {
   hearingAssistance: false,
 };
 
+function includesQuery(query, ...values) {
+  if (!query) return true;
+  return values.some((value) => String(value ?? "").toLowerCase().includes(query));
+}
+
 export default function AdminPage() {
   const user = getStoredUser();
   const authHeaders = useMemo(() => getAuthHeaders(), []);
@@ -38,6 +43,8 @@ export default function AdminPage() {
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [buildingSearch, setBuildingSearch] = useState("");
+  const [roomSearch, setRoomSearch] = useState("");
 
   const isSuperAdmin = user?.role === "SUPER_ADMIN";
 
@@ -205,6 +212,17 @@ export default function AdminPage() {
     ? buildings.filter((building) => String(building.university?.id ?? building.universityId) === String(selectedUniversityId))
     : buildings;
 
+  const buildingQuery = buildingSearch.trim().toLowerCase();
+  const roomQuery = roomSearch.trim().toLowerCase();
+
+  const visibleBuildings = filteredBuildings.filter((building) =>
+    includesQuery(buildingQuery, building.name, building.university?.name)
+  );
+
+  const visibleRooms = rooms.filter((room) =>
+    includesQuery(roomQuery, room.name, room.building?.name)
+  );
+
   return (
     <main className={styles.page}>
       <section className={styles.hero}>
@@ -355,7 +373,17 @@ export default function AdminPage() {
         <article className={styles.panel}>
           <div className={styles.panelHeader}>
             <h2>Buildings</h2>
-            <span>{filteredBuildings.length} total</span>
+            <span>{visibleBuildings.length} shown</span>
+          </div>
+          <div className={styles.tableToolbar}>
+            <input
+              type="search"
+              className={styles.searchInput}
+              value={buildingSearch}
+              onChange={(e) => setBuildingSearch(e.target.value)}
+              placeholder="Search buildings"
+              aria-label="Search buildings"
+            />
           </div>
           {loading ? (
             <p>Loading buildings…</p>
@@ -371,7 +399,7 @@ export default function AdminPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredBuildings.map((building) => (
+                  {visibleBuildings.map((building) => (
                     <tr key={building.id}>
                       <td>{building.name}</td>
                       <td>{building.university?.name ?? "—"}</td>
@@ -393,7 +421,17 @@ export default function AdminPage() {
         <article className={styles.panel}>
           <div className={styles.panelHeader}>
             <h2>Rooms</h2>
-            <span>{rooms.length} total</span>
+            <span>{visibleRooms.length} shown</span>
+          </div>
+          <div className={styles.tableToolbar}>
+            <input
+              type="search"
+              className={styles.searchInput}
+              value={roomSearch}
+              onChange={(e) => setRoomSearch(e.target.value)}
+              placeholder="Search rooms"
+              aria-label="Search rooms"
+            />
           </div>
           {loading ? (
             <p>Loading rooms…</p>
@@ -409,7 +447,7 @@ export default function AdminPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {rooms.map((room) => (
+                  {visibleRooms.map((room) => (
                     <tr key={room.id}>
                       <td>{room.name}</td>
                       <td>{room.building?.name ?? "—"}</td>

@@ -106,6 +106,19 @@
   font-size: 1.2rem;
 }
 
+.tableToolbar {
+  margin-bottom: 0.8rem;
+}
+
+.searchInput {
+  width: min(340px, 100%);
+  padding: 0.65rem 0.85rem;
+  border-radius: 10px;
+  border: 1px solid #cad5e2;
+  background: #fff;
+  color: #17212b;
+}
+
 .form {
   display: flex;
   flex-direction: column;

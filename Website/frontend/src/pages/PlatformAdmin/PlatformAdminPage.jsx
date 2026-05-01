@@ -28,6 +28,11 @@ function getUniversityRoomCount(university) {
   );
 }
 
+function includesQuery(query, ...values) {
+  if (!query) return true;
+  return values.some((value) => String(value ?? "").toLowerCase().includes(query));
+}
+
 export default function PlatformAdminPage() {
   const authHeaders = useMemo(() => getAuthHeaders(), []);
 
@@ -40,6 +45,17 @@ export default function PlatformAdminPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [userSearch, setUserSearch] = useState("");
+
+  const userQuery = userSearch.trim().toLowerCase();
+  const visibleUsers = users.filter((user) =>
+    includesQuery(
+      userQuery,
+      user.email,
+      user.role,
+      universities.find((university) => String(university.id) === String(user.managedUniversityId))?.name
+    )
+  );
 
   async function loadData() {
     setLoading(true);
@@ -230,7 +246,17 @@ export default function PlatformAdminPage() {
         <article className={`${styles.panel} ${styles.usersPanel}`}>
           <div className={styles.panelHeader}>
             <h2>User access management</h2>
-            <span>{users.length} users</span>
+            <span>{visibleUsers.length} shown</span>
+          </div>
+          <div className={styles.tableToolbar}>
+            <input
+              type="search"
+              className={styles.searchInput}
+              value={userSearch}
+              onChange={(e) => setUserSearch(e.target.value)}
+              placeholder="Search users"
+              aria-label="Search users"
+            />
           </div>
           {loading ? (
             <p>Loading users…</p>
@@ -246,7 +272,7 @@ export default function PlatformAdminPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {users.map((user) => {
+                  {visibleUsers.map((user) => {
                     const draft = userDrafts[user.userId] ?? { role: user.role, managedUniversityId: "" };
                     return (
                       <tr key={user.userId}>

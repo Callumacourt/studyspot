@@ -8,6 +8,9 @@ import Room from './pages/Room/Room';
 import SearchPage from './pages/Search/SearchPage';
 import PrivacyPage from './pages/Privacy/PrivacyPage';
 import ContactPage from './pages/Contact/ContactPage';
+import AdminPage from './pages/Admin/AdminPage';
+import PlatformAdminPage from './pages/PlatformAdmin/PlatformAdminPage';
+import RequireRole from './components/RequireRole/RequireRole';
 
 /**
  * Central route table used by App when rendering <Routes>.
@@ -21,6 +24,8 @@ const routes = [
   { path: '/login', element: <LoginPage />},
   { path: "/signup", element: <SignUpPage /> },
   { path: "/success", element: <SuccessPage /> },
+  { path: "/admin", element: <RequireRole><AdminPage /></RequireRole> },
+  { path: "/admin/system", element: <RequireRole minRole="SUPER_ADMIN"><PlatformAdminPage /></RequireRole> },
   { path: "/privacy", element: <PrivacyPage/> },
   { path: "/contactus", element: <ContactPage/> },
   { path: '*', element: <ErrorPage /> },

@@ -3,6 +3,7 @@ import ProfileDropdown from "../ProfileDropdown/ProfileDropdown";
 import userIcn from "../../assets/icons/user.svg";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { getStoredUser, isAdminRole } from "../../utils/auth";
 
 // Global header with nav links and auth/profile actions.
 export default function Header() {
@@ -11,10 +12,14 @@ export default function Header() {
     const [isLoggedIn, setIsLoggedIn] = useState(
         Boolean(localStorage.getItem("token"))
     );
+    const [user, setUser] = useState(getStoredUser());
 
     useEffect(() => {
         // Sync header auth state when login/logout happens in this tab.
-        const onAuth = () => setIsLoggedIn(Boolean(localStorage.getItem("token")));
+        const onAuth = () => {
+            setIsLoggedIn(Boolean(localStorage.getItem("token")));
+            setUser(getStoredUser());
+        };
         window.addEventListener("authChanged", onAuth);
         return () => window.removeEventListener("authChanged", onAuth);
     }, []);
@@ -51,6 +56,15 @@ export default function Header() {
                         >
                             About
                         </button>
+                        {isAdminRole(user?.role) && (
+                            <button
+                                className={styles.aboutUsBtn}
+                                type="button"
+                                onClick={() => navigate("/admin")}
+                            >
+                                Admin
+                            </button>
+                        )}
                     </div>
 
                     <div className={styles.authArea}>
@@ -68,7 +82,7 @@ export default function Header() {
                                     <img src={userIcn} alt="User" />
                                 </button>
                                 {isHovering && (
-                                    <ProfileDropdown onSignOut={handleSignedOut} />
+                                    <ProfileDropdown onSignOut={handleSignedOut} user={user} />
                                 )}
                             </div>
                         ) : (

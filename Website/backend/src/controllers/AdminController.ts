@@ -1,13 +1,14 @@
 import { Request, Response } from "express";
 import type { AuthenticatedRequest } from "../middleware/auth";
 import { AdminService } from "../services/AdminService";
+import { AdminError } from "../services/admin/adminErrors";
 
 function getAuth(req: Request) {
   return (req as AuthenticatedRequest).auth!;
 }
 
 function handleError(error: unknown, res: Response) {
-  if (error instanceof AdminService.AdminError) {
+  if (error instanceof AdminError) {
     return res.status(error.status).json({ success: false, error: error.message });
   }
 
@@ -15,150 +16,94 @@ function handleError(error: unknown, res: Response) {
   return res.status(500).json({ success: false, error: "Internal Server Error" });
 }
 
+async function run(
+  res: Response,
+  action: () => Promise<unknown>,
+  responseKey: string,
+  successStatus = 200
+) {
+  try {
+    const payload = await action();
+    return res.status(successStatus).json({ success: true, [responseKey]: payload });
+  } catch (error) {
+    return handleError(error, res);
+  }
+}
+
 export const AdminController = {
   async getSummary(req: Request, res: Response) {
-    try {
-      const summary = await AdminService.getSummary(getAuth(req));
-      return res.status(200).json({ success: true, summary });
-    } catch (error) {
-      return handleError(error, res);
-    }
+    return run(res, () => AdminService.getSummary(getAuth(req)), "summary");
   },
 
   async getUniversities(req: Request, res: Response) {
-    try {
-      const universities = await AdminService.getUniversities(getAuth(req));
-      return res.status(200).json({ success: true, universities });
-    } catch (error) {
-      return handleError(error, res);
-    }
+    return run(res, () => AdminService.getUniversities(getAuth(req)), "universities");
   },
 
   async createUniversity(req: Request, res: Response) {
-    try {
-      const university = await AdminService.createUniversity(getAuth(req), req.body);
-      return res.status(201).json({ success: true, university });
-    } catch (error) {
-      return handleError(error, res);
-    }
+    return run(res, () => AdminService.createUniversity(getAuth(req), req.body), "university", 201);
   },
 
   async updateUniversity(req: Request, res: Response) {
-    try {
-      const universityId = Number(req.params.id);
-      const university = await AdminService.updateUniversity(getAuth(req), universityId, req.body);
-      return res.status(200).json({ success: true, university });
-    } catch (error) {
-      return handleError(error, res);
-    }
+    const universityId = Number(req.params.id);
+    return run(res, () => AdminService.updateUniversity(getAuth(req), universityId, req.body), "university");
   },
 
   async deleteUniversity(req: Request, res: Response) {
-    try {
-      const universityId = Number(req.params.id);
-      const result = await AdminService.deleteUniversity(getAuth(req), universityId);
-      return res.status(200).json({ success: true, result });
-    } catch (error) {
-      return handleError(error, res);
-    }
+    const universityId = Number(req.params.id);
+    return run(res, () => AdminService.deleteUniversity(getAuth(req), universityId), "result");
   },
 
   async getBuildings(req: Request, res: Response) {
-    try {
-      const universityId = req.query.universityId ? Number(req.query.universityId) : undefined;
-      const buildings = await AdminService.getBuildings(getAuth(req), universityId);
-      return res.status(200).json({ success: true, buildings });
-    } catch (error) {
-      return handleError(error, res);
-    }
+    const universityId = req.query.universityId ? Number(req.query.universityId) : undefined;
+    return run(res, () => AdminService.getBuildings(getAuth(req), universityId), "buildings");
   },
 
   async createBuilding(req: Request, res: Response) {
-    try {
-      const building = await AdminService.createBuilding(getAuth(req), req.body);
-      return res.status(201).json({ success: true, building });
-    } catch (error) {
-      return handleError(error, res);
-    }
+    return run(res, () => AdminService.createBuilding(getAuth(req), req.body), "building", 201);
   },
 
   async updateBuilding(req: Request, res: Response) {
-    try {
-      const buildingId = Number(req.params.id);
-      const building = await AdminService.updateBuilding(getAuth(req), buildingId, req.body);
-      return res.status(200).json({ success: true, building });
-    } catch (error) {
-      return handleError(error, res);
-    }
+    const buildingId = Number(req.params.id);
+    return run(res, () => AdminService.updateBuilding(getAuth(req), buildingId, req.body), "building");
   },
 
   async deleteBuilding(req: Request, res: Response) {
-    try {
-      const buildingId = Number(req.params.id);
-      const result = await AdminService.deleteBuilding(getAuth(req), buildingId);
-      return res.status(200).json({ success: true, result });
-    } catch (error) {
-      return handleError(error, res);
-    }
+    const buildingId = Number(req.params.id);
+    return run(res, () => AdminService.deleteBuilding(getAuth(req), buildingId), "result");
   },
 
   async getRooms(req: Request, res: Response) {
-    try {
-      const rooms = await AdminService.getRooms(getAuth(req), {
+    return run(
+      res,
+      () =>
+        AdminService.getRooms(getAuth(req), {
         buildingId: req.query.buildingId ? Number(req.query.buildingId) : undefined,
         universityId: req.query.universityId ? Number(req.query.universityId) : undefined,
-      });
-      return res.status(200).json({ success: true, rooms });
-    } catch (error) {
-      return handleError(error, res);
-    }
+        }),
+      "rooms"
+    );
   },
 
   async createRoom(req: Request, res: Response) {
-    try {
-      const room = await AdminService.createRoom(getAuth(req), req.body);
-      return res.status(201).json({ success: true, room });
-    } catch (error) {
-      return handleError(error, res);
-    }
+    return run(res, () => AdminService.createRoom(getAuth(req), req.body), "room", 201);
   },
 
   async updateRoom(req: Request, res: Response) {
-    try {
-      const roomId = Number(req.params.id);
-      const room = await AdminService.updateRoom(getAuth(req), roomId, req.body);
-      return res.status(200).json({ success: true, room });
-    } catch (error) {
-      return handleError(error, res);
-    }
+    const roomId = Number(req.params.id);
+    return run(res, () => AdminService.updateRoom(getAuth(req), roomId, req.body), "room");
   },
 
   async deleteRoom(req: Request, res: Response) {
-    try {
-      const roomId = Number(req.params.id);
-      const result = await AdminService.deleteRoom(getAuth(req), roomId);
-      return res.status(200).json({ success: true, result });
-    } catch (error) {
-      return handleError(error, res);
-    }
+    const roomId = Number(req.params.id);
+    return run(res, () => AdminService.deleteRoom(getAuth(req), roomId), "result");
   },
 
   async getUsers(req: Request, res: Response) {
-    try {
-      const users = await AdminService.getUsers(getAuth(req));
-      return res.status(200).json({ success: true, users });
-    } catch (error) {
-      return handleError(error, res);
-    }
+    return run(res, () => AdminService.getUsers(getAuth(req)), "users");
   },
 
   async updateUserRole(req: Request, res: Response) {
-    try {
-      const userId = Number(req.params.id);
-      const user = await AdminService.updateUserRole(getAuth(req), userId, req.body);
-      return res.status(200).json({ success: true, user });
-    } catch (error) {
-      return handleError(error, res);
-    }
+    const userId = Number(req.params.id);
+    return run(res, () => AdminService.updateUserRole(getAuth(req), userId, req.body), "user");
   },
 };

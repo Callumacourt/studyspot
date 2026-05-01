@@ -1,134 +1,33 @@
-import { Prisma } from "../generated/prisma/client";
 import { prisma } from "../prisma";
 import type { AdminAuthContext, UserRole } from "../utils/adminAccess";
+import {
+  deleteBuildingCascade,
+  deleteRoomCascade,
+  deleteUniversityCascade,
+  getUniversityIdForBuilding,
+  getUniversityIdForRoom,
+} from "./admin/adminCascade";
+import { AdminError, asAdminError } from "./admin/adminErrors";
+import {
+  assertCanManageUniversity,
+  assertSuperAdmin,
+  resolveScopedUniversityId,
+  resolveScopedUniversityIds,
+} from "./admin/adminGuards";
+import { ensureBoolean, ensureName, ensurePositiveInt } from "./admin/adminParsers";
+import {
+  ADMIN_USER_SELECT,
+  ROOM_ADMIN_INCLUDE,
+  UNIVERSITY_WITH_STRUCTURE_INCLUDE,
+} from "./admin/adminSelects";
 
-class AdminError extends Error {
-  status: number;
-
-  constructor(message: string, status = 400) {
-    super(message);
-    this.status = status;
-  }
-}
-
-function assertSuperAdmin(auth: AdminAuthContext) {
-  if (auth.role !== "SUPER_ADMIN") {
-    throw new AdminError("Super admin access required", 403);
-  }
-}
-
-async function getUniversityIdForBuilding(buildingId: number): Promise<number> {
-  const building = await prisma.building.findUnique({
-    where: { id: buildingId },
-    select: { universityId: true },
-  });
-
-  if (!building) throw new AdminError("Building not found", 404);
-  return building.universityId;
-}
-
-async function getUniversityIdForRoom(roomId: number): Promise<number> {
-  const room = await prisma.room.findUnique({
-    where: { id: roomId },
-    select: { building: { select: { universityId: true } } },
-  });
-
-  if (!room) throw new AdminError("Room not found", 404);
-  return room.building.universityId;
-}
-
-async function assertCanManageUniversity(auth: AdminAuthContext, universityId: number) {
-  if (auth.role === "SUPER_ADMIN") return;
-  if (auth.role !== "UNIVERSITY_ADMIN") {
-    throw new AdminError("Admin access required", 403);
-  }
-  if (!auth.managedUniversityId || auth.managedUniversityId !== universityId) {
-    throw new AdminError("You can only manage your assigned university", 403);
-  }
-}
-
-function ensureName(name: unknown, label: string): string {
-  const value = String(name ?? "").trim();
-  if (!value) throw new AdminError(`${label} is required`);
-  return value;
-}
-
-function ensureBoolean(value: unknown): boolean {
-  return value === true || value === "true";
-}
-
-function ensureNumber(value: unknown, label: string): number {
-  const parsed = Number(value);
-  if (!Number.isInteger(parsed) || parsed <= 0) {
-    throw new AdminError(`${label} must be a positive integer`);
-  }
-  return parsed;
-}
-
-function handlePrismaError(error: unknown): never {
-  if (error instanceof AdminError) throw error;
-
-  if (
-    error instanceof Prisma.PrismaClientKnownRequestError &&
-    error.code === "P2002"
-  ) {
-    throw new AdminError("A record with those details already exists", 409);
-  }
-
-  throw error;
-}
-
-async function deleteRoomCascade(tx: Prisma.TransactionClient, roomId: number) {
-  await tx.room.update({
-    where: { id: roomId },
-    data: { favouritedByUsers: { set: [] } },
-  });
-  await tx.sensorReading.deleteMany({ where: { roomId } });
-  await tx.occupancyAverage.deleteMany({ where: { roomId } });
-  await tx.sensor.deleteMany({ where: { roomId } });
-  await tx.room.delete({ where: { id: roomId } });
-}
-
-async function deleteBuildingCascade(tx: Prisma.TransactionClient, buildingId: number) {
-  const rooms = await tx.room.findMany({ where: { buildingId }, select: { id: true } });
-  for (const room of rooms) {
-    await deleteRoomCascade(tx, room.id);
-  }
-  await tx.building.delete({ where: { id: buildingId } });
-}
-
-async function deleteUniversityCascade(tx: Prisma.TransactionClient, universityId: number) {
-  const buildings = await tx.building.findMany({ where: { universityId }, select: { id: true } });
-  for (const building of buildings) {
-    await deleteBuildingCascade(tx, building.id);
-  }
-
-  const affectedUsers = await tx.user.findMany({
-    where: { managedUniversityId: universityId },
-    select: { userId: true, role: true },
-  });
-
-  for (const user of affectedUsers) {
-    await tx.user.update({
-      where: { userId: user.userId },
-      data: {
-        managedUniversityId: null,
-        role: user.role === "UNIVERSITY_ADMIN" ? "USER" : user.role,
-      },
-    });
-  }
-
-  await tx.university.delete({ where: { id: universityId } });
+function isValidUserRole(role: string): role is UserRole {
+  return role === "USER" || role === "UNIVERSITY_ADMIN" || role === "SUPER_ADMIN";
 }
 
 export const AdminService = {
   async getSummary(auth: AdminAuthContext) {
-    const accessibleUniversityIds =
-      auth.role === "SUPER_ADMIN"
-        ? undefined
-        : auth.managedUniversityId
-        ? [auth.managedUniversityId]
-        : [];
+    const accessibleUniversityIds = resolveScopedUniversityIds(auth);
 
     const universityWhere = accessibleUniversityIds
       ? { id: { in: accessibleUniversityIds } }
@@ -139,21 +38,7 @@ export const AdminService = {
         where: universityWhere,
         orderBy: { name: "asc" },
         include: {
-          buildings: {
-            include: {
-              _count: { select: { rooms: true } },
-            },
-            orderBy: { name: "asc" },
-          },
-          administrators: {
-            select: {
-              userId: true,
-              email: true,
-              role: true,
-              managedUniversityId: true,
-            },
-            orderBy: { email: "asc" },
-          },
+          ...UNIVERSITY_WITH_STRUCTURE_INCLUDE,
           _count: { select: { buildings: true } },
         },
       }),
@@ -191,46 +76,15 @@ export const AdminService = {
   },
 
   async getUniversities(auth: AdminAuthContext) {
-    if (auth.role === "SUPER_ADMIN") {
-      return prisma.university.findMany({
-        orderBy: { name: "asc" },
-        include: {
-          buildings: {
-            include: { _count: { select: { rooms: true } } },
-            orderBy: { name: "asc" },
-          },
-          administrators: {
-            select: {
-              userId: true,
-              email: true,
-              role: true,
-              managedUniversityId: true,
-            },
-            orderBy: { email: "asc" },
-          },
-        },
-      });
-    }
-
-    if (!auth.managedUniversityId) return [];
     return prisma.university.findMany({
-      where: { id: auth.managedUniversityId },
+      where:
+        auth.role === "SUPER_ADMIN"
+          ? undefined
+          : auth.managedUniversityId
+          ? { id: auth.managedUniversityId }
+          : { id: -1 },
       orderBy: { name: "asc" },
-      include: {
-        buildings: {
-          include: { _count: { select: { rooms: true } } },
-          orderBy: { name: "asc" },
-        },
-        administrators: {
-          select: {
-            userId: true,
-            email: true,
-            role: true,
-            managedUniversityId: true,
-          },
-          orderBy: { email: "asc" },
-        },
-      },
+      include: UNIVERSITY_WITH_STRUCTURE_INCLUDE,
     });
   },
 
@@ -241,7 +95,7 @@ export const AdminService = {
         data: { name: ensureName(payload.name, "University name") },
       });
     } catch (error) {
-      handlePrismaError(error);
+      asAdminError(error);
     }
   },
 
@@ -253,7 +107,7 @@ export const AdminService = {
         data: { name: ensureName(payload.name, "University name") },
       });
     } catch (error) {
-      handlePrismaError(error);
+      asAdminError(error);
     }
   },
 
@@ -287,10 +141,7 @@ export const AdminService = {
       return [];
     }
 
-    const scopedUniversityId =
-      auth.role === "SUPER_ADMIN"
-        ? universityId
-        : auth.managedUniversityId ?? undefined;
+    const scopedUniversityId = resolveScopedUniversityId(auth, universityId);
 
     if (scopedUniversityId) {
       await assertCanManageUniversity(auth, scopedUniversityId);
@@ -307,7 +158,7 @@ export const AdminService = {
   },
 
   async createBuilding(auth: AdminAuthContext, payload: { universityId: unknown; name: unknown }) {
-    const universityId = ensureNumber(payload.universityId, "University id");
+    const universityId = ensurePositiveInt(payload.universityId, "University id");
     await assertCanManageUniversity(auth, universityId);
 
     try {
@@ -319,7 +170,7 @@ export const AdminService = {
         include: { university: { select: { id: true, name: true } } },
       });
     } catch (error) {
-      handlePrismaError(error);
+      asAdminError(error);
     }
   },
 
@@ -334,7 +185,7 @@ export const AdminService = {
         include: { university: { select: { id: true, name: true } } },
       });
     } catch (error) {
-      handlePrismaError(error);
+      asAdminError(error);
     }
   },
 
@@ -361,10 +212,7 @@ export const AdminService = {
       return [];
     }
 
-    const scopedUniversityId =
-      auth.role === "SUPER_ADMIN"
-        ? filters.universityId
-        : auth.managedUniversityId ?? undefined;
+    const scopedUniversityId = resolveScopedUniversityId(auth, filters.universityId);
 
     if (scopedUniversityId) {
       await assertCanManageUniversity(auth, scopedUniversityId);
@@ -376,19 +224,7 @@ export const AdminService = {
         ...(scopedUniversityId ? { building: { universityId: scopedUniversityId } } : {}),
       },
       orderBy: [{ buildingId: "asc" }, { name: "asc" }],
-      include: {
-        building: {
-          select: {
-            id: true,
-            name: true,
-            university: { select: { id: true, name: true } },
-          },
-        },
-        sensors: {
-          select: { sensorId: true, name: true, deviceId: true },
-          orderBy: { sensorId: "asc" },
-        },
-      },
+      include: ROOM_ADMIN_INCLUDE,
     });
   },
 
@@ -403,7 +239,7 @@ export const AdminService = {
       hearingAssistance?: unknown;
     }
   ) {
-    const buildingId = ensureNumber(payload.buildingId, "Building id");
+    const buildingId = ensurePositiveInt(payload.buildingId, "Building id");
     const universityId = await getUniversityIdForBuilding(buildingId);
     await assertCanManageUniversity(auth, universityId);
 
@@ -417,22 +253,10 @@ export const AdminService = {
           groundFloor: ensureBoolean(payload.groundFloor),
           hearingAssistance: ensureBoolean(payload.hearingAssistance),
         },
-        include: {
-          building: {
-            select: {
-              id: true,
-              name: true,
-              university: { select: { id: true, name: true } },
-            },
-          },
-          sensors: {
-            select: { sensorId: true, name: true, deviceId: true },
-            orderBy: { sensorId: "asc" },
-          },
-        },
+        include: ROOM_ADMIN_INCLUDE,
       });
     } catch (error) {
-      handlePrismaError(error);
+      asAdminError(error);
     }
   },
 
@@ -448,7 +272,7 @@ export const AdminService = {
       hearingAssistance?: unknown;
     }
   ) {
-    const targetBuildingId = ensureNumber(payload.buildingId, "Building id");
+    const targetBuildingId = ensurePositiveInt(payload.buildingId, "Building id");
     const targetUniversityId = await getUniversityIdForBuilding(targetBuildingId);
     const currentUniversityId = await getUniversityIdForRoom(roomId);
 
@@ -466,22 +290,10 @@ export const AdminService = {
           groundFloor: ensureBoolean(payload.groundFloor),
           hearingAssistance: ensureBoolean(payload.hearingAssistance),
         },
-        include: {
-          building: {
-            select: {
-              id: true,
-              name: true,
-              university: { select: { id: true, name: true } },
-            },
-          },
-          sensors: {
-            select: { sensorId: true, name: true, deviceId: true },
-            orderBy: { sensorId: "asc" },
-          },
-        },
+        include: ROOM_ADMIN_INCLUDE,
       });
     } catch (error) {
-      handlePrismaError(error);
+      asAdminError(error);
     }
   },
 
@@ -501,13 +313,7 @@ export const AdminService = {
 
     return prisma.user.findMany({
       orderBy: { email: "asc" },
-      select: {
-        userId: true,
-        email: true,
-        role: true,
-        managedUniversityId: true,
-        managedUniversity: { select: { id: true, name: true } },
-      },
+      select: ADMIN_USER_SELECT,
     });
   },
 
@@ -518,8 +324,8 @@ export const AdminService = {
   ) {
     assertSuperAdmin(auth);
 
-    const role = String(payload.role ?? "") as UserRole;
-    if (!["USER", "UNIVERSITY_ADMIN", "SUPER_ADMIN"].includes(role)) {
+    const role = String(payload.role ?? "");
+    if (!isValidUserRole(role)) {
       throw new AdminError("Role must be USER, UNIVERSITY_ADMIN, or SUPER_ADMIN");
     }
 
@@ -528,7 +334,7 @@ export const AdminService = {
         ? null
         : payload.managedUniversityId === undefined
         ? undefined
-        : ensureNumber(payload.managedUniversityId, "Managed university id");
+        : ensurePositiveInt(payload.managedUniversityId, "Managed university id");
 
     if (role === "UNIVERSITY_ADMIN" && !managedUniversityId) {
       throw new AdminError("University admins must be assigned to a university");
@@ -545,13 +351,7 @@ export const AdminService = {
         role,
         managedUniversityId: role === "UNIVERSITY_ADMIN" ? managedUniversityId ?? null : null,
       },
-      select: {
-        userId: true,
-        email: true,
-        role: true,
-        managedUniversityId: true,
-        managedUniversity: { select: { id: true, name: true } },
-      },
+      select: ADMIN_USER_SELECT,
     });
   },
 

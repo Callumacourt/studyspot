@@ -2,6 +2,12 @@ import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import styles from "./AdminPage.module.css";
 import { getAuthHeaders, getStoredUser } from "../../utils/auth";
+import {
+  buildBuildingPayload,
+  buildRoomPayload,
+  fetchAdminDashboard,
+  getApiErrorMessage,
+} from "./adminApi";
 
 const emptyBuildingForm = { id: null, name: "", universityId: "" };
 const emptyRoomForm = {
@@ -37,30 +43,18 @@ export default function AdminPage() {
     setError("");
 
     try {
-      const [summaryRes, universityRes, buildingRes, roomRes] = await Promise.all([
-        axios.get("/api/admin/summary", { headers: authHeaders }),
-        axios.get("/api/admin/universities", { headers: authHeaders }),
-        axios.get("/api/admin/buildings", {
-          headers: authHeaders,
-          params: targetUniversityId ? { universityId: targetUniversityId } : undefined,
-        }),
-        axios.get("/api/admin/rooms", {
-          headers: authHeaders,
-          params: targetUniversityId ? { universityId: targetUniversityId } : undefined,
-        }),
-      ]);
-
-      const nextUniversities = universityRes.data?.universities ?? [];
+      const { summary, universities: nextUniversities, buildings: nextBuildings, rooms: nextRooms } =
+        await fetchAdminDashboard(authHeaders, targetUniversityId);
       const resolvedUniversityId =
         targetUniversityId ||
         user?.managedUniversityId ||
         nextUniversities[0]?.id ||
         "";
 
-      setSummary(summaryRes.data?.summary ?? null);
+      setSummary(summary);
       setUniversities(nextUniversities);
-      setBuildings(buildingRes.data?.buildings ?? []);
-      setRooms(roomRes.data?.rooms ?? []);
+      setBuildings(nextBuildings);
+      setRooms(nextRooms);
       setSelectedUniversityId(String(resolvedUniversityId || ""));
 
       setBuildingForm((prev) => ({
@@ -68,7 +62,7 @@ export default function AdminPage() {
         universityId: prev.universityId || String(resolvedUniversityId || ""),
       }));
     } catch (err) {
-      setError(err.response?.data?.error || "Failed to load admin dashboard.");
+      setError(getApiErrorMessage(err, "Failed to load admin dashboard."));
     } finally {
       setLoading(false);
     }
@@ -92,10 +86,7 @@ export default function AdminPage() {
     setMessage("");
 
     try {
-      const payload = {
-        name: buildingForm.name,
-        universityId: Number(buildingForm.universityId || selectedUniversityId),
-      };
+      const payload = buildBuildingPayload(buildingForm, selectedUniversityId);
 
       if (buildingForm.id) {
         await axios.patch(`/api/admin/buildings/${buildingForm.id}`, payload, { headers: authHeaders });
@@ -108,7 +99,7 @@ export default function AdminPage() {
       setBuildingForm({ ...emptyBuildingForm, universityId: selectedUniversityId });
       await loadDashboard(selectedUniversityId);
     } catch (err) {
-      setError(err.response?.data?.error || "Failed to save building.");
+      setError(getApiErrorMessage(err, "Failed to save building."));
     } finally {
       setSubmitting(false);
     }
@@ -121,14 +112,7 @@ export default function AdminPage() {
     setMessage("");
 
     try {
-      const payload = {
-        name: roomForm.name,
-        buildingId: Number(roomForm.buildingId),
-        wheelchairAccessible: roomForm.wheelchairAccessible,
-        hasAdjustableDesks: roomForm.hasAdjustableDesks,
-        groundFloor: roomForm.groundFloor,
-        hearingAssistance: roomForm.hearingAssistance,
-      };
+      const payload = buildRoomPayload(roomForm);
 
       if (roomForm.id) {
         await axios.patch(`/api/admin/rooms/${roomForm.id}`, payload, { headers: authHeaders });
@@ -141,7 +125,7 @@ export default function AdminPage() {
       setRoomForm(emptyRoomForm);
       await loadDashboard(selectedUniversityId);
     } catch (err) {
-      setError(err.response?.data?.error || "Failed to save room.");
+      setError(getApiErrorMessage(err, "Failed to save room."));
     } finally {
       setSubmitting(false);
     }
@@ -158,7 +142,7 @@ export default function AdminPage() {
       setMessage("Building deleted.");
       await loadDashboard(selectedUniversityId);
     } catch (err) {
-      setError(err.response?.data?.error || "Failed to delete building.");
+      setError(getApiErrorMessage(err, "Failed to delete building."));
     }
   }
 
@@ -171,7 +155,7 @@ export default function AdminPage() {
       setMessage("Room deleted.");
       await loadDashboard(selectedUniversityId);
     } catch (err) {
-      setError(err.response?.data?.error || "Failed to delete room.");
+      setError(getApiErrorMessage(err, "Failed to delete room."));
     }
   }
 

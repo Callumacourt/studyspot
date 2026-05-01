@@ -2,6 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import styles from "./PlatformAdminPage.module.css";
 import { getAuthHeaders } from "../../utils/auth";
+import {
+  buildUserRolePayload,
+  fetchPlatformAdminData,
+  getApiErrorMessage,
+} from "../Admin/adminApi";
 
 const emptyUniversityForm = { id: null, name: "" };
 
@@ -23,15 +28,11 @@ export default function PlatformAdminPage() {
     setError("");
 
     try {
-      const [summaryRes, universityRes, userRes] = await Promise.all([
-        axios.get("/api/admin/summary", { headers: authHeaders }),
-        axios.get("/api/admin/universities", { headers: authHeaders }),
-        axios.get("/api/admin/users", { headers: authHeaders }),
-      ]);
+      const { summary, universities: nextUniversities, users: nextUsers } =
+        await fetchPlatformAdminData(authHeaders);
 
-      const nextUsers = userRes.data?.users ?? [];
-      setSummary(summaryRes.data?.summary ?? null);
-      setUniversities(universityRes.data?.universities ?? []);
+      setSummary(summary);
+      setUniversities(nextUniversities);
       setUsers(nextUsers);
       setUserDrafts(
         Object.fromEntries(
@@ -45,7 +46,7 @@ export default function PlatformAdminPage() {
         )
       );
     } catch (err) {
-      setError(err.response?.data?.error || "Failed to load platform admin data.");
+      setError(getApiErrorMessage(err, "Failed to load platform admin data."));
     } finally {
       setLoading(false);
     }
@@ -73,7 +74,7 @@ export default function PlatformAdminPage() {
       setUniversityForm(emptyUniversityForm);
       await loadData();
     } catch (err) {
-      setError(err.response?.data?.error || "Failed to save university.");
+      setError(getApiErrorMessage(err, "Failed to save university."));
     } finally {
       setSubmitting(false);
     }
@@ -96,7 +97,7 @@ export default function PlatformAdminPage() {
       setMessage("University deleted.");
       await loadData();
     } catch (err) {
-      setError(err.response?.data?.error || "Failed to delete university.");
+      setError(getApiErrorMessage(err, "Failed to delete university."));
     }
   }
 
@@ -109,16 +110,13 @@ export default function PlatformAdminPage() {
       const draft = userDrafts[userId];
       await axios.patch(
         `/api/admin/users/${userId}/role`,
-        {
-          role: draft.role,
-          managedUniversityId: draft.role === "UNIVERSITY_ADMIN" ? Number(draft.managedUniversityId) : null,
-        },
+        buildUserRolePayload(draft),
         { headers: authHeaders }
       );
       setMessage("User permissions updated.");
       await loadData();
     } catch (err) {
-      setError(err.response?.data?.error || "Failed to update user permissions.");
+      setError(getApiErrorMessage(err, "Failed to update user permissions."));
     } finally {
       setSubmitting(false);
     }

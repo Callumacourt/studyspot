@@ -4,6 +4,7 @@ import loginRoute from "./routes/LoginRoute";
 import registerRoute from "./routes/RegisterRoute";
 import roomRoute from "./routes/RoomRoute";
 import universityRoute from "./routes/UniversityRoute";
+import adminRoute from "./routes/AdminRoute";
 import { SensorService } from "./services/SensorService";
 import cors from "cors";
 
@@ -36,6 +37,7 @@ app.use("/users", registerRoute);
 app.use("/users", loginRoute);
 app.use("/api/rooms", roomRoute);
 app.use("/api/universities", universityRoute);
+app.use("/api/admin", adminRoute);
 
 /* Periodic background sync of sensors (disabled during tests)
    - guarded by NODE_ENV !== "test" to keep unit tests deterministic

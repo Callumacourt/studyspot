@@ -18,10 +18,19 @@ enum MetricType {
   LIGHT
 }
 
+enum UserRole {
+  USER
+  UNIVERSITY_ADMIN
+  SUPER_ADMIN
+}
+
 model User {
   userId Int @id @default(autoincrement())
   email String @unique
   password String // make sure we hash this before storing
+  role UserRole @default(USER)
+  managedUniversityId Int?
+  managedUniversity University? @relation("ManagedUniversityAdmins", fields: [managedUniversityId], references: [id])
   favouritedRooms Room[]
 }
 
@@ -29,6 +38,7 @@ model University {
   id Int @id @default(autoincrement())
   name String @unique
   buildings Building []
+  administrators User[] @relation("ManagedUniversityAdmins")
 }
 
 model Building {

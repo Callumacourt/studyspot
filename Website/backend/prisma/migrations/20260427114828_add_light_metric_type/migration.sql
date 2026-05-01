@@ -1,0 +1,2 @@
+-- Restored placeholder migration file so Prisma migration history remains consistent.
+-- The LIGHT metric enum value is already reflected in the current schema.

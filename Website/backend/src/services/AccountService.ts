@@ -2,6 +2,7 @@ import { PrismaClient } from "../generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg"; 
 import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken"
+import { resolveEffectiveRole } from "../utils/adminAccess";
 
 // Connect to our database via DATABASE_URL env var 
 const prisma = new PrismaClient({
@@ -73,13 +74,31 @@ export const AccountService = {
             include: { favouritedRooms: true}
         });
 
+        const effectiveRole = resolveEffectiveRole({
+            email: account.email,
+            role: (user as any)?.role,
+        });
+        const managedUniversityId = (user as any)?.managedUniversityId ?? null;
+
         // Sign JWT for authentication. Ensure JWT_SECRET exists.
         const token = jwt.sign(
-            { userId : account.userId, email: account.email },
+            {
+                userId : account.userId,
+                email: account.email,
+                role: effectiveRole,
+                managedUniversityId,
+            },
             process.env.JWT_SECRET!,
             { expiresIn: "1h" }  
         )
 
-        return { user, token }
+        return {
+            token,
+            user: {
+                ...user,
+                role: effectiveRole,
+                managedUniversityId,
+            },
+        }
     }
 }

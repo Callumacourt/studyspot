@@ -65,4 +65,20 @@ export const RoomController = {
       return res.status(500).json({ success: false, error: error.message });
     }
   },
+
+  async bookRoom (req: Request, res: Response) {
+    try {
+      const roomId = Number(req.params.roomId);
+      if (Number.isNaN(roomId)) return res.status(400).json({ success: false, error: "Invalid room id for booking" });
+
+      // only available rooms will be shown on front end this is double security
+      const available = RoomService.checkAvailability(roomId);
+      if (!available) return res.status(400).json({success: false, message: "Room not available at selected times"})
+
+      await RoomService.bookRoom(roomId);
+      return res.status(200).json({success: true, message: "Room booked successfully"})
+    } catch (error: any) {
+        return res.status(500).json({ success: false, error: error.message });
+    }
+  }
 };

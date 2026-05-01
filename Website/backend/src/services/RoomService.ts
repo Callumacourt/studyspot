@@ -99,4 +99,59 @@ export const RoomService = {
 
     return mapRoomWithMetrics(room);
   },
-};
+
+  // Check if desired time range is available for room booking on bookable rooms
+  // Returns true if available or false if overlapping
+  async checkRoomAvailability(roomId: number, desiredStartHour: Date, desiredEndHour: Date) {
+    if (desiredStartHour >= desiredEndHour) throw new Error("Invalid time range");
+    
+    const room = await prisma.room.findUnique({
+      where: {id: roomId},
+      include: {
+        bookings: true;
+      }
+    })
+
+    if (!room) throw new Error("Invalid roomId")
+
+    if (!room.bookable) return false;
+
+    const overlapping = (room.bookings || []).some((b) => {
+      if (!b.startTime || b.endTime) return false;
+      if (!b.status === "CANCELLED") return false;
+
+      return b.startTime < desiredEndHour && b.endTime > desiredStartHour;
+    });
+    return !overlapping;
+  }
+
+  async bookRoom(roomId: number, startTime: Date, endTime: Date, bookedByUserId?: number) {
+    if (startTime >= endTime) throw new Error("Invalid time range");
+
+    const room = await prisma.room.findUnique({where: { id: roomId }})
+    if (!room) throw new Error("Invalid roomId");
+    if (!room.bookable) throw new Error("Room is not bookable");
+
+    if (room.maxBookingDurationMinutes) {
+      const durationMins = Math.round((endTime.getTime() - startTime.getTime()) / 60000);
+      if (!durationMins > room.maxBookingDurationMins) {
+        throw new Error("Requested booking exceeds max booking time");
+      }
+    }
+    
+    const available = await this.checkRoomAvailability(roomId, startTime, endTime);
+    if (!available) throw new Error("Requested booking conflicts with an existing booking")
+
+    const created = await prisma.roomBooking.create({
+      data: {
+        roomId,
+        startTime,
+        endTime,
+        status: "CONFIRMED",
+        bookedByUserId: bookedByUserId ?? null,
+      },
+    });
+
+    return created;
+}
+}

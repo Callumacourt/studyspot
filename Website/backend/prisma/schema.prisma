@@ -38,6 +38,13 @@ enum UserRole {
   SUPER_ADMIN
 }
 
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
 model User {
   userId Int @id @default(autoincrement())
   email String @unique
@@ -77,12 +84,27 @@ model Room {
   favouritedByUsers User []
   reports RoomReport[]
 
+  bookable Boolean @default(false)
+  maxBookingDurationMinutes Int?
+  openHour DateTime?
+  closeHour DateTime?
+  bookings RoomBooking[]
+
   wheelchairAccessible Boolean @default(false)
   hasAdjustableDesks Boolean @default(false)
   groundFloor Boolean @default(false)
   hearingAssistance Boolean @default(false)
 
   @@unique([buildingId, name])
+}
+
+model RoomBooking {
+  id Int @id @default(autoincrement())
+  roomId Int
+  room Room @relation(fields: [roomId], references: [id])
+  startTime DateTime
+  endTime DateTime
+  status BookingStatus @default(PENDING)
 }
 
 model RoomReport {

@@ -287,6 +287,8 @@
 .reportCard select,
 .reportCard textarea {
     border: 1px solid #ced8e3;
+    background-color: white;
+    color: black;
     border-radius: 10px;
     padding: 0.7rem 0.8rem;
     font: inherit;

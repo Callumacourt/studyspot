@@ -169,14 +169,14 @@ export default function RoomBooker({ roomId, openHour, closeHour, maxBookingDura
                 { startTime: startISO, endTime: endISO },
                 { headers: getAuthHeaders() }
             );
-            setMessage({ text: `Booked ${fmtHour(selectedStart)}\u2013${fmtHour(selectedEnd)} on ${selectedDate} \u2713`, ok: true });
+            setMessage({ text: `Booked ${fmtHour(selectedStart)} - ${fmtHour(selectedEnd)} on ${selectedDate} \u2713`, ok: true });
             setSelectedStart(null);
             setSelectedEnd(null);
             const res = await axios.get(`/api/rooms/${roomId}/bookings?date=${selectedDate}`);
             setBookings(res.data?.bookings ?? []);
             if (onSuccess) setTimeout(onSuccess, 1500);
         } catch (err: any) {
-            setMessage({ text: err?.response?.data?.error || "Booking failed \u2014 please try again.", ok: false });
+            setMessage({ text: err?.response?.data?.error || "Booking failed please try again.", ok: false });
         } finally {
             setSubmitting(false);
         }
@@ -239,7 +239,7 @@ export default function RoomBooker({ roomId, openHour, closeHour, maxBookingDura
 
             {hasSelection && (
                 <p className={styles.summary}>
-                    {fmtHour(selectedStart!)} \u2013 {fmtHour(selectedEnd!)} &nbsp;
+                    {fmtHour(selectedStart!)} - {fmtHour(selectedEnd!)} &nbsp;
                     ({selectedEnd! - selectedStart!}h)
                 </p>
             )}

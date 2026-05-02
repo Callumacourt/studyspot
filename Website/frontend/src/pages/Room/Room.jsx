@@ -12,6 +12,7 @@ import RoomMetrics         from "./RoomMetrics";
 import RoomAccessibility   from "./RoomAccessibility";
 import RoomReport          from "./RoomReport";
 import { useRoomData }     from "./useRoomData";
+import Toast               from "../../components/Toast/Toast";
 import styles              from "./Room.module.css";
 
 export default function Room() {
@@ -106,7 +107,13 @@ export default function Room() {
                         </div>
                     </div>
 
-                    {actionMessage && <p className={styles.inlineMessage}>{actionMessage}</p>}
+                    {actionMessage && (
+                        <Toast
+                            message={actionMessage}
+                            type="success"
+                            onDismiss={() => setActionMessage("")}
+                        />
+                    )}
                     {loading        && <p>Loading sensor data...</p>}
                     {error          && <p>Error: {error}</p>}
 

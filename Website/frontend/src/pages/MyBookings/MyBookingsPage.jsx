@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { getAuthHeaders } from "../../utils/auth";
+import Toast from "../../components/Toast/Toast";
 import styles from "./MyBookingsPage.module.css";
 
 function formatDateTime(iso) {
@@ -59,7 +60,6 @@ export default function MyBookingsPage() {
       await axios.delete(`/api/user/bookings/${bookingId}/cancel`, { headers: authHeaders });
       setBookings((prev) => prev.filter((b) => b.id !== bookingId));
       setCancelSuccess("Booking cancelled successfully.");
-      setTimeout(() => setCancelSuccess(""), 4000);
     } catch (err) {
       setError(err?.response?.data?.error || "Failed to cancel booking.");
     } finally {
@@ -78,8 +78,8 @@ export default function MyBookingsPage() {
         <p>View and manage your room reservations.</p>
       </section>
 
-      {error         && <p className={styles.error}>{error}</p>}
-      {cancelSuccess && <p className={styles.success}>{cancelSuccess}</p>}
+      <Toast message={error}         type="error"   onDismiss={() => setError("")}          />
+      <Toast message={cancelSuccess} type="success" onDismiss={() => setCancelSuccess("")} />
       {loading && <p className={styles.loading}>Loading bookings…</p>}
 
       {!loading && (

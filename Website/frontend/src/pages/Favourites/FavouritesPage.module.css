@@ -1,5 +1,5 @@
 .page {
-  min-height: 100%;
+  min-height: 80dvh;
   padding: 2rem var(--page-gutter);
   background: #f5f7fb;
   color: #162332;

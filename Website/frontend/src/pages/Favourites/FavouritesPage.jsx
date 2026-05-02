@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import RoomCard from "../../components/RoomCard/RoomCard";
+import Toast from "../../components/Toast/Toast";
 import styles from "./FavouritesPage.module.css";
 import { getAuthHeaders } from "../../utils/auth";
 
@@ -56,8 +57,8 @@ export default function FavouritesPage() {
         <p>Quickly jump back to the spaces you use most often.</p>
       </section>
 
-      {message && <p className={styles.message}>{message}</p>}
-      {error && <p className={styles.error}>{error}</p>}
+      <Toast message={message} type="success" onDismiss={() => setMessage("")} />
+      <Toast message={error}   type="error"   onDismiss={() => setError("")}   />
 
       {loading ? (
         <p>Loading favourites…</p>

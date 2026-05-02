@@ -1,6 +1,6 @@
 import { prisma } from "../prisma";
 import { buildMetricFilters, metricsMatchFilters, type RoomMetrics } from "../utils/RoomFilters";
-import { extractMetrics, mapRoomWithMetrics } from "./roomMappers";
+import {  mapRoomWithMetrics } from "./roomMappers";
 
 // All potential parameters a roomfilter query can recieve, all are optional
 type RoomFilterParams = {

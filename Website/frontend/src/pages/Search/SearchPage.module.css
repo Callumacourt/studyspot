@@ -11,7 +11,7 @@
 .navButtons {
     width: 30vw;
     padding: 1vh 1vw;
-    background-color: #f1f1f1;
+    background-color:#F0EDE6;
     display: flex;
     flex-direction: column;
     color: black;
@@ -101,8 +101,8 @@
     color: black;
     width: 100%;
     min-width: 0;
-    padding: 1rem;
-    background-color: lavender;
+    padding: 2rem;
+    background-color: #F7F5F0;
     border-radius: 20px;
 }
 

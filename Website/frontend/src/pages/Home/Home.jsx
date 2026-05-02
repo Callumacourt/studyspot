@@ -70,7 +70,7 @@ export default function Home () {
                 <h1 className={styles.title}>Where are you studying?</h1>
 
                 <div className={styles.searchWrapper}>
-                    <div className={styles.searchBar}>
+                    <div className={`${styles.searchBar}${showSuggestions && filteredUniversities.length > 0 ? ` ${styles.searchBarOpen}` : ""}`}>
                         <input
                             type="text"
                             placeholder="Search university..."

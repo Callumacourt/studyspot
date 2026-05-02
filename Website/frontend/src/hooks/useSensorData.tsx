@@ -19,7 +19,9 @@ type Stats = {
     temp: string | null;
     humidity: string | null;
     noise: string | null;
+    noiseRaw: number | null;
     light: string | null;
+    lightRaw: number | null;
 };
 
 type LatestByMetric = {
@@ -38,7 +40,7 @@ function asNumber(value: MetricValue): number | null {
 
 // Convert raw per-sensor payloads into one latest-value snapshot per metric.
 function parseStats(data: SensorReading[]): Stats {
-    const stats: Stats = { occupancy: null, temp: null, humidity: null, noise: null, light: null };
+    const stats: Stats = { occupancy: null, temp: null, humidity: null, noise: null, noiseRaw: null, light: null, lightRaw: null };
     const latest: Partial<Record<string, LatestByMetric>> = {};
 
     for (const sensor of data) {
@@ -64,11 +66,13 @@ function parseStats(data: SensorReading[]): Stats {
     const occupancyVal = asNumber(latest.occupancy?.value ?? null);
     const lightVal = asNumber(latest.light?.value ?? null);
 
-    stats.temp = tempVal != null ? `${tempVal}°C` : null;
-    stats.humidity = humidityVal != null ? `${humidityVal}%` : null;
-    stats.noise = noiseVal != null ? `${noiseVal} dB` : null;
-    stats.occupancy = occupancyVal;
-    stats.light = lightVal != null ? `${lightVal} lux` : null;
+    stats.temp        = tempVal    != null ? `${tempVal}°C`    : null;
+    stats.humidity    = humidityVal != null ? `${humidityVal}%`  : null;
+    stats.noise       = noiseVal    != null ? `${noiseVal} dB`   : null;
+    stats.noiseRaw    = noiseVal;
+    stats.occupancy   = occupancyVal;
+    stats.light       = lightVal    != null ? `${lightVal} lux`  : null;
+    stats.lightRaw    = lightVal;
 
     return stats;
 }

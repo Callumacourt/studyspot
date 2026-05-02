@@ -5,6 +5,13 @@
   box-shadow: 0 1px 3px rgba(0,0,0,0.06);
   cursor: pointer;
   display: block;
+  border: 1px solid transparent;
+
+}
+
+.roomCard:hover {
+  border-color: navy;
+  border-left-color: inherit;
 }
 
 .title {
@@ -16,7 +23,6 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
 }
 
 .left {
@@ -35,6 +41,7 @@
 
 .right {
   display: flex;
+  margin-top: 0.5vh;
   gap: 1rem;
   align-items: center;
   flex: 0 0 auto;
@@ -55,6 +62,14 @@
   height: 16px;
   display: inline-block;
 }
+
+/* Occupancy / temp colour modifiers — text only, no background */
+.statSlate  { color: #64748b; }
+.statGreen  { color: #059669; }
+.statAmber  { color: #b45309; }
+.statRed    { color: #dc2626; }
+.statBlue   { color: #2563eb; }
+.statOrange { color: #ea580c; }
 
 @media (max-width: 520px) {
   .row { flex-direction: column; align-items: flex-start; gap: 0.5rem; }

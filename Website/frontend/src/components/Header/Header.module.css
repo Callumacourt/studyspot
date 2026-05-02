@@ -1,6 +1,10 @@
 .header {
     padding: 1rem 0;
-    background-color:lightgray;
+    background-color:#1C2E4A;
+}
+
+.header * {
+    color: #A8C4E0;
 }
 .mainNav {
     display: flex;
@@ -11,7 +15,6 @@
     margin: 0 auto;
     padding: 0 var(--page-gutter);
     box-sizing: border-box;
-    color: #000000;
 }
 
 .leftGroup {
@@ -64,7 +67,6 @@
     padding: 0.45rem 0;
     background-color: transparent;
     letter-spacing: 0.05em;
-    color: #000000;
 }
 
 .signinBtn {

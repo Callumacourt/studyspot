@@ -61,7 +61,7 @@
 }
 
 .clicked {
-    background-color: navy !important;
+    background-color: #1C2E4A !important;
     color: white !important;
 }
 
@@ -164,4 +164,9 @@
   justify-content: center;
   padding: 1.5vh 0px;
   border-radius: 25px;
+}
+
+.submitSpan button:hover {
+  background-color: #1C2E4A;
+  color: white;
 }

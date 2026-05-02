@@ -61,13 +61,7 @@ export default function Room() {
                     onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") openGoogleMaps(); }}
                 >
                     <img src={roomImg} alt={roomData?.name ? `${roomData.name} study space` : "Study room"} className={styles.roomImage} />
-                    <div className={styles.roomImageOverlay}>
-                        <h3>{roomData?.name ?? `Room ${roomId}`}</h3>
-                        <p>Quiet study zone • Live monitored</p>
-                    </div>
                 </section>
-                {console.log(roomData)}
-
                 {/* ── Stats sidebar ── */}
                 <aside className={styles.stats}>
                     <div className={styles.statsNav}>

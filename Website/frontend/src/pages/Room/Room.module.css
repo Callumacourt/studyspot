@@ -433,7 +433,7 @@
 .roomNav {
     background-color: rgb(42, 92, 130);
     color: white;
-    padding: 0.65rem 0.85rem;
+    padding: 1rem 2rem;
 }
 
 .roomNav h2 {
@@ -453,6 +453,21 @@
 .metric {
   min-width: 0;
 }
+
+.metricClickable {
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background 0.15s;
+  padding: 4px 6px;
+  margin: -4px -6px;
+}
+
+.metricClickable:hover,
+.metricClickable:focus-visible {
+  background: rgba(11, 95, 193, 0.07);
+  outline: none;
+}
+
 
 .metricValue {
   display: flex;

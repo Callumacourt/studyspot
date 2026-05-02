@@ -129,7 +129,13 @@ export default function Room() {
                 <section className={styles.busyTimes}>
                     <nav className={styles.roomNav}><h2>Busy Times</h2></nav>
                     <div className={styles.graphContainer}>
-                        <BusyTimesChart hourlyAverages={hourlyAverages} liveOccupancy={stats?.occupancy ?? null} />
+                        <BusyTimesChart
+                            hourlyAverages={hourlyAverages}
+                            liveOccupancy={stats?.occupancy ?? null}
+                            openHour={roomData?.openHour}
+                            closeHour={roomData?.closeHour}
+                            roomId={roomId}
+                        />
                     </div>
                 </section>
             </section>

@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import axios from "axios";
 import {
   ResponsiveContainer,
   BarChart,
@@ -15,6 +16,9 @@ import styles from "./BusyTimesChart.module.css";
 type BusyTimesChartProps = {
   hourlyAverages: number[]; // length 24
   liveOccupancy?: number | null;
+  openHour?: string | null;
+  closeHour?: string | null;
+  roomId?: string | number | null; // fetch today's bookings
 };
 
 type Point = { hour: number; label: string; value: number };
@@ -40,18 +44,48 @@ function colorFor(value: number, max: number): string {
   return "#0b5fc1"; // high contrast busy
 }
 
-export default function BusyTimesChart({ hourlyAverages, liveOccupancy = null }: BusyTimesChartProps) {
+export default function BusyTimesChart({ hourlyAverages, liveOccupancy = null, openHour, closeHour, roomId }: BusyTimesChartProps) {
   const [showTooltip, setShowTooltip] = useState(false);
+
+  // Fetch today's bookings to mark unavailable slots
+  const [bookedHours, setBookedHours] = useState<Set<number>>(new Set());
+  const todayStr = useMemo(() => {
+    const d = new Date();
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  }, []);
+
+  useEffect(() => {
+    if (!roomId) return;
+    let cancelled = false;
+    axios.get(`/api/rooms/${roomId}/bookings?date=${todayStr}`)
+      .then((res) => {
+        if (cancelled) return;
+        const bookings: { startTime: string; endTime: string }[] = res.data?.bookings ?? [];
+        const hours = new Set<number>();
+        for (const b of bookings) {
+          const start = new Date(b.startTime).getUTCHours();
+          const end   = new Date(b.endTime).getUTCHours();
+          for (let h = start; h < end; h++) hours.add(h);
+        }
+        setBookedHours(hours);
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [roomId, todayStr]);
   const values = Array.isArray(hourlyAverages) ? hourlyAverages : [];
   const full = Array.from({ length: 24 }, (_, h) => Number(values[h] ?? 0));
-  const max = Math.max(...full, 0);
+
+  // Restrict to opening hours when provided
+  const openH  = openHour  ? new Date(openHour).getUTCHours()  : 0;
+  const closeH = closeHour ? new Date(closeHour).getUTCHours() : 24;
+
+  const max = Math.max(...full.slice(openH, closeH), 0);
   const currentHour = new Date().getHours();
 
-  const data: Point[] = full.map((value, hour) => ({
-    hour,
-    label: hourLabel(hour),
-    value,
-  }));
+  const data: Point[] = full
+    .map((value, hour) => ({ hour, label: hourLabel(hour), value }))
+    .filter(({ hour }) => hour >= openH && hour < closeH);
 
   const liveText =
     typeof liveOccupancy === "number"
@@ -97,6 +131,7 @@ export default function BusyTimesChart({ hourlyAverages, liveOccupancy = null }:
           className={`${styles.tooltip} ${showTooltip ? styles.tooltipVisible : ""}`}
         >
           Calculated as the hourly average occupancy from stored sensor readings across recent days.
+          Red bars indicate the room is already booked for that hour today.
         </div>
       </div>
       <div className={styles.liveBadge} aria-hidden="true">
@@ -126,7 +161,13 @@ export default function BusyTimesChart({ hourlyAverages, liveOccupancy = null }:
             width={32}
           />
           <Tooltip
-            formatter={(value: unknown) => [toRoundedNumber(value), "Avg people"]}
+            formatter={(value: unknown, _name: unknown, props: any) => {
+              const hour = props?.payload?.hour;
+              if (typeof hour === "number" && bookedHours.has(hour)) {
+                return ["Already booked today", ""];
+              }
+              return [toRoundedNumber(value), "Avg people"];
+            }}
             labelFormatter={(l) => `Hour: ${l}`}
             wrapperStyle={{
               background: "rgba(11,95,193,0.95)",
@@ -139,17 +180,41 @@ export default function BusyTimesChart({ hourlyAverages, liveOccupancy = null }:
             {data.map((d) => (
               <Cell
                 key={d.hour}
-                fill={d.hour === currentHour ? "#ff8a3d" : colorFor(d.value, max)}
-                stroke={d.hour === currentHour ? "#7a2f00" : "#07304a"}
-                strokeWidth={d.hour === currentHour ? 1.5 : 1}
+                fill={
+                  bookedHours.has(d.hour)
+                    ? "#ef4444"
+                    : d.hour === currentHour
+                    ? "#ff8a3d"
+                    : colorFor(d.value, max)
+                }
+                stroke={
+                  bookedHours.has(d.hour)
+                    ? "#7f1d1d"
+                    : d.hour === currentHour
+                    ? "#7a2f00"
+                    : "#07304a"
+                }
+                strokeWidth={bookedHours.has(d.hour) || d.hour === currentHour ? 1.5 : 1}
                 tabIndex={0}
                 role="img"
-                aria-label={`${d.label}: ${Math.round(d.value)} average people`}
+                aria-label={`${
+                  d.label
+                }: ${Math.round(d.value)} average people${
+                  bookedHours.has(d.hour) ? " — booked today" : ""
+                }`}
               />
             ))}
           </Bar>
         </BarChart>
       </ResponsiveContainer>
+
+      {/* Legend */}
+      {bookedHours.size > 0 && (
+        <div className={styles.bookedLegend} aria-hidden="true">
+          <span className={styles.bookedSwatch} />
+          Room booked today
+        </div>
+      )}
     </div>
   );
 }

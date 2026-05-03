@@ -80,7 +80,7 @@ export default function MyBookingsPage() {
 
       <Toast message={error}         type="error"   onDismiss={() => setError("")}          />
       <Toast message={cancelSuccess} type="success" onDismiss={() => setCancelSuccess("")} />
-      {loading && <p className={styles.loading}>Loading bookings…</p>}
+      {loading && <p className={styles.loading} aria-live="polite" role="status">Loading bookings…</p>}
 
       {!loading && (
         <section className={styles.section}>
@@ -136,6 +136,7 @@ function BookingCard({ booking, onRequestCancel, onConfirmCancel, onDismissCance
               onClick={() => onRequestCancel(id)}
               disabled={cancelling === id}
               type="button"
+              aria-label={`Cancel booking for ${room.name}`}
             >
               Cancel
             </button>
@@ -143,13 +144,15 @@ function BookingCard({ booking, onRequestCancel, onConfirmCancel, onDismissCance
         </div>
       </div>
       {isConfirming && (
-        <div className={styles.confirmRow}>
+        // aria-live=polite announces the confirmation prompt to screen readers
+        <div className={styles.confirmRow} aria-live="polite">
           <span className={styles.confirmText}>Cancel this booking?</span>
           <button
             className={styles.confirmYes}
             onClick={() => onConfirmCancel(id)}
             disabled={cancelling === id}
             type="button"
+            aria-label={`Confirm cancel booking for ${room.name}`}
           >
             {cancelling === id ? "Cancelling…" : "Yes, cancel"}
           </button>
@@ -157,6 +160,7 @@ function BookingCard({ booking, onRequestCancel, onConfirmCancel, onDismissCance
             className={styles.confirmNo}
             onClick={onDismissCancel}
             type="button"
+            aria-label={`Keep booking for ${room.name}`}
           >
             Keep it
           </button>

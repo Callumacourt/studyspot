@@ -70,6 +70,7 @@ export default function RoomFilter({ onFilterChange, onReset, filteredRooms = []
             type="button"
             className={`${styles.leftBtn} ${vals.noise === "Silent" ? styles.clicked : ""}`}
             aria-label="Silent"
+            aria-pressed={vals.noise === "Silent"}
             onClick={() => handleNoiseChange("Silent")}
           >
             Silent
@@ -78,6 +79,7 @@ export default function RoomFilter({ onFilterChange, onReset, filteredRooms = []
             type="button"
             className={vals.noise === "Quiet" ? styles.clicked : ""}
             aria-label="Quiet"
+            aria-pressed={vals.noise === "Quiet"}
             onClick={() => handleNoiseChange("Quiet")}
           >
             Quiet
@@ -85,7 +87,8 @@ export default function RoomFilter({ onFilterChange, onReset, filteredRooms = []
           <button
             type="button"
             className={`${styles.rightBtn} ${vals.noise === "Normal" ? styles.clicked : ""}`}
-            aria-label="Normal+"
+            aria-label="Moderate and above"
+            aria-pressed={vals.noise === "Normal"}
             onClick={() => handleNoiseChange("Normal")}
           >
             Moderate+
@@ -105,6 +108,8 @@ export default function RoomFilter({ onFilterChange, onReset, filteredRooms = []
       </fieldset>
 
       <fieldset className = {styles.environmentFilter}>
+        {/* Visually-hidden legend gives the fieldset an accessible name for AT */}
+        <legend className={styles.srOnly}>Environment filters</legend>
         <button
           type="button"
           className={styles.collapseBtn}
@@ -141,6 +146,8 @@ export default function RoomFilter({ onFilterChange, onReset, filteredRooms = []
         )}
       </fieldset>
       <fieldset className = {styles.accessibilityFilter}>
+        {/* Visually-hidden legend gives the fieldset an accessible name for AT */}
+        <legend className={styles.srOnly}>Accessibility filters</legend>
         <button
           type="button"
           className={styles.collapseBtn}

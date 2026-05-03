@@ -231,10 +231,11 @@ export default function RoomBooker({ roomId, openHour, closeHour, maxBookingDura
                 </div>
             )}
 
-            <div className={styles.legend}>
-                <span className={`${styles.dot} ${styles.dotFree}`}    /> Available
-                <span className={`${styles.dot} ${styles.dotSelected}`} /> Selected
-                <span className={`${styles.dot} ${styles.dotTaken}`}   /> Booked
+            {/* Colour swatches are decorative — text labels carry the meaning */}
+            <div className={styles.legend} aria-label="Slot colour legend">
+                <span className={`${styles.dot} ${styles.dotFree}`}    aria-hidden="true" /> Available
+                <span className={`${styles.dot} ${styles.dotSelected}`} aria-hidden="true" /> Selected
+                <span className={`${styles.dot} ${styles.dotTaken}`}   aria-hidden="true" /> Booked
             </div>
 
             {hasSelection && (

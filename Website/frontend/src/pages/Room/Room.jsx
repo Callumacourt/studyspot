@@ -47,7 +47,7 @@ export default function Room() {
                         <li className={styles.seperator}><img src={chevronRightIcn} alt=">" /></li>
                         <li><a href="#">{getBuildingName() || "Building"}</a></li>
                         <li className={styles.seperator}><img src={chevronRightIcn} alt=">" /></li>
-                        <li className="current">{roomData?.name ?? `Room ${roomId}`}</li>
+                        <li aria-current="page">{roomData?.name ?? `Room ${roomId}`}</li>
                     </ul>
                 </nav>
                 <Link className={styles.backLink} to="/search">← Back to map</Link>
@@ -64,7 +64,7 @@ export default function Room() {
                     <img src={roomImg} alt={roomData?.name ? `${roomData.name} study space` : "Study room"} className={styles.roomImage} />
                 </section>
                 {/* ── Stats sidebar ── */}
-                <aside className={styles.stats}>
+                <aside className={styles.stats} aria-label="Room stats and actions">
                     <div className={styles.statsNav}>
                         <div className={styles.roomTitle}>{roomData?.name ?? `Room ${roomId}`}</div>
                         <div className={styles.statsActions}>
@@ -114,8 +114,9 @@ export default function Room() {
                             onDismiss={() => setActionMessage("")}
                         />
                     )}
-                    {loading        && <p>Loading sensor data...</p>}
-                    {error          && <p>Error: {error}</p>}
+                    {/* aria-live regions announce sensor data state changes to screen readers */}
+                    {loading && <p aria-live="polite" role="status">Loading sensor data…</p>}
+                    {error   && <p aria-live="assertive" role="alert">Error: {error}</p>}
 
                     <div className={styles.statsContent}>
                         <h4>Environment Metrics</h4>

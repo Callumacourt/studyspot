@@ -91,6 +91,7 @@ export default function SignUpPage() {
               value={formData.fullName}
               onChange={handleChange}
               className={styles.input}
+              autoComplete="name"
             />
           </div>
 
@@ -106,6 +107,7 @@ export default function SignUpPage() {
               value={formData.email}
               onChange={handleChange}
               className={styles.input}
+              autoComplete="email"
             />
           </div>
 
@@ -121,6 +123,7 @@ export default function SignUpPage() {
               value={formData.password}
               onChange={handleChange}
               className={styles.input}
+              autoComplete="new-password"
             />
           </div>
 
@@ -136,10 +139,12 @@ export default function SignUpPage() {
               value={formData.confirmPassword}
               onChange={handleChange}
               className={styles.input}
+              autoComplete="new-password"
             />
           </div>
 
-          {error && <p className={styles.error}>{error}</p>}
+          {/* role=alert ensures validation errors are announced immediately */}
+          {error && <p className={styles.error} role="alert" aria-live="assertive">{error}</p>}
 
           <button type="submit" className={styles.button}>
             Sign Up

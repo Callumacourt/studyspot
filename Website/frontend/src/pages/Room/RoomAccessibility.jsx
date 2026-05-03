@@ -43,10 +43,15 @@ export default function RoomAccessibility({ roomData }) {
     return (
         <div className={styles.accessibility}>
             {ACCESS_ITEMS.map(({ key, label, Icon }) => (
-                <div key={key} className={styles.accessItem}>
-                    <div className={styles.accessIcon}><Icon /></div>
-                    <div className={styles.accessLabel}>{label}</div>
-                    <div className={styles.accessFlag}>{roomData?.[key] ? "Yes" : "No"}</div>
+                <div
+                    key={key}
+                    className={styles.accessItem}
+                    // Full sentence label lets screen readers skip the separate icon/label/flag columns
+                    aria-label={`${label}: ${roomData?.[key] ? "Yes" : "No"}`}
+                >
+                    <div className={styles.accessIcon} aria-hidden="true"><Icon /></div>
+                    <div className={styles.accessLabel} aria-hidden="true">{label}</div>
+                    <div className={styles.accessFlag} aria-hidden="true">{roomData?.[key] ? "Yes" : "No"}</div>
                 </div>
             ))}
         </div>

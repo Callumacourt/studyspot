@@ -61,7 +61,7 @@ export default function FavouritesPage() {
       <Toast message={error}   type="error"   onDismiss={() => setError("")}   />
 
       {loading ? (
-        <p>Loading favourites…</p>
+        <p aria-live="polite" role="status">Loading favourites…</p>
       ) : rooms.length === 0 ? (
         <div className={styles.empty}>
           <h2>No favourites yet</h2>
@@ -82,6 +82,8 @@ export default function FavouritesPage() {
                 type="button"
                 className={styles.removeButton}
                 onClick={() => removeFavourite(room.id)}
+                // Include room name so screen readers say "Remove Cardiff Library from favourites"
+                aria-label={`Remove ${room.name} from favourites`}
               >
                 Remove from favourites
               </button>

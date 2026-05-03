@@ -33,9 +33,10 @@ export default function RoomCard({ name, building, metrics, onClick }) {
       className={styles.roomCard}
       style={{ borderLeft: `4px solid ${occ.color}` }}
       onClick={onClick}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") onClick?.(); }}
       role="button"
       tabIndex={0}
-      aria-label={`Open room ${name}`}
+      aria-label={`Open ${name}${ building ? `, ${building}` : ""} — ${occ.label} occupancy`}
     >
       <h3 className={styles.title}>{name}</h3>
 

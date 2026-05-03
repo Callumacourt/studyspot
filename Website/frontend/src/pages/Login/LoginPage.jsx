@@ -83,6 +83,7 @@ export default function LoginPage() {
               value={formData.email}
               onChange={handleChange}
               className={styles.input}
+              autoComplete="email"
             />
           </div>
 
@@ -98,6 +99,7 @@ export default function LoginPage() {
               value={formData.password}
               onChange={handleChange}
               className={styles.input}
+              autoComplete="current-password"
             />
           </div>
 
@@ -117,7 +119,8 @@ export default function LoginPage() {
             </a>
           </div>
 
-          {error && <p className={styles.error}>{error}</p>}
+          {/* role=alert announces validation errors immediately to screen readers */}
+          {error && <p className={styles.error} role="alert" aria-live="assertive">{error}</p>}
 
           <button type="submit" className={styles.button}>
             Sign In

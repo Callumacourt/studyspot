@@ -76,9 +76,18 @@ export default function Header() {
 
     return (
         <header className={styles.header}>
-            <nav className={styles.mainNav}>
+            {/* role="banner" is implicit on <header>; aria-label scopes the nav for AT */}
+            <nav className={styles.mainNav} aria-label="Main navigation">
                 <div className={styles.leftGroup}>
-                    <h2 className={styles.logo} onClick={() => navigate("/")}>
+                    {/* Logo acts as a home link — needs full keyboard support */}
+                    <h2
+                        className={styles.logo}
+                        onClick={() => navigate("/")}
+                        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") navigate("/"); }}
+                        role="button"
+                        tabIndex={0}
+                        aria-label="StudySpot home"
+                    >
                         StudySpot
                     </h2>
                 </div>

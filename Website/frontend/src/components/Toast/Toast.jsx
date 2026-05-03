@@ -27,8 +27,10 @@ export default function Toast({ message, type = "success", onDismiss, duration =
   return createPortal(
     <div
       className={`${styles.toast} ${styles[type] ?? styles.success}`}
-      role="status"
-      aria-live="polite"
+      // Errors are urgent — use assertive so screen readers interrupt immediately.
+      // Info/success use polite so they wait for a natural pause.
+      role={type === "error" ? "alert" : "status"}
+      aria-live={type === "error" ? "assertive" : "polite"}
     >
       <span className={styles.icon}>
         {type === "error" ? "✕" : "✓"}

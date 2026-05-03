@@ -170,3 +170,15 @@
   background-color: #1C2E4A;
   color: white;
 }
+/* Screen-reader-only utility: visually hidden but accessible to AT */
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

@@ -155,31 +155,37 @@ export default function SearchPage() {
         <div className={styles.navSection}>
           <h2>Find A Study Space</h2>
           {universities.length > 0 && (
-            <Select
-              inputId="uni-select"
-              options={[
-                { value: "", label: "All universities" },
-                ...universities.map((u) => ({ value: u.id, label: u.name })),
-              ]}
-              value={
-                (() => {
-                  const id = urlParams.get("universityId");
-                  if (!id) return { value: "", label: "All universities" };
-                  const u = universities.find((u) => String(u.id) === id);
-                  return u ? { value: u.id, label: u.name } : { value: "", label: "All universities" };
-                })()
-              }
-              onChange={handleUniversityChange}
-              isSearchable
-              placeholder="Select university…"
-              classNamePrefix="uniSelect"
-              className={styles.uniSelectControl}
-            />
+            <>
+              {/* Visually hidden label associates with the react-select via inputId */}
+              <label htmlFor="uni-select" className={styles.srOnly}>Select university</label>
+              <Select
+                inputId="uni-select"
+                options={[
+                  { value: "", label: "All universities" },
+                  ...universities.map((u) => ({ value: u.id, label: u.name })),
+                ]}
+                value={
+                  (() => {
+                    const id = urlParams.get("universityId");
+                    if (!id) return { value: "", label: "All universities" };
+                    const u = universities.find((u) => String(u.id) === id);
+                    return u ? { value: u.id, label: u.name } : { value: "", label: "All universities" };
+                  })()
+                }
+                onChange={handleUniversityChange}
+                isSearchable
+                placeholder="Select university…"
+                classNamePrefix="uniSelect"
+                className={styles.uniSelectControl}
+              />
+            </>
           )}
         </div>
+        
 
-        {loading && <p>Loading rooms...</p>}
-        {error && <p>{error}</p>}
+        {/* aria-live regions announce async state changes without requiring focus */}
+        {loading && <p aria-live="polite" role="status">Loading rooms…</p>}
+        {error   && <p aria-live="assertive" role="alert">{error}</p>}
 
         {/* render grouped by building */}
         {Object.entries(groupedRooms).map(([buildingName, roomsInBuilding]) => (
@@ -189,16 +195,21 @@ export default function SearchPage() {
               className={styles.buildingHeader}
               onClick={() => toggleBuilding(buildingName)}
               aria-expanded={!collapsedBuildings[buildingName]}
+              aria-controls={`building-${buildingName.replace(/\s+/g, "-")}`}
             >
               {buildingName}
               <img
                 src={collapsedBuildings[buildingName] ? chevronDown : chevronUp}
-                alt={collapsedBuildings[buildingName] ? "Expand" : "Collapse"}
+                alt=""
+                aria-hidden="true"
                 className={styles.buildingChevron}
               />
             </button>
             {!collapsedBuildings[buildingName] && (
-              <div className={styles.roomGrid}>
+              <div
+                id={`building-${buildingName.replace(/\s+/g, "-")}`}
+                className={styles.roomGrid}
+              >
                 {roomsInBuilding.map((room) => (
                   <RoomCard
                     key={room.id}

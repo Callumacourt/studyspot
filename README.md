@@ -14,15 +14,22 @@ This README is the root setup and replication guide.
 ## 1) Folder and File Structure
 
 ### 1.1 Root layout
+```text
 studyspot_group2/
 ├── README.md
-├── Testing/
+├── Testing
 │   ├── studyspot_monitor.py
 │   ├── cloud.py
 │   ├── updated_cloud.py
 │   ├── test.py
-│   ├── buzzer.py / buzzerRanger.py / dht.py / pir.py / light.py / sound.py / lcd.py
-│   └── ObjectDetection/
+│   ├── buzzer.py
+│   ├── buzzerRanger.py
+│   ├── dht.py
+│   ├── pir.py
+│   ├── light.py
+│   ├── sound.py
+│   ├── lcd.py
+│   └── ObjectDetection
 │       ├── runner.py
 │       ├── room_manager.py
 │       ├── manager.py
@@ -31,35 +38,37 @@ studyspot_group2/
 │       ├── detect.tflite
 │       ├── room_info.json
 │       └── rqs.txt
-└── Website/
-		├── backend/
-		│   ├── package.json
-		│   ├── prisma/
-		│   │   ├── schema.prisma
-		│   │   ├── seed.ts
-		│   │   └── migrations/
-		│   └── src/
-		│       ├── app.ts
-		│       ├── prisma.ts
-		│       ├── controllers/
-		│       ├── services/
-		│       ├── routes/
-		│       ├── middleware/
-		│       ├── utils/
-		│       ├── tests/
-		│       └── generated/prisma/
-		└── frontend/
-				├── package.json
-				├── vite.config.js
-				├── index.html
-				├── public/
-				└── src/
-						├── App.jsx / main.jsx / routes.jsx
-						├── pages/
-						├── components/
-						├── hooks/
-						├── utils/
-						└── types/
+└── Website
+    ├── backend
+    │   ├── package.json
+    │   ├── prisma
+    │   │   ├── schema.prisma
+    │   │   ├── seed.ts
+    │   │   └── migrations
+    │   └── src
+    │       ├── app.ts
+    │       ├── prisma.ts
+    │       ├── controllers
+    │       ├── services
+    │       ├── routes
+    │       ├── middleware
+    │       ├── utils
+    │       ├── tests
+    │       └── generated/prisma
+    └── frontend
+        ├── package.json
+        ├── vite.config.js
+        ├── index.html
+        ├── public
+        └── src
+            ├── App.jsx
+            ├── main.jsx
+            ├── routes.jsx
+            ├── pages
+            ├── components
+            ├── hooks
+            ├── utils
+            └── types
 ```
 
 ### 1.2 Purpose of key folders/files

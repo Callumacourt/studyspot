@@ -107,7 +107,7 @@ Configuration
    npx tsx prisma/seed.ts
    ```
    Seed creates sample buildings, rooms and a default test user:
-   - Email: `testuser@gmail.com`
+   - Email: `testuser@cardiff.ac.uk`
    - Password: `password`
 
 3. Start backend (default port 3000):

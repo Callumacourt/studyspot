@@ -217,7 +217,7 @@ async function main() {
     where:  { email: "testuser@gmail.com" },
     update: {},
     create: {
-      email: "testuser@gmail.com",
+      email: "testuser@cardiff.ac.uk",
       password: hashedPassword,
       favouritedRooms: { connect: allFakeRooms.slice(0, 3).map((r) => ({ id: r.id })) },
     },

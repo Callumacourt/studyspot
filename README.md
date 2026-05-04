@@ -181,7 +181,7 @@ SENSOR_SYNC_INTERVAL_MS=60000
 REAL_ROOM_ID=9 
 REAL_ROOM_SENSOR_ID=9
 REAL_ROOM_DEVICE_ID=""
-SUPER_ADMIN_EMAILS="admin1@cardiff.ac.uk,admin2@cardiff.ac.uk"
+SUPER_ADMIN_EMAILS="admin1@cardiff.ac.uk,admin2@cardiff.ac.uk" // register with this email to create an admin account
 ```
 
 ### B) ObjectDetection runtime config (`Testing/ObjectDetection/room_info.json`)

@@ -15,6 +15,15 @@ export default function FavouritesPage() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
+  function occupancyAccent(metrics) {
+    const pct = Number(metrics?.occupancy);
+    if (!Number.isFinite(pct)) return "#94a3b8";
+    if (pct === 0) return "#94a3b8";
+    if (pct <= 33) return "#34d399";
+    if (pct <= 66) return "#fbbf24";
+    return "#f87171";
+  }
+
   async function loadFavourites() {
     setLoading(true);
     setError("");
@@ -71,12 +80,19 @@ export default function FavouritesPage() {
       ) : (
         <section className={styles.grid}>
           {rooms.map((room) => (
-            <article key={room.id} className={styles.cardWrap}>
+            <article
+              key={room.id}
+              className={styles.cardWrap}
+              style={{ "--fav-accent": occupancyAccent(room.metrics) }}
+            >
               <RoomCard
                 name={room.name}
                 building={room.building?.name}
                 metrics={room.metrics}
                 onClick={() => navigate(`/room/${room.id}`)}
+                className={styles.favRoomCard}
+                accentPosition="none"
+                disableShadow
               />
               <button
                 type="button"

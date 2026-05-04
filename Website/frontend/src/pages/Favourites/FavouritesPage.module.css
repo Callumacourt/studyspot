@@ -38,10 +38,33 @@
   background: #fff;
   border-radius: 16px;
   border: 1px solid #e1e8f0;
+  position: relative;
+  overflow: hidden;
   padding: 0.6rem;
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.cardWrap:hover {
+  border-color: #1c2e4a;
+  box-shadow: 0 0 0 2px rgba(28, 46, 74, 0.12);
+}
+
+.cardWrap::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 4px;
+  background: var(--fav-accent, #94a3b8);
+}
+
+.favRoomCard,
+.favRoomCard:hover {
+  border-color: transparent !important;
 }
 
 .removeButton,

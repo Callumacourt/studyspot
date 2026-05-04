@@ -24,14 +24,34 @@ function tempInfo(val) {
 }
 
 // Search results card for a room; fully clickable to open room details.
-export default function RoomCard({ name, building, metrics, onClick }) {
+export default function RoomCard({
+  name,
+  building,
+  metrics,
+  onClick,
+  className = "",
+  accentPosition = "left",
+  disableShadow = false,
+}) {
   const occ  = occupancyInfo(metrics?.occupancy);
   const temp = tempInfo(metrics?.temperature);
 
+  const accentStyle =
+    accentPosition === "none"
+      ? {}
+      : accentPosition === "top"
+      ? { borderTop: `4px solid ${occ.color}` }
+      : { borderLeft: `4px solid ${occ.color}` };
+
+  const cardStyle = {
+    ...accentStyle,
+    ...(disableShadow ? { boxShadow: "none" } : {}),
+  };
+
   return (
     <div
-      className={styles.roomCard}
-      style={{ borderLeft: `4px solid ${occ.color}` }}
+      className={`${styles.roomCard} ${className}`.trim()}
+      style={cardStyle}
       onClick={onClick}
       onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") onClick?.(); }}
       role="button"

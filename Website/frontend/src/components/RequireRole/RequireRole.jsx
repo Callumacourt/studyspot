@@ -1,3 +1,11 @@
+/**
+ * Route guard component for role-based access control.
+ *
+ * Behaviour:
+ * - Unauthenticated users are redirected to login.
+ * - Authenticated users without required role are redirected to home.
+ * - Authorised users render `children`.
+ */
 import { Navigate, useLocation } from "react-router-dom";
 import { getStoredUser, hasRequiredRole } from "../../utils/auth";
 

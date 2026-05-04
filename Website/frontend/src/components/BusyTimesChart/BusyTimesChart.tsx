@@ -1,3 +1,19 @@
+/**
+ * BusyTimesChart
+ *
+ * Accessibility-first occupancy visualisation component.
+ *
+ * Inputs:
+ * - pre-computed hourly averages,
+ * - live occupancy snapshot,
+ * - room open/close hours,
+ * - room id (to overlay same-day booking constraints).
+ *
+ * Visual encoding:
+ * - blue gradient = relative occupancy intensity,
+ * - orange bar = current hour,
+ * - red bar = hour already booked today.
+ */
 import React, { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import {
@@ -10,8 +26,6 @@ import {
   Cell,
 } from "recharts";
 import styles from "./BusyTimesChart.module.css";
-
-// Accessible hourly occupancy bar chart used on room detail pages.
 
 type BusyTimesChartProps = {
   hourlyAverages: number[]; // length 24

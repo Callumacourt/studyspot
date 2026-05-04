@@ -1,3 +1,17 @@
+/**
+ * `useRoomData`
+ *
+ * Aggregates room-detail data requirements into a single reusable hook:
+ * - room metadata,
+ * - busy-times hourly averages,
+ * - favourite status/actions,
+ * - UI action messages.
+ *
+ * Why this hook exists:
+ * - keeps `Room.jsx` focused on rendering and interaction,
+ * - centralizes API calls and cancellation patterns,
+ * - avoids duplicating auth/favourite logic across components.
+ */
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { getAuthHeaders } from "../../utils/auth";
@@ -12,7 +26,7 @@ export function useRoomData(roomId) {
     const [favLoading,     setFavLoading]     = useState(false);
     const [actionMessage,  setActionMessage]  = useState("");
 
-    // Room metadata
+    // Room metadata fetch (name, building, booking/accessibility fields, etc.)
     useEffect(() => {
         let cancelled = false;
         axios.get(`/api/rooms/${roomId}`)
@@ -21,7 +35,7 @@ export function useRoomData(roomId) {
         return () => { cancelled = true; };
     }, [roomId]);
 
-    // Favourite status
+    // Favourite status is only queried for authenticated users.
     useEffect(() => {
         if (!isLoggedIn) { setIsFavourite(false); return; }
         let cancelled = false;
@@ -31,7 +45,7 @@ export function useRoomData(roomId) {
         return () => { cancelled = true; };
     }, [roomId, isLoggedIn]);
 
-    // Hourly occupancy averages — refreshed every 60s
+    // Hourly occupancy averages drive the BusyTimesChart; refresh every 60s.
     useEffect(() => {
         let cancelled = false;
 
@@ -50,6 +64,7 @@ export function useRoomData(roomId) {
         return () => { cancelled = true; clearInterval(id); };
     }, [roomId]);
 
+    // Toggle favourite state with optimistic-style local update + feedback toast.
     const toggleFavourite = async (navigate) => {
         if (!isLoggedIn) { navigate("/login"); return; }
         setFavLoading(true);
@@ -71,6 +86,7 @@ export function useRoomData(roomId) {
         }
     };
 
+    // Defensive building-name resolver (supports multiple payload shapes).
     const getBuildingName = () => {
         const b = roomData?.building;
         if (!b) return roomData?.buildingName ?? (roomData?.buildingId ? `Building ${roomData.buildingId}` : "");

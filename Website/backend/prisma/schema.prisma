@@ -1,5 +1,24 @@
-// This is our database file
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+/**
+ * StudySpot Database Schema (Prisma ORM)
+ * 
+ * Defines the core data model for StudySpot platform:
+ * - University → Building → Room hierarchy for organising study spaces.
+ * - Room relationships: sensors (linked to ThingsBoard devices), bookings, reports, metrics.
+ * - User authentication: email/password, role based access control (USER, UNIVERSITY_ADMIN, SUPER_ADMIN).
+ * - Telemetry: sensor readings (temperature, humidity, noise, light, occupancy).
+ * - Bookings: time-slot reservations with status tracking (PENDING, CONFIRMED, CANCELLED, COMPLETED).
+ * - Reports: user submitted issues (accessibility, safety, data quality).
+ * 
+ * Key design choices:
+ * - MetricType enum standardises sensor reading classification.
+ * - UserRole enum enables fine grained access control (see adminAccess utility).
+ * - Sensors link rooms to external ThingsBoard devices for live telemetry ingestion.
+ * - Readings table stores historical occupancy/environment data for analytics.
+ * - Bookings support future dated reservations with conflict detection.
+ * 
+ * Docs: https://www.prisma.io/docs
+ */
+
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
@@ -45,18 +64,30 @@ enum BookingStatus {
   COMPLETED
 }
 
+/**
+ * User model: represents registered platform users.
+ * - email: unique identifier for login; must be validated on registration
+ * - password: bcrypt-hashed; never stored in plaintext
+ * - role: controls feature access (USER, UNIVERSITY_ADMIN, SUPER_ADMIN)
+ * - managedUniversityId: if UNIVERSITY_ADMIN, allows admin user to manage specific university
+ * - relations: favourited rooms, submitted reports, made bookings
+ */
 model User {
   userId Int @id @default(autoincrement())
   email String @unique
-  password String // make sure we hash this before storing
+  password String // Always hashed with bcrypt before storage (see AccountService.registerUser)
   role UserRole @default(USER)
   managedUniversityId Int?
   managedUniversity University? @relation("ManagedUniversityAdmins", fields: [managedUniversityId], references: [id])
-  favouritedRooms Room[]
-  roomReports RoomReport[]
-  bookings RoomBooking[]
+  favouritedRooms Room[] // Many-to-many: rooms saved by user for quick access
+  roomReports RoomReport[] // Reports submitted by user about rooms
+  bookings RoomBooking[] // Time slot reservations made by user
 }
 
+/**
+ * University model: represents academic institutions.
+ * Top level container in hierarchy: University → Building → Room.
+ */
 model University {
   id Int @id @default(autoincrement())
   name String @unique
@@ -64,6 +95,11 @@ model University {
   administrators User[] @relation("ManagedUniversityAdmins")
 }
 
+/**
+ * Building model: physical buildings on campus that contain study rooms.
+ * - Part of University → Building → Room hierarchy for hierarchical organisation.
+ * - Each building has one university parent; one university can have many buildings.
+ */
 model Building {
   id Int @id @default(autoincrement())
   universityId Int
@@ -74,6 +110,16 @@ model Building {
   @@unique([universityId, name])
 }
 
+/**
+ * Room model: study space records with sensor data, accessibility features, and booking capability.
+ * - buildingId: reference to parent building (part of University → Building → Room hierarchy).
+ * - sensors: linked to ThingsBoard device IDs for live telemetry ingestion.
+ * - readings: historical sensor readings for analytics and occupancy inference.
+ * - bookable: boolean flag; if true, supports time slot reservations.
+ * - accessibility fields: wheelchairAccessible, hasAdjustableDesks, groundFloor, hearingAssistance.
+ * - reports: user-submitted issues tracked separately for admin review.
+ * - occupancyAverages: pre-calculated hourly/daily patterns for frontend recommendations.
+ */
 model Room {
   id Int @id @default(autoincrement())
   readings SensorReading[]
@@ -99,6 +145,14 @@ model Room {
   @@unique([buildingId, name])
 }
 
+/**
+ * RoomBooking model: time slot reservations for bookable rooms.
+ * - roomId: room being booked.
+ * - bookedByUserId: user making the reservation (nullable for system created bookings).
+ * - startTime, endTime: UTC timestamps defining reservation window.
+ * - status: PENDING (unconfirmed), CONFIRMED, CANCELLED, or COMPLETED.
+ * - Conflict detection performed by RoomService.checkRoomAvailability() before creation.
+ */
 model RoomBooking {
   id Int @id @default(autoincrement())
   roomId Int
@@ -110,6 +164,14 @@ model RoomBooking {
   status BookingStatus @default(PENDING)
 }
 
+/**
+ * RoomReport model: user submitted feedback and issue reports.
+ * - reporterUserId: user submitting the report (nullable for anonymous reports).
+ * - category: type of issue (DATA_QUALITY, SAFETY, ACCESSIBILITY, OTHER).
+ * - status: OPEN (new), IN_REVIEW (acknowledged), RESOLVED, or DISMISSED.
+ * - Tracked separately from ratings to allow admin triage and follow-up.
+ * - Indexed by roomId+status and reporterUserId for efficient admin queries.
+ */
 model RoomReport {
   id Int @id @default(autoincrement())
   roomId Int
@@ -126,6 +188,13 @@ model RoomReport {
   @@index([reporterUserId])
 }
 
+/**
+ * SensorReading model: individual sensor measurement records.
+ * - Stores historical telemetry for each room at a given timestamp.
+ * - metricType: one of TEMP, HUMIDITY, NOISE, LIGHT, OCCUPANCY.
+ * - Readings are created by SensorService.saveSensorReadings() during sync jobs.
+ * - Used for occupancy analytics, trend visualization, and fallback if live device fails.
+ */
 model SensorReading {
   readingId Int @id @default(autoincrement())
   roomId Int
@@ -135,13 +204,20 @@ model SensorReading {
   time DateTime
 }
 
-// Average amount of people in a room at a given hour on a given day
+/**
+ * OccupancyAverage model: pre-computed hourly occupancy statistics.
+ * - Stores daily patterns (e.g., "Room 101 is typically 60% full on Mondays at 2 PM").
+ * - dayOfWeek: 0=Monday, 1=Tuesday, ..., 6=Sunday.
+ * - hour: 0=midnight, 1=1 AM, ..., 23=11 PM (UTC).
+ * - Used by frontend to show occupancy trends and help students choose study times.
+ * - Can be pre-calculated from SensorReading history or updated via batch jobs.
+ */
 model OccupancyAverage {
   id Int @id @default(autoincrement())
   roomId Int
   room Room @relation(fields: [roomId], references: [id])
-  dayOfWeek Int // 0 = Monday, 1 = Tues ... 7 = Sunday
-  hour Int // 0 = midnight, 1 = 1AM ... etc
+  dayOfWeek Int // 0 = Monday, 1 = Tues ... 6 = Sunday
+  hour Int // 0 = midnight, 1 = 1AM ... 23 = 11 PM
   averageOccupancy Int
 }
 

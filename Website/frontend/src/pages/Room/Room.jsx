@@ -1,3 +1,15 @@
+/**
+ * Room page
+ *
+ * Combines multiple concerns for a single study-room detail view:
+ * - static room metadata (`useRoomData`),
+ * - live sensor stats (`useSensorData`),
+ * - busy-times visualisation,
+ * - favourite/report/book actions.
+ *
+ * Backend room, sensor, booking, and user-personalisation features converge
+ * here in one interface.
+ */
 import { useState }        from "react";
 import { createPortal }    from "react-dom";
 import { Link, useNavigate, useParams } from "react-router-dom";
@@ -31,6 +43,7 @@ export default function Room() {
 
     const { stats, loading, error } = useSensorData(roomId);
 
+    // Open building/room context in Google Maps for wayfinding.
     const openGoogleMaps = () => {
         const query = getBuildingName() || roomData?.name || "";
         if (!query) return;
@@ -150,6 +163,7 @@ export default function Room() {
                 />
             )}
 
+            {/* Render booking modal into `document.body` to avoid z-index/overflow clipping issues. */}
             {bookerOpen && createPortal(
                 <div
                     className={styles.bookerOverlay}

@@ -1,3 +1,17 @@
+/**
+ * SearchPage
+ *
+ * Main discovery experience for study rooms.
+ *
+ * UX model:
+ * - URL is the source of truth for filters/search state.
+ * - Query params are translated into backend filter endpoints.
+ * - Results are grouped by building with collapsible sections.
+ *
+ * Benefits:
+ * - Deep-linkable searches (shareable URLs).
+ * - Browser back/forward naturally restores filter state.
+ */
 import { useNavigate, useSearchParams } from "react-router-dom";
 import styles from "./SearchPage.module.css";
 import RoomFilter from "../../components/RoomFilter/RoomFilter";
@@ -41,6 +55,7 @@ export default function SearchPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Update URL when university changes so state is shareable/bookmarkable.
   const handleUniversityChange = (option) => {
     // Persist selected university in query params.
     const next = new URLSearchParams(urlParams);
@@ -49,6 +64,7 @@ export default function SearchPage() {
     setUrlParams(next);
   };
 
+  // Update URL-backed name search.
   const handleSearch = (query) => {
     // Persist room-name search in query params.
     const next = new URLSearchParams(urlParams);
@@ -62,6 +78,7 @@ export default function SearchPage() {
   useEffect(() => {
     let cancelled = false;
 
+    // Fetch rooms whenever query-string state changes.
     async function fetchRooms() {
       setLoading(true);
       setError("");
@@ -103,7 +120,7 @@ export default function SearchPage() {
       "hearingAssistance",
     ].forEach((k) => next.delete(k));
 
-    // Re-add active filters.
+    // Re-add active filters (only values deviating from default ranges).
     if (filters.temp[0] > 10) next.set("tempMin", String(filters.temp[0]));
     if (filters.temp[1] < 40) next.set("tempMax", String(filters.temp[1]));
     if (filters.humidity[0] > 10) next.set("humidityMin", String(filters.humidity[0]));

@@ -1,11 +1,39 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
- 
+
 """
-StudySpot - IoT Study Space Monitoring System
- 
-Reads temperature, humidity, sound, light, and occupancy data
-and outputs as JSON to stdout for Node-RED integration
+StudySpot Continuous Sensor Monitor
+
+**Purpose**:
+Continuously reads environmental sensors via GrovePi hardware interface,
+validates readings for physical plausibility, and outputs normalized JSON
+to stdout at regular intervals. Designed for Node-RED integration or
+redirection to external telemetry systems.
+
+**Hardware Setup**:
+- GrovePi board on Raspberry Pi I2C/GPIO
+- DHT11 temperature/humidity sensor on D4 (port 4)
+- Light sensor (analog) on A1 (port 1)
+- Sound sensor (analog) on A0 (port 0)
+- Ultrasonic distance sensor on D3 (port 3)
+
+**Output Format**:
+One JSON object per line to stdout; lines do not require pre-parsing.
+Example:
+  {"temperature": 22.5, "humidity": 55.0, "sound_level": 42.1, ...}
+
+**Usage**:
+  python3 studyspot_monitor.py > /tmp/telemetry.log
+  Or pipe to Node-RED via stdin.
+
+**Validation**:
+- Temperature: 0–50°C (physical room range)
+- Humidity: 0–100%
+- Distance: 0–400 cm (ultrasonic max)
+- Missing/invalid readings are silently dropped (not included in JSON)
+
+**Error Handling**:
+- Sensor read failures: logged to stderr, does not halt loop
+- Graceful shutdown on SIGINT (Ctrl+C)
 """
  
 import time

@@ -1,6 +1,15 @@
+/**
+ * `useSensorData`
+ *
+ * Polling hook for room telemetry used by the Room detail page.
+ *
+ * Data pipeline:
+ * 1) Fetch `/api/sensordata/:roomId` payload.
+ * 2) Normalize per-sensor timeseries into latest value per metric key.
+ * 3) Convert raw values into UI-ready labels + numeric raw fields.
+ * 4) Re-poll every 60 seconds for near-live dashboard updates.
+ */
 import { useState, useEffect } from "react";
-
-// Hook for fetching, normalising, and polling room sensor telemetry.
 
 type MetricValue = number | boolean | string | null;
 type Timeseries = { ts: number; value: MetricValue }[];

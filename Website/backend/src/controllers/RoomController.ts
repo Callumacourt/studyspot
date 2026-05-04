@@ -1,9 +1,28 @@
+/**
+ * RoomController
+ * 
+ * HTTP request handler for room-related endpoints.
+ * Responsibilities:
+ * - Parse and validate query/path parameters from HTTP requests.
+ * - Transform raw request data into typed service method inputs.
+ * - Handle HTTP response codes and error responses.
+ * - Delegate business logic to RoomService layer.
+ * 
+ * All methods follow this pattern:
+ * 1. Extract and validate parameters
+ * 2. Call RoomService method
+ * 3. Return 200/201 on success, 400/404/409 on client error, 500 on server error
+ * 
+ * @module RoomController
+ */
+
 import { Request, Response } from "express";
 import type { AuthenticatedRequest } from "../middleware/auth";
 import { RoomService } from "../services/RoomService";
 
-// Controller for room related http requests
-// Delegates business logic to RoomService
+/**
+ * RoomController object with request handlers.
+ */
 export const RoomController = {
 
   /**
@@ -55,10 +74,16 @@ export const RoomController = {
     }
   },
 
-  /** 
-  // GET /rooms
-  // Reutrn all rooms in the database
-  */
+  /**
+   * GET /rooms
+   * 
+   * Fetch all rooms with latest sensor metrics.
+   * No filtering applied; returns entire database catalog.
+   * 
+   * Response:
+   * - 200: {success: true, rooms: Room[]} with metrics included
+   * - 500: Server error during fetch
+   */
   async getAllRooms(req: Request, res: Response) {
     try {
       const rooms = await RoomService.getAllRooms();
@@ -70,8 +95,27 @@ export const RoomController = {
   
   /**
    * GET /rooms/filter
-   * Parse query parameters into typed filter object, call service and return results
-  */
+   * 
+   * Search rooms by combined static and metric-based filters.
+   * 
+   * Query parameters (all optional):
+   * - universityId (int): filter by university
+   * - buildingId (int): filter by building
+   * - noise (string): "QUIET", "MODERATE", "LOUD" (metric filter)
+   * - occupancy (string): "EMPTY", "LIGHT", "MODERATE+" (metric filter)
+   * - tempMin/tempMax (float): temperature range in Celsius
+   * - humidityMin/humidityMax (float): humidity range in %
+   * - wheelchairAccessible (bool): "true"/"false"
+   * - hasAdjustableDesks (bool): "true"/"false"
+   * - groundFloor (bool): "true"/"false"
+   * - hearingAssistance (bool): "true"/"false"
+   * - name (string): partial room name match (case-insensitive)
+   * 
+   * Response:
+   * - 200: {success: true, rooms: Room[]} matching filters
+   * - 400: Invalid query parameters
+   * - 500: Server error
+   */
   async getRoomsByFilter(req: Request, res: Response) {
     try {
       const q = req.query;
@@ -98,10 +142,21 @@ export const RoomController = {
     }
   },
 
-  /** 
+  /**
    * GET /rooms/:id
-  // Valid route param and fetch single room with id from req
-  */
+   * 
+   * Fetch a single room by numeric id.
+   * Includes building info, latest sensor readings, and metrics.
+   * 
+   * Path parameters:
+   * - id (int): room database id
+   * 
+   * Response:
+   * - 200: {success: true, room: Room} with all room details and metrics
+   * - 400: Invalid id parameter (non-numeric)
+   * - 404: Room not found
+   * - 500: Server error
+   */
   async getRoomById(req: Request, res: Response) {
     try {
       const id = Number(req.params.id);

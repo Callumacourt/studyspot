@@ -1,3 +1,24 @@
+/**
+ * routes.jsx - Frontend Route Configuration
+ * 
+ * Centralised definition of all client-side routes.
+ * Consumed by App.jsx to render React Router <Routes>.
+ * 
+ * Route types:
+ * - **Public**: Home, Search, Room detail, About, Privacy, Contact (no auth required)
+ * - **Auth-only**: Favourites, My Bookings (require user login)
+ * - **Admin**: AdminPage (UNIVERSITY_ADMIN+ required)
+ * - **Super-Admin**: PlatformAdminPage (SUPER_ADMIN required)
+ * - **Auth flows**: Login, SignUp, Success (post-registration)
+ * - **Fallback**: ErrorPage (404 catch-all for undefined routes)
+ * 
+ * Protected routes use <RequireRole> wrapper component for runtime access control.
+ * 
+ * @typedef {Object} Route
+ * @property {string} path - URL path pattern (React Router syntax)
+ * @property {JSX.Element} element - Component to render for this path
+ */
+
 import Home from './pages/Home/Home';
 import About from './pages/About/About';
 import ErrorPage from './pages/Error/ErrorPage';
@@ -15,7 +36,12 @@ import PlatformAdminPage from './pages/PlatformAdmin/PlatformAdminPage';
 import RequireRole from './components/RequireRole/RequireRole';
 
 /**
- * Central route table used by App when rendering <Routes>.
+ * Central route configuration table.
+ * 
+ * Used by App.jsx to dynamically generate React Router <Routes>.
+ * Modifications here automatically reflect in navigation without code changes.
+ * 
+ * @type {Array<{path: string, element: JSX.Element}>}
  */
 
 const routes = [

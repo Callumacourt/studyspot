@@ -1,14 +1,20 @@
+/**
+ * SensorController
+ *
+ * HTTP layer for sensor telemetry endpoints.
+ * - Validates request inputs.
+ * - Delegates data retrieval/persistence logic to SensorService.
+ * - Shapes consistent API responses for frontend consumers.
+ */
 import { Request, Response } from "express";
 import { prisma } from "../prisma";
 import { SensorService } from "../services/SensorService";
 
-// Controller for sensor related http endpoints.
-// - Delegates business logic to SensorService / prisma
 export const SensorController = {
   /**
-   * GET /sensors/:id/data
-   * Validate room id, fetch sensor readings for the room.
-   * Returns [] if room has no sensors (null from service).
+  * GET /api/sensordata/:id
+  * Validate room id and return latest telemetry per sensor for that room.
+  * Returns empty data array when room has no linked sensors.
    */
   async getSensorData(req: Request, res: Response) {
     try {
@@ -19,7 +25,7 @@ export const SensorController = {
 
       const readings = await SensorService.getSensorDataByRoom(roomId);
 
-      // null means no sensors — return empty rather than 500
+      // null/empty means no sensors — return success with empty data set.
       if (!readings) return res.status(200).json({ success: true, data: [] });
 
       return res.status(200).json({ success: true, data: readings });
@@ -31,7 +37,7 @@ export const SensorController = {
 
 
   /**
-   * POST /sensors/link
+  * POST /api/link
    * Link an existing sensor to a room.
    * - body: { sensorId, roomId }
    * - Validates presence and existence of sensor & room, updates sensor.roomId
@@ -66,8 +72,8 @@ export const SensorController = {
   },
 
   /**
-   * GET /sensors/:id/occupancy-avgs
-   * Validate room id and return hourly occupancy averages for charting.
+  * GET /api/sensordata/:id/occupancy-averages
+  * Return 24-slot hourly occupancy averages used by busy-times chart.
    */
   async getOccupancyAvgs(req: Request, res: Response) {
     try {

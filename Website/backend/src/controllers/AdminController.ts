@@ -1,12 +1,23 @@
+/**
+ * AdminController
+ *
+ * Thin orchestration layer for administrative endpoints.
+ * Keeps handlers concise by centralizing:
+ * - auth-context extraction,
+ * - standardized success envelope,
+ * - typed admin error handling.
+ */
 import { Request, Response } from "express";
 import type { AuthenticatedRequest } from "../middleware/auth";
 import { AdminService } from "../services/AdminService";
 import { AdminError } from "../services/admin/adminErrors";
 
+/** Extract normalized auth context attached by `requireAuth`. */
 function getAuth(req: Request) {
   return (req as AuthenticatedRequest).auth!;
 }
 
+/** Map domain errors to consistent HTTP responses. */
 function handleError(error: unknown, res: Response) {
   if (error instanceof AdminError) {
     return res.status(error.status).json({ success: false, error: error.message });
@@ -16,6 +27,10 @@ function handleError(error: unknown, res: Response) {
   return res.status(500).json({ success: false, error: "Internal Server Error" });
 }
 
+/**
+ * Standardized async controller wrapper.
+ * Executes service action and returns `{ success: true, [responseKey]: payload }`.
+ */
 async function run(
   res: Response,
   action: () => Promise<unknown>,
@@ -31,6 +46,7 @@ async function run(
 }
 
 export const AdminController = {
+  /** Aggregate admin dashboard counters/summary. */
   async getSummary(req: Request, res: Response) {
     return run(res, () => AdminService.getSummary(getAuth(req)), "summary");
   },

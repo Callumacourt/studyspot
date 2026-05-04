@@ -1,3 +1,14 @@
+/**
+ * RoomBooker
+ *
+ * Slot-based booking UI for one room over a rolling 7-day window.
+ *
+ * Core behaviours:
+ * - Fetches existing bookings per selected date.
+ * - Prevents selecting blocked/taken slots.
+ * - Enforces configured max booking duration.
+ * - Submits validated UTC booking payloads to backend.
+ */
 import { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import { getAuthHeaders } from "../../utils/auth";

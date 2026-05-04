@@ -1,8 +1,18 @@
+/**
+ * RoomService
+ *
+ * Business-layer operations for room discovery and booking.
+ *
+ * Key responsibilities:
+ * - Fetch room entities with building context and latest telemetry-derived metrics.
+ * - Apply combined static filters (DB-side) and metric filters (in-memory).
+ * - Validate and create bookings with overlap and duration checks.
+ */
 import { prisma } from "../prisma";
 import { buildMetricFilters, metricsMatchFilters, type RoomMetrics } from "../utils/RoomFilters";
 import {  mapRoomWithMetrics } from "./roomMappers";
 
-// All potential parameters a roomfilter query can recieve, all are optional
+// Supported room filter inputs (all optional) passed from controller/query params.
 type RoomFilterParams = {
   universityId?: number;
   buildingId?: number;
@@ -19,13 +29,15 @@ type RoomFilterParams = {
   name?: string;
 };
 
-// Service for fetching rooms and their latest sensor metrics + handling room bookings.
-// - Queries prisma for rooms + recent readings, then extracts usable metrics.
-// - Provides search/filter helper used by API routes
 export const RoomService = {
 
-  // Return all rooms with building info and latest metrics.
-  // Limits readings fetched per room to recent 200 for performance.
+  /**
+   * Return all rooms with building info and latest metrics.
+   *
+   * Implementation detail:
+   * - Fetches up to 200 latest readings per room to keep payloads bounded while
+   *   still producing stable metric snapshots.
+   */
   async getAllRooms() {
     const rooms = await prisma.room.findMany({
       include: {
@@ -37,8 +49,14 @@ export const RoomService = {
     return rooms.map((room) => mapRoomWithMetrics(room));
   },
 
-  // Search rooms by provided filters (both static room fields and metric filters).
-  // Metric filters are applied in memory after fetching recent readings.
+  /**
+   * Search rooms by provided filters.
+   *
+   * Filter pipeline:
+   * 1) DB-side filtering for static fields (building, accessibility, name).
+   * 2) Mapping to derived `metrics` shape.
+   * 3) In-memory metric filtering (noise/occupancy/temp/humidity ranges).
+   */
   async getRoomsByFilter(params: RoomFilterParams) {
     const rooms = await prisma.room.findMany({
       where: {
@@ -70,7 +88,7 @@ export const RoomService = {
       .filter((r) => metricsMatchFilters(r.metrics, metricFilters));
   },
 
-  // Find a room by name (case insensitive) or null if not found
+  /** Find a room by case-insensitive name or return `null`. */
   async getRoomByName(roomName: string) {
     const room = await prisma.room.findFirst({
       where: { name: { equals: roomName, mode: "insensitive" } },
@@ -85,7 +103,7 @@ export const RoomService = {
     return mapRoomWithMetrics(room);
   },
 
-  // Fetch a single room by numeric id, return null if missing.
+  /** Fetch one room by numeric id, return `null` when not found. */
   async getRoomById(id: number) {
     const room = await prisma.room.findUnique({
       where: { id },
@@ -100,8 +118,14 @@ export const RoomService = {
     return mapRoomWithMetrics(room);
   },
 
-  // Check if desired time range is available for room booking on bookable rooms
-  // Returns true if available or false if overlapping
+  /**
+   * Check whether a desired booking range is available.
+   *
+   * Rules:
+   * - start must be before end.
+   * - room must exist and be marked `bookable`.
+   * - overlapping non-cancelled bookings block availability.
+   */
   async checkRoomAvailability(roomId: number, desiredStartHour: Date, desiredEndHour: Date) {
     if (desiredStartHour >= desiredEndHour) throw new Error("Invalid time range");
 
@@ -123,8 +147,10 @@ export const RoomService = {
     return !overlapping;
   },
 
-  // Returns active bookings for a room on a specific calendar date (YYYY-MM-DD).
-  // Used by the frontend to build available time slot grid.
+  /**
+   * Return active bookings intersecting a given calendar date (UTC day window).
+   * Used by frontend slot grids and busy-time overlays.
+   */
   async getBookingsForDate(roomId: number, dateStr: string) {
     const dayStart = new Date(`${dateStr}T00:00:00.000Z`);
     const dayEnd   = new Date(`${dateStr}T23:59:59.999Z`);
@@ -141,6 +167,10 @@ export const RoomService = {
     });
   },
 
+  /**
+   * Create a confirmed booking after validating range, room flags, max duration,
+   * and overlap conflicts.
+   */
   async bookRoom(roomId: number, startTime: Date, endTime: Date, bookedByUserId?: number) {
     if (startTime >= endTime) throw new Error("Invalid time range");
 

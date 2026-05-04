@@ -1,3 +1,16 @@
+/**
+ * Backend application entrypoint.
+ *
+ * Responsibilities:
+ * - Load environment variables.
+ * - Configure global middleware (JSON parser, CORS, security header reduction).
+ * - Mount feature routes (auth, rooms, sensors, admin, user).
+ * - Expose lightweight health endpoint for checks/tests.
+ * - Run periodic background sensor sync (disabled in test env).
+ *
+ * Note: the Express `app` is exported for tests; server listening is only
+ * started when `NODE_ENV !== "test"`.
+ */
 import "dotenv/config";
 import sensorRoute from "./routes/sensorRoute";
 import loginRoute from "./routes/LoginRoute";
@@ -49,6 +62,8 @@ if (process.env.NODE_ENV !== "test") {
   const syncIntervalMs = Number(process.env.SENSOR_SYNC_INTERVAL_MS ?? 60_000);
   let syncInProgress = false;
 
+  // Mutex-guarded sync runner prevents overlapping jobs when an interval tick
+  // occurs before the previous run has finished.
   const runSync = async () => {
     if (syncInProgress) {
       console.warn("[App] Sensor sync skipped (previous run still in progress)");

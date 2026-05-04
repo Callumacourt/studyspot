@@ -1,3 +1,25 @@
+/**
+ * SensorService
+ * 
+ * Provides unified access to environmental sensor data from heterogeneous sources:
+ * - **Real sensors**: pull live telemetry from ThingsBoard MQTT/REST API.
+ * - **Placeholder/demo sensors**: read latest persisted readings from database.
+ * 
+ * Key responsibilities:
+ * - Fetch telemetry for individual sensors or entire rooms.
+ * - Normalise telemetry format (thingsboard → internal metric schema).
+ * - Persist latest readings to database for history + fallback.
+ * - Support scheduled sync jobs across all rooms.
+ * - Generate occupancy statistics (hourly/daily averages).
+ * 
+ * Architecture:
+ * - Delegates ThingsBoard API calls to thingsboard utility.
+ * - Uses sensorHelpers for device ID resolution and placeholder detection.
+ * - Uses sensorNormaliser to map ThingsBoard keys to MetricType enum.
+ * 
+ * @module SensorService
+ */
+
 import { prisma } from "../prisma";
 import type { Sensor } from "../generated/prisma/client";
 import getTelemetry from "../utils/thingsboard";
@@ -17,10 +39,7 @@ import {
 } from "../utils/sensorNormaliser";
 
 /**
- * SensorService
- * Handles fetching, normalising, and persisting sensor telemetry.
- * - Real devices: read from ThingsBoard
- * - Placeholder/fake devices: read latest persisted DB values
+ * SensorService object with telemetry methods.
  */
 export const SensorService = {
 

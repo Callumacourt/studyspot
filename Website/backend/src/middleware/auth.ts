@@ -1,3 +1,15 @@
+/**
+ * Authentication / authorisation middleware.
+ *
+ * `requireAuth`:
+ * - Extracts Bearer token from Authorization header.
+ * - Verifies token with `JWT_SECRET`.
+ * - Hydrates `req.auth` with normalised identity context.
+ *
+ * `requireAdmin`:
+ * - Requires `req.auth` to exist (must run after `requireAuth`).
+ * - Checks role hierarchy against required minimum role.
+ */
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { hasRequiredRole, type AdminAuthContext, type UserRole } from "../utils/adminAccess";
@@ -19,6 +31,9 @@ function getBearerToken(req: Request): string | null {
   return authHeader.slice("Bearer ".length).trim() || null;
 }
 
+/**
+ * Require a valid JWT and attach normalised auth context to `req.auth`.
+ */
 export function requireAuth(req: AuthenticatedRequest, res: Response, next: NextFunction) {
   const token = getBearerToken(req);
   if (!token) {
@@ -43,6 +58,13 @@ export function requireAuth(req: AuthenticatedRequest, res: Response, next: Next
   }
 }
 
+/**
+ * Require authenticated user with at least `requiredRole`.
+ *
+ * Example:
+ * - `requireAdmin("UNIVERSITY_ADMIN")` allows UNIVERSITY_ADMIN and SUPER_ADMIN.
+ * - `requireAdmin("SUPER_ADMIN")` allows only SUPER_ADMIN.
+ */
 export function requireAdmin(requiredRole: UserRole = "UNIVERSITY_ADMIN") {
   return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     if (!req.auth) {

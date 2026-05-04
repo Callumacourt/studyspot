@@ -1,4 +1,0 @@
-numpy==1.21.2
-tflite-runtime==2.13.0
-python3-opencv=4.5.1
-python3-picamera=1.13

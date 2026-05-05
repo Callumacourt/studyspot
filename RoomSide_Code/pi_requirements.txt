@@ -1,0 +1,12 @@
+Python Version 3.7-9
+
+-- pip --
+numpy==1.21.2
+tflite-runtime==2.13.0
+serial
+smbus
+paho.mqtt.client
+grovepi
+-- apt --
+python3-opencv=4.5.1
+python3-picamera=1.13

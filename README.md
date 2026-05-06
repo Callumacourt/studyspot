@@ -17,6 +17,15 @@ This README is the root setup and replication guide.
 ```text
 studyspot_group2/
 ├── README.md
+├── RoomSide_Code
+│   ├── camera.py
+│   ├── obj_detector.py
+│   ├── room_manager.py
+│   ├── runner.py
+│   ├── studyspot_arduino.ino
+│   ├── room_info.json
+│   ├── detect.tflite
+│   └── pi_requirements.txt
 ├── Testing
 │   ├── studyspot_monitor.py
 │   ├── cloud.py
@@ -73,22 +82,22 @@ studyspot_group2/
 
 ### 1.2 Purpose of key folders/files
 
-#### IoT and hardware scripts (`Testing/`)
+#### IoT and hardware testing scripts (`Testing/`)
 - `studyspot_monitor.py`: standalone continuous sensor reader that emits JSON to stdout.
 - `cloud.py`: integrated edge script (sensor ingestion + occupancy + LCD + MQTT publish + optional camera counting).
 - `updated_cloud.py`: variant of `cloud.py` with adjusted runtime logic.
 - `test.py`: hardware smoke test for buzzer, ultrasonic, DHT, PIR, light, sound, LCD.
 - `buzzer.py`, `buzzerRanger.py`, `dht.py`, `pir.py`, `light.py`, `sound.py`, `lcd.py`: single sensor diagnostics.
 
-#### Camera/object-detection module (`Testing/ObjectDetection/`)
+#### IoT Platform Code (`RoomSide_Code`)
 - `runner.py`: launches `RoomManager` orchestration.
 - `room_manager.py`: main orchestration class (occupancy, bluetooth ingestion, LCD updates, telemetry publish).
-- `manager.py`: camera + detector quick cycle test.
 - `camera.py`: PiCamera wrapper for capture flows.
 - `obj_detector.py`: TensorFlow Lite inference wrapper and person counting (`obj_class=0`).
-- `detect.tflite`: detection model used by `obj_detector.py`.
+- `detect.tflite`: detection model used by `obj_detector.py`. Model found at https://github.com/openvinotoolkit/open_model_zoo/blob/master/models/public/ssd_mobilenet_v1_coco/ and a pretrained,prebuilt model obtained from https://storage.googleapis.com/download.tensorflow.org/models/tflite/coco_ssd_mobilenet_v1_1.0_quant_2018_06_29.zip
 - `room_info.json`: runtime configuration (ThingsBoard, LCD, occupancy timing, ports).
-- `rqs.txt`: object-detection Python dependencies.
+- `studyspot_arduino.ino` : Arduino sketch that performs environmental monitoring and formats it for bluetooth transmission
+- `pi_requirements.txt`: dependencies in order to run this code on the pi
 
 #### Web platform (`Website/`)
 
@@ -141,22 +150,11 @@ cd ../frontend
 npm install
 ```
 
-### B) Install object-detection Python dependencies (Pi/device)
+### B) Install Pi Python dependencies (Pi/device)
 
-From `studyspot_group2/Testing/ObjectDetection`, install packages listed in `rqs.txt`.
+From `studyspot_group2/RoomSide_Code`, install packages listed in `pi_requirements.txt` and ensure correct Python version.
 
-> Note: `rqs.txt` contains both pip and apt installs. Install according to your OS package manager and Python environment.
-
-### C) Install Grove / IoT Python dependencies (Pi/device)
-
-Scripts in `Testing/` import:
-- `grovepi`
-- `grove_rgb_lcd`
-- `paho.mqtt.client`
-- `smbus`
-- `serial` (pyserial)
-
-Install these into the Python environment used to run the IoT scripts.
+> Note: `pi_requirements.txt` contains both pip and apt installs. Install according to your OS package manager and Python environment.
 
 ## 2.3 Configuration
 

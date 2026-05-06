@@ -175,10 +175,10 @@ class RoomManager():
                     if( abs(alt_occupancy - self.occupancyCount) >= 2):
                         
                         alt_occupancy = self.camera_occupancy()
-                        print("Saw difference of " + str(abs(alt_occupancy-self.occupancyCount)) + " people from camera, updating count..")
                         
                     if( abs(alt_occupancy - self.occupancyCount) >= 2):
                         self.occupancyCount = alt_occupancy
+                        print("Saw difference of " + str(abs(alt_occupancy-self.occupancyCount)) + " people from camera, updating count..")
                     else:
                         print("Camera output aligned, no change needed")
                 # set the occupancy for posting

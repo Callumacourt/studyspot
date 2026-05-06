@@ -50,7 +50,7 @@ class RoomManager():
         else:
             self.camera = None
         # create a bus for writing to the LCD
-        self.bus = smbus.SMBus(1)
+        self.bus = SMBus(1)
         
         self.thingsboard_init()
     
@@ -151,8 +151,9 @@ class RoomManager():
                         alt_occupancy = self.camera_occupancy()
                         
                     if( abs(alt_occupancy - self.occupancyCount) >= 2):
-                        self.occupancyCount = alt_occupancy
                         print("Saw difference of " + str(abs(alt_occupancy-self.occupancyCount)) + " people from camera, updating count..")
+                        self.occupancyCount = alt_occupancy
+                        
                     else:
                         print("Camera output aligned, no change needed")
                 # set the occupancy for posting
@@ -168,18 +169,6 @@ class RoomManager():
     def on_publish(self, client, userdata, result):
         print("Published to ThingsBoard")
 
-    
-    def thingsboard_init(self):
-        """Establishes conection with thingsboard in order to post room data
-        """
-        client = Client()
-        client.username_pw_set(self.info['thingsboard']['token'])
-        client.on_connect = self.on_connect
-        client.on_publish = self.on_publish
-        client.connect(self.info['thingsboard']['host'], 1883, 60)
-        client.loop_start()
-        self.client = client
-        
     def lcd_init(self):
         """Resets the LCD screen to blank
         """
@@ -336,6 +325,18 @@ class RoomManager():
                 print(f"Bluetooth error: {e} — retrying in 5s")
                 sleep(5)
     
+    def thingsboard_init(self):
+        """Establishes conection with thingsboard in order to post room data
+        """
+        client = Client()
+        client.username_pw_set(self.info['thingsboard']['token'])
+        client.on_connect = self.on_connect
+        client.on_publish = self.on_publish
+        client.connect(self.info['thingsboard']['host'], 1883, 60)
+        client.loop_start()
+        self.client = client
+        
+    
     def main_process(self):
         # Run the occupancy code and bluetooth code on separate threads 
         occ_thread = Thread(target=self.occupancy_thread, daemon=True)
@@ -380,5 +381,5 @@ class RoomManager():
             self.client.loop_stop()
             self.client.disconnect()
             print("Terminated.")
-            os._exit(0)
+            _exit(0)
         

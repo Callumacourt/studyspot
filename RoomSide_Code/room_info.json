@@ -1,23 +1,23 @@
 {"room_name":"Room 1",
- "room_id":"000",
+ "room_id":"001",
  "bluetooth":{
      "port":"/dev/rfcomm0",
      "baud":"9600"},
  "thingsboard":{
      "host":"thingsboard.cs.cf.ac.uk",
      "token":"oR1ywp7HMZXwD6c6is9O",
-     "publish_interval":"5",
+     "publish_interval":"10",
      "topic":"v1/devices/me/telemetry"},
  "quiet":"False",
  "camera":"True",
  "occupancy":{
      "direction_timeout":"2000",
-     "crossing_cooldown":"2000",
+     "crossing_cooldown":"500",
      "trigger_dist":"50",
-     "snapshot_interval":"15"},
+     "snapshot_interval":"60"},
  "us_pins":{"out":"3",
             "in":"4"},
  "lcd":{"rgb_addr":"0x62",
         "text_addr":"0x3e",
-        "cycle_period":"5"}
+        "cycle_period":"4"}
 }

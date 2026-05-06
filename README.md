@@ -37,16 +37,7 @@ studyspot_group2/
 │   ├── pir.py
 │   ├── light.py
 │   ├── sound.py
-│   ├── lcd.py
-│   └── ObjectDetection
-│       ├── runner.py
-│       ├── room_manager.py
-│       ├── manager.py
-│       ├── camera.py
-│       ├── obj_detector.py
-│       ├── detect.tflite
-│       ├── room_info.json
-│       └── rqs.txt
+│   └── lcd.py
 └── Website
     ├── backend
     │   ├── package.json
@@ -89,12 +80,12 @@ studyspot_group2/
 - `test.py`: hardware smoke test for buzzer, ultrasonic, DHT, PIR, light, sound, LCD.
 - `buzzer.py`, `buzzerRanger.py`, `dht.py`, `pir.py`, `light.py`, `sound.py`, `lcd.py`: single sensor diagnostics.
 
-#### IoT Platform Code (`RoomSide_Code`)
+#### IoT Platform Code (`RoomSide_Code/`)
 - `runner.py`: launches `RoomManager` orchestration.
 - `room_manager.py`: main orchestration class (occupancy, bluetooth ingestion, LCD updates, telemetry publish).
 - `camera.py`: PiCamera wrapper for capture flows.
 - `obj_detector.py`: TensorFlow Lite inference wrapper and person counting (`obj_class=0`).
-- `detect.tflite`: detection model used by `obj_detector.py`. Model found at https://github.com/openvinotoolkit/open_model_zoo/blob/master/models/public/ssd_mobilenet_v1_coco/ and a pretrained,prebuilt model obtained from https://storage.googleapis.com/download.tensorflow.org/models/tflite/coco_ssd_mobilenet_v1_1.0_quant_2018_06_29.zip
+- `detect.tflite`: detection model used by `obj_detector.py`.
 - `room_info.json`: runtime configuration (ThingsBoard, LCD, occupancy timing, ports).
 - `studyspot_arduino.ino` : Arduino sketch that performs environmental monitoring and formats it for bluetooth transmission
 - `pi_requirements.txt`: dependencies in order to run this code on the pi
@@ -182,7 +173,7 @@ REAL_ROOM_DEVICE_ID=""
 SUPER_ADMIN_EMAILS="admin1@cardiff.ac.uk,admin2@cardiff.ac.uk" // register with this email to create an admin account
 ```
 
-### B) ObjectDetection runtime config (`Testing/ObjectDetection/room_info.json`)
+### B) Room manager runtime config (`RoomSide_Code/room_info.json`)
 
 Update these for your deployment:
 - bluetooth serial port/baud,
@@ -190,12 +181,6 @@ Update these for your deployment:
 - occupancy timing thresholds,
 - ultrasonic sensor GPIO pin mapping,
 - LCD I2C addresses/cycle period.
-
-### C) Edge telemetry scripts (`Testing/cloud.py`, `Testing/updated_cloud.py`)
-
-These scripts currently define broker/token constants in-file. Replace with your own credentials before running in production or demos.
-
----
 
 ## 3) Running the Project
 
@@ -271,7 +256,7 @@ Expected behavior:
 - periodic publish confirmation,
 - occupancy and environment values pushed to ThingsBoard topic.
 
-### Object-detection + room manager mode
+### Room Manager
 
 ```bash
 cd studyspot_group2/Testing/ObjectDetection
@@ -345,6 +330,13 @@ Expected behavior:
 	Docs: https://pyserial.readthedocs.io/
 - `smbus` — I2C comms for LCD and peripherals
 
+### Object Detection Model
+For this project we used a pre-trained tensorflow model made for mobile/microcontroller devices made by OpenVino.
+It's github page can be found here:
+https://github.com/openvinotoolkit/open_model_zoo/blob/master/models/public/ssd_mobilenet_v1_coco/ 
+and a pretrained,prebuilt version of the model was obtained from:
+https://storage.googleapis.com/download.tensorflow.org/models/tflite/coco_ssd_mobilenet_v1_1.0_quant_2018_06_29.zip
+
 ---
 
 ## 5) Code Documentation Approach
@@ -357,9 +349,9 @@ The codebase uses multiple documentation layers:
 - test files as executable behavioural documentation.
 
 Primary documentation-rich files:
-- `Testing/studyspot_monitor.py`
-- `Testing/cloud.py`
-- `Testing/ObjectDetection/room_manager.py`
+- `RoomSide_Code/room_manager.py`
+- `RoomSide_Code/camera.py`
+- `RoomSide_Code/obj_detector.py`
 - `Website/backend/src/app.ts`
 - `Website/backend/prisma/seed.ts`
 

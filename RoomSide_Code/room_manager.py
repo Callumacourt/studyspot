@@ -53,32 +53,6 @@ class RoomManager():
         self.bus = smbus.SMBus(1)
         
         self.thingsboard_init()
-        
-    def bluetooth_thread(self):
-        """Handles the fetching of telemetry data from the arduino via bluetooth
-        """
-        # loop for bluetooth to reconnect if an error occurs
-        while self.status:
-            try:
-                # establish bluetooth connection
-                bt = Serial(self.info['bluetooth']['port'], int(self.info['bluetooth']['baud']), timeout=5)
-                print("Bluetooth connected on " + self.info['bluetooth']['port'])
-                while self.status:
-                    raw = bt.readline().decode('utf-8', errors='ignore').strip()
-                    if not raw:
-                        continue
-                    try:
-                        data = json.loads(raw)
-                        if data.get('node') == 'environment':
-                            self.telemetry['temperature'] = data.get('temperature', self.telemetry['temperature'])
-                            self.telemetry['humidity']    = data.get('humidity',    self.telemetry['humidity'])
-                            self.telemetry['sound']       = data.get('sound',       self.telemetry['sound'])
-                            self.telemetry['light']       = data.get('light',       self.telemetry['light'])
-                    except json.JSONDecodeError:
-                        pass
-            except SerialException as e:
-                print(f"Bluetooth error: {e} — retrying in 5s")
-                sleep(5)
     
     def camera_occupancy(self):
         """Counts the occupancy with the camera and an object detection model
@@ -335,7 +309,33 @@ class RoomManager():
             self.lcd_set_text(f"Occupancy:{occ}", f"Sound:{sound_str}")
         else:
             self.lcd_set_text(f"Light:{light_str}", f"Occ:{occ}")
-            
+    
+    def bluetooth_thread(self):
+        """Handles the fetching of telemetry data from the arduino via bluetooth
+        """
+        # loop for bluetooth to reconnect if an error occurs
+        while self.status:
+            try:
+                # establish bluetooth connection
+                bt = Serial(self.info['bluetooth']['port'], int(self.info['bluetooth']['baud']), timeout=5)
+                print("Bluetooth connected on " + self.info['bluetooth']['port'])
+                while self.status:
+                    raw = bt.readline().decode('utf-8', errors='ignore').strip()
+                    if not raw:
+                        continue
+                    try:
+                        data = json.loads(raw)
+                        if data.get('node') == 'environment':
+                            self.telemetry['temperature'] = data.get('temperature', self.telemetry['temperature'])
+                            self.telemetry['humidity']    = data.get('humidity',    self.telemetry['humidity'])
+                            self.telemetry['sound']       = data.get('sound',       self.telemetry['sound'])
+                            self.telemetry['light']       = data.get('light',       self.telemetry['light'])
+                    except json.JSONDecodeError:
+                        pass
+            except SerialException as e:
+                print(f"Bluetooth error: {e} — retrying in 5s")
+                sleep(5)
+    
     def main_process(self):
         # Run the occupancy code and bluetooth code on separate threads 
         occ_thread = Thread(target=self.occupancy_thread, daemon=True)

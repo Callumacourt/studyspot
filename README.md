@@ -8,6 +8,8 @@ Combines:
 - a fullstack web app for discovery, filtering, booking, and administration of study rooms.
 
 ## Architecture Reference
+<img width="1800" height="2160" alt="system_architecture(2)" src="https://github.com/user-attachments/assets/0ad1ee41-4fbf-4601-a192-b577148294ae" />
+
 
 The production university deployment consumed telemetry from real IoT sensors via ThingsBoard behind the Cardiff University network. The public demo version uses simulated telemetry for accessibility and reliability.
 

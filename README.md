@@ -7,6 +7,14 @@ Combines:
 - cloud telemetry publishing,
 - a fullstack web app for discovery, filtering, booking, and administration of study rooms.
 
+## Architecture Reference
+
+The production university deployment consumed telemetry from real IoT sensors via ThingsBoard behind the Cardiff University network. The public demo version uses simulated telemetry for accessibility and reliability.
+
+- *The production university deployment consumed telemetry from real IoT sensors via ThingsBoard behind the Cardiff University network. The public demo version uses simulated telemetry for demonstration.*
+
+## Snapshots
+
 <img width="1863" height="898" alt="Screenshot from 2026-05-10 22-13-12" src="https://github.com/user-attachments/assets/a56ebfc5-8190-47e6-99cf-becad533ad6e" />
 <img width="1863" height="898" alt="Screenshot from 2026-05-10 22-13-06" src="https://github.com/user-attachments/assets/426d3151-312d-4b8d-ba2a-1e580012db33" />
 

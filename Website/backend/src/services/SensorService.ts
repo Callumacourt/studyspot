@@ -21,7 +21,6 @@
  */
 
 import { prisma } from "../prisma";
-import type { Sensor } from "@prisma/client";
 import getTelemetry from "../utils/thingsboard";
 
 import { 
@@ -37,6 +36,12 @@ import {
   THINGSBOARD_TELEMETRY_KEYS,
   type SensorData,
 } from "../utils/sensorNormaliser";
+
+type Sensor = {
+  sensorId: number;
+  roomId: number;
+  deviceId: string | null;
+};
 
 /**
  * SensorService object with telemetry methods.

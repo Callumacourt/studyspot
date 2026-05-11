@@ -1,8 +1,13 @@
-import type { MetricType } from "../generated/prisma/enums";
+import { MetricType } from "@prisma/client";
 import { DB_METRIC_KEY_MAP, SensorData} from "./sensorNormaliser";
 import type { NormalisedPoint } from "./sensorNormaliser";
-import type { Sensor } from "@prisma/client";
 import { prisma } from "../prisma";
+
+type Sensor = {
+  sensorId: number;
+  roomId: number;
+  deviceId: string | null;
+};
 
 export function resolveDeviceId(sensor: Sensor): string | null {
   const realRoomSensorId = Number(process.env.REAL_ROOM_SENSOR_ID ?? 9);

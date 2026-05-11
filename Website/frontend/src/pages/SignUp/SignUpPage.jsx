@@ -51,7 +51,7 @@ export default function SignUpPage() {
 
     try {
       await axios.post(
-        "http://localhost:3000/users/register", // will need to change this route when we run on actual server
+        `${import.meta.env.VITE_API_URL}/users/register`, // will need to change this route when we run on actual server
       {
         email: formData.email,
         password: formData.password,

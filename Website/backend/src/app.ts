@@ -24,22 +24,25 @@ import cors from "cors";
 
 const express = require('express');
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 
 /* Basic middleware
    - parse JSON bodies
    - enable CORS for browser clients
    - remove X Powered-By header to avoid leaking framework info */
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+  origin: [
+    "http://localhost:5173",
+    "https://your-frontend.vercel.app"
+  ]
+}));
 app.disable("x-powered-by");
 
 /* Lightweight healthcheck used by probes and tests. */
 app.get("/healthz", (_req: any, res: any) => {
   return res.status(200).json({ success: true, status: "ok", ts: Date.now() });
 });
-
-console.log("DATABASE_URL:", process.env.DATABASE_URL);
 
 /* Mount API routes
    - /api          : sensor-related endpoints
@@ -86,7 +89,7 @@ if (process.env.NODE_ENV !== "test") {
   setInterval(runSync, syncIntervalMs);
 
   app.listen(port, () => {
-    console.log(`Server listening at http://localhost:${port}`);
+    console.log(`Server listening on port ${port}`);
   });
 }
 

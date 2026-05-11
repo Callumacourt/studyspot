@@ -2,7 +2,7 @@ import { beforeAll, afterAll, beforeEach, describe, it, expect } from "vitest";
 import request from "supertest";
 import { execSync } from "child_process";
 import app from "../app";
-import { PrismaClient } from "../generated/prisma/client";
+import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import path from "path";
 

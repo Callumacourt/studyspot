@@ -1,7 +1,7 @@
 import type { MetricType } from "../generated/prisma/enums";
 import { DB_METRIC_KEY_MAP, SensorData} from "./sensorNormaliser";
 import type { NormalisedPoint } from "./sensorNormaliser";
-import type { Sensor } from "../generated/prisma/client";
+import type { Sensor } from "@prisma/client";
 import { prisma } from "../prisma";
 
 export function resolveDeviceId(sensor: Sensor): string | null {

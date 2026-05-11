@@ -1,7 +1,7 @@
 import "dotenv/config";
 import bcrypt from "bcrypt";
 import { PrismaPg } from "@prisma/adapter-pg";
-import { PrismaClient, MetricType } from "../src/generated/prisma/client";
+import { PrismaClient, MetricType } from "@prisma/client";
 
 // Seeding script — populates the DB with mock data for development/demo purposes.
 const prisma = new PrismaClient({

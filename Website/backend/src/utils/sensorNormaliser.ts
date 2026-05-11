@@ -1,4 +1,4 @@
-import { MetricType } from "../generated/prisma/client";
+import { MetricType } from "@prisma/client";
 import type { TbTelemetry } from "./thingsboard";
 
 export const METRIC_KEYS = ["temperature", "humidity", "noise", "occupancy", "light"] as const;

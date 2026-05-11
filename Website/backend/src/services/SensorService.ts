@@ -21,7 +21,7 @@
  */
 
 import { prisma } from "../prisma";
-import type { Sensor } from "../generated/prisma/client";
+import type { Sensor } from "@prisma/client";
 import getTelemetry from "../utils/thingsboard";
 
 import { 

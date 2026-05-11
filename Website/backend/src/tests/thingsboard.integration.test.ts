@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
 import { beforeAll, describe, expect, it } from "vitest";
-import { PrismaClient } from "../generated/prisma/client";
+import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import getTelemetry from "../utils/thingsboard";
 import { METRIC_KEYS } from "../utils/sensorNormaliser";

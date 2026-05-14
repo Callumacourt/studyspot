@@ -4,6 +4,7 @@
 // - Returns mapping of metric key -> timeseries points.
 
 import axios from "axios";
+import { generateMockTelemetry } from "./demoHelper";
 
 const TB_URL = (process.env.THINGSBOARD_URL || "").replace(/\/$/, ""); // base URL without trailing slash
 const TB_TOKEN_RAW = process.env.THINGSBOARD_TOKEN || ""; // raw token payload (string or JSON blob)
@@ -168,32 +169,24 @@ async function getValidAccessToken(forceRefresh = false): Promise<string> {
    - On 401 and when a refresh token exists, retries once after forcing a token refresh.
 */
 export default async function getTelemetry(deviceId: string, keys: readonly string[], limit = 1): Promise<TbTelemetry> {
-  if (!TB_URL) throw new Error("THINGSBOARD_URL not configured");
-  if (!cachedAccessToken && !cachedRefreshToken && !hasLoginCredentials()) {
-    throw new Error("THINGSBOARD auth not configured (set token/refresh token or username/password)");
+  // 1. Force mock if on Vercel
+  if (process.env.VERCEL) {
+    return generateMockTelemetry(keys);
   }
-
-  const url = `${TB_URL}/api/plugins/telemetry/DEVICE/${encodeURIComponent(
-    deviceId
-  )}/values/timeseries?keys=${keys.join(",")}&limit=${limit}&orderBy=DESC`;
 
   try {
     const accessToken = await getValidAccessToken();
-    const headers = { Authorization: `Bearer ${accessToken}` };
-    const resp = await axios.get<TbTelemetry>(url, { headers, timeout: 10000 });
-    return resp.data ?? {};
-  } catch (err: any) {
-    const status = err?.response?.status;
-    // If unauthorised and we have a refresh token, try once more after forcing refresh.
-    if (status === 401 && cachedRefreshToken) {
-      const refreshed = await getValidAccessToken(true);
-      const retry = await axios.get<TbTelemetry>(url, {
-        headers: { Authorization: `Bearer ${refreshed}` },
-        timeout: 10000,
-      });
-      return retry.data ?? {};
-    }
+    const url = `${TB_URL}/api/plugins/telemetry/DEVICE/${encodeURIComponent(deviceId)}/values/timeseries?keys=${keys.join(",")}&limit=${limit}&orderBy=DESC`;
 
-    throw new Error(`Failed to fetch telemetry for device ${deviceId}: ${(err as Error).message}`);
+    const resp = await axios.get<TbTelemetry>(url, { 
+      headers: { Authorization: `Bearer ${accessToken}` },
+      timeout: 5000 
+    });
+    
+    return resp.data ?? {};
+  } catch (err) {
+    // 2. Fallback to mock if VPN/ThingsBoard fails
+    console.warn(`[ThingsBoard] Connection failed for ${deviceId}. Serving mock data.`);
+    return generateMockTelemetry(keys);
   }
 }

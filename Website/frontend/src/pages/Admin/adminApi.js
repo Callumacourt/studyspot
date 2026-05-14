@@ -1,13 +1,13 @@
-import axios from "axios";
+import api from "../../utils/axios";
 
 export async function fetchAdminDashboard(headers, universityId) {
   const scopedParams = universityId ? { universityId } : undefined;
 
   const [summaryRes, universityRes, buildingRes, roomRes] = await Promise.all([
-    axios.get("/api/admin/summary", { headers }),
-    axios.get("/api/admin/universities", { headers }),
-    axios.get("/api/admin/buildings", { headers, params: scopedParams }),
-    axios.get("/api/admin/rooms", { headers, params: scopedParams }),
+    api.get("/api/admin/summary", { headers }),
+    api.get("/api/admin/universities", { headers }),
+    api.get("/api/admin/buildings", { headers, params: scopedParams }),
+    api.get("/api/admin/rooms", { headers, params: scopedParams }),
   ]);
 
   return {
@@ -20,9 +20,9 @@ export async function fetchAdminDashboard(headers, universityId) {
 
 export async function fetchPlatformAdminData(headers) {
   const [summaryRes, universityRes, userRes] = await Promise.all([
-    axios.get("/api/admin/summary", { headers }),
-    axios.get("/api/admin/universities", { headers }),
-    axios.get("/api/admin/users", { headers }),
+    api.get("/api/admin/summary", { headers }),
+    api.get("/api/admin/universities", { headers }),
+    api.get("/api/admin/users", { headers }),
   ]);
 
   return {
@@ -34,12 +34,12 @@ export async function fetchPlatformAdminData(headers) {
 
 export async function fetchAdminReports(headers, universityId) {
   const params = universityId ? { universityId } : undefined;
-  const response = await axios.get("/api/admin/reports", { headers, params });
+  const response = await api.get("/api/admin/reports", { headers, params });
   return response.data?.reports ?? [];
 }
 
 export async function updateAdminReportStatus(headers, reportId, status) {
-  const response = await axios.patch(
+  const response = await api.patch(
     `/api/admin/reports/${reportId}/status`,
     { status },
     { headers }

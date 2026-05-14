@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import styles from "./SignUpPage.module.css";
-import axios from "axios";
 
 // Sign-up page for creating a new account.
 export default function SignUpPage() {
@@ -50,7 +49,7 @@ export default function SignUpPage() {
     }
 
     try {
-      await axios.post(
+      await api.post(
         `${import.meta.env.VITE_API_URL}/users/register`, // will need to change this route when we run on actual server
       {
         email: formData.email,

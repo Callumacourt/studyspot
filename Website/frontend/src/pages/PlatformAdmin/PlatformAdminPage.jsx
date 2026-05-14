@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import axios from "axios";
 import styles from "./PlatformAdminPage.module.css";
 import { getAuthHeaders } from "../../utils/auth";
 import {
@@ -99,10 +98,10 @@ export default function PlatformAdminPage() {
 
     try {
       if (universityForm.id) {
-        await axios.patch(`/api/admin/universities/${universityForm.id}`, { name: universityForm.name }, { headers: authHeaders });
+        await api.patch(`/api/admin/universities/${universityForm.id}`, { name: universityForm.name }, { headers: authHeaders });
         setMessage("University updated.");
       } else {
-        await axios.post("/api/admin/universities", { name: universityForm.name }, { headers: authHeaders });
+        await api.post("/api/admin/universities", { name: universityForm.name }, { headers: authHeaders });
         setMessage("University created.");
       }
       setUniversityForm(emptyUniversityForm);
@@ -124,7 +123,7 @@ export default function PlatformAdminPage() {
     if (!confirmed) return;
 
     try {
-      await axios.delete(`/api/admin/universities/${university.id}`, { headers: authHeaders });
+      await api.delete(`/api/admin/universities/${university.id}`, { headers: authHeaders });
       setMessage("University deleted.");
       await loadData();
     } catch (err) {
@@ -139,7 +138,7 @@ export default function PlatformAdminPage() {
 
     try {
       const draft = userDrafts[userId];
-      await axios.patch(
+      await api.patch(
         `/api/admin/users/${userId}/role`,
         buildUserRolePayload(draft),
         { headers: authHeaders }

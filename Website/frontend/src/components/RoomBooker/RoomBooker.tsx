@@ -10,9 +10,9 @@
  * - Submits validated UTC booking payloads to backend.
  */
 import { useState, useEffect, useMemo } from "react";
-import axios from "axios";
 import { getAuthHeaders } from "../../utils/auth";
 import styles from "./RoomBooker.module.css";
+import api from "../../utils/axios";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -112,7 +112,7 @@ export default function RoomBooker({ roomId, openHour, closeHour, maxBookingDura
         setSelectedEnd(null);
         setMessage(null);
 
-        axios.get(`/api/rooms/${roomId}/bookings?date=${selectedDate}`)
+        api.get(`/api/rooms/${roomId}/bookings?date=${selectedDate}`)
             .then((res) => { if (!cancelled) setBookings(res.data?.bookings ?? []); })
             .catch(() => { if (!cancelled) setBookings([]); })
             .finally(() => { if (!cancelled) setLoadingSlots(false); });
@@ -175,7 +175,7 @@ export default function RoomBooker({ roomId, openHour, closeHour, maxBookingDura
         setSubmitting(true);
         setMessage(null);
         try {
-            await axios.post(
+            await api.post(
                 `/api/rooms/${roomId}/book`,
                 { startTime: startISO, endTime: endISO },
                 { headers: getAuthHeaders() }
@@ -183,7 +183,7 @@ export default function RoomBooker({ roomId, openHour, closeHour, maxBookingDura
             setMessage({ text: `Booked ${fmtHour(selectedStart)} - ${fmtHour(selectedEnd)} on ${selectedDate} \u2713`, ok: true });
             setSelectedStart(null);
             setSelectedEnd(null);
-            const res = await axios.get(`/api/rooms/${roomId}/bookings?date=${selectedDate}`);
+            const res = await api.get(`/api/rooms/${roomId}/bookings?date=${selectedDate}`);
             setBookings(res.data?.bookings ?? []);
             if (onSuccess) setTimeout(onSuccess, 1500);
         } catch (err: any) {

@@ -14,8 +14,7 @@
  * - orange bar = current hour,
  * - red bar = hour already booked today.
  */
-import React, { useState, useEffect, useMemo } from "react";
-import axios from "axios";
+import { useState, useEffect, useMemo } from "react";
 import {
   ResponsiveContainer,
   BarChart,
@@ -26,6 +25,7 @@ import {
   Cell,
 } from "recharts";
 import styles from "./BusyTimesChart.module.css";
+import api from "../../utils/axios";
 
 type BusyTimesChartProps = {
   hourlyAverages: number[]; // length 24
@@ -72,7 +72,7 @@ export default function BusyTimesChart({ hourlyAverages, liveOccupancy = null, o
   useEffect(() => {
     if (!roomId) return;
     let cancelled = false;
-    axios.get(`/api/rooms/${roomId}/bookings?date=${todayStr}`)
+    api.get(`/api/rooms/${roomId}/bookings?date=${todayStr}`)
       .then((res) => {
         if (cancelled) return;
         const bookings: { startTime: string; endTime: string }[] = res.data?.bookings ?? [];

@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import RoomCard from "../../components/RoomCard/RoomCard";
 import Toast from "../../components/Toast/Toast";
 import styles from "./FavouritesPage.module.css";
 import { getAuthHeaders } from "../../utils/auth";
+import api from "../../utils/axios";
 
 export default function FavouritesPage() {
   const navigate = useNavigate();
@@ -29,7 +29,7 @@ export default function FavouritesPage() {
     setError("");
 
     try {
-      const response = await axios.get("/api/user/me/favourites", { headers: authHeaders });
+      const response = await api.get("/api/user/me/favourites", { headers: authHeaders });
       setRooms(response.data?.rooms ?? []);
     } catch (err) {
       const status = err?.response?.status;
@@ -50,7 +50,7 @@ export default function FavouritesPage() {
 
   async function removeFavourite(roomId) {
     try {
-      await axios.delete(`/api/rooms/${roomId}/favourite`, { headers: authHeaders });
+      await api.delete(`/api/rooms/${roomId}/favourite`, { headers: authHeaders });
       setRooms((prev) => prev.filter((room) => room.id !== roomId));
       setMessage("Room removed from favourites.");
     } catch (err) {

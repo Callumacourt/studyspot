@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import axios from "axios";
 import styles from "./AdminPage.module.css";
 import { getAuthHeaders, getStoredUser } from "../../utils/auth";
 import {
@@ -10,6 +9,7 @@ import {
   getApiErrorMessage,
   updateAdminReportStatus,
 } from "./adminApi";
+import api from "../../utils/api";
 
 const emptyBuildingForm = { id: null, name: "", universityId: "" };
 const emptyRoomForm = {
@@ -108,10 +108,10 @@ export default function AdminPage() {
       const payload = buildBuildingPayload(buildingForm, selectedUniversityId);
 
       if (buildingForm.id) {
-        await axios.patch(`/api/admin/buildings/${buildingForm.id}`, payload, { headers: authHeaders });
+        await api.patch(`/api/admin/buildings/${buildingForm.id}`, payload, { headers: authHeaders });
         setMessage("Building updated.");
       } else {
-        await axios.post("/api/admin/buildings", payload, { headers: authHeaders });
+        await api.post("/api/admin/buildings", payload, { headers: authHeaders });
         setMessage("Building created.");
       }
 
@@ -134,10 +134,10 @@ export default function AdminPage() {
       const payload = buildRoomPayload(roomForm);
 
       if (roomForm.id) {
-        await axios.patch(`/api/admin/rooms/${roomForm.id}`, payload, { headers: authHeaders });
+        await api.patch(`/api/admin/rooms/${roomForm.id}`, payload, { headers: authHeaders });
         setMessage("Room updated.");
       } else {
-        await axios.post("/api/admin/rooms", payload, { headers: authHeaders });
+        await api.post("/api/admin/rooms", payload, { headers: authHeaders });
         setMessage("Room created.");
       }
 
@@ -157,7 +157,7 @@ export default function AdminPage() {
     if (!confirmed) return;
 
     try {
-      await axios.delete(`/api/admin/buildings/${building.id}`, { headers: authHeaders });
+      await api.delete(`/api/admin/buildings/${building.id}`, { headers: authHeaders });
       setMessage("Building deleted.");
       await loadDashboard(selectedUniversityId);
     } catch (err) {
@@ -170,7 +170,7 @@ export default function AdminPage() {
     if (!confirmed) return;
 
     try {
-      await axios.delete(`/api/admin/rooms/${room.id}`, { headers: authHeaders });
+      await api.delete(`/api/admin/rooms/${room.id}`, { headers: authHeaders });
       setMessage("Room deleted.");
       await loadDashboard(selectedUniversityId);
     } catch (err) {

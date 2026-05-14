@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import styles from "./Login.module.css";
-import axios from "axios";
 import { persistSession } from "../../utils/auth";
 // Login form with client-side checks and auth token persistence.
 export default function LoginPage() {
@@ -39,8 +38,8 @@ export default function LoginPage() {
 
 
     try {
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/users/login`, // will need to change this route when we run on actual server
+      const response = await api.post(
+        `${import.meta.env.VITE_API_URL}/users/login`, 
       {
         email: formData.email,
         password: formData.password,

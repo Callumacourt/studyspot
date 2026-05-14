@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
 import { getAuthHeaders } from "../../utils/auth";
 import Toast from "../../components/Toast/Toast";
 import styles from "./MyBookingsPage.module.css";
+import api from "../../utils/axios";
 
 function formatDateTime(iso) {
   const d = new Date(iso);
@@ -42,7 +42,7 @@ export default function MyBookingsPage() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await axios.get("/api/user/me/bookings", { headers: authHeaders });
+        const res = await api.get("/api/user/me/bookings", { headers: authHeaders });
         setBookings(res.data?.bookings ?? []);
       } catch (err) {
         if (err?.response?.status === 401) { navigate("/login", { replace: true }); return; }
@@ -57,7 +57,7 @@ export default function MyBookingsPage() {
     setCancelling(bookingId);
     setConfirmId(null);
     try {
-      await axios.delete(`/api/user/bookings/${bookingId}/cancel`, { headers: authHeaders });
+      await api.delete(`/api/user/bookings/${bookingId}/cancel`, { headers: authHeaders });
       setBookings((prev) => prev.filter((b) => b.id !== bookingId));
       setCancelSuccess("Booking cancelled successfully.");
     } catch (err) {

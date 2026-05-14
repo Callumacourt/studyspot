@@ -1,5 +1,4 @@
 import { useState } from "react";
-import axios from "axios";
 import { getAuthHeaders } from "../../utils/auth";
 import styles from "./Room.module.css";
 
@@ -14,7 +13,7 @@ export default function RoomReport({ roomId, onClose, onMessage }) {
 
         setSubmitting(true);
         try {
-            await axios.post(
+            await api.post(
                 `/api/rooms/${roomId}/reports`,
                 { category, message: message.trim() },
                 { headers: getAuthHeaders() }

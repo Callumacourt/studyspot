@@ -13,8 +13,8 @@
  * - avoids duplicating auth/favourite logic across components.
  */
 import { useState, useEffect } from "react";
-import axios from "axios";
 import { getAuthHeaders } from "../../utils/auth";
+import api from "../../utils/api";
 
 export function useRoomData(roomId) {
     const isLoggedIn   = Boolean(localStorage.getItem("token"));
@@ -29,7 +29,7 @@ export function useRoomData(roomId) {
     // Room metadata fetch (name, building, booking/accessibility fields, etc.)
     useEffect(() => {
         let cancelled = false;
-        axios.get(`/api/rooms/${roomId}`)
+        api.get(`/api/rooms/${roomId}`)
             .then((res) => { if (!cancelled) setRoomData(res.data?.room ?? null); })
             .catch(console.error);
         return () => { cancelled = true; };
@@ -39,7 +39,7 @@ export function useRoomData(roomId) {
     useEffect(() => {
         if (!isLoggedIn) { setIsFavourite(false); return; }
         let cancelled = false;
-        axios.get(`/api/rooms/${roomId}/favourite`, { headers: authHeaders })
+        api.get(`/api/rooms/${roomId}/favourite`, { headers: authHeaders })
             .then((res) => { if (!cancelled) setIsFavourite(Boolean(res.data?.isFavourite)); })
             .catch(() => { if (!cancelled) setIsFavourite(false); });
         return () => { cancelled = true; };
@@ -51,7 +51,7 @@ export function useRoomData(roomId) {
 
         async function fetch() {
             try {
-                const res    = await axios.get(`/api/sensordata/${roomId}/occupancy-averages`);
+                const res    = await api.get(`/api/sensordata/${roomId}/occupancy-averages`);
                 const values = Array.isArray(res.data?.data) ? res.data.data : [];
                 if (!cancelled) setHourlyAverages(Array.from({ length: 24 }, (_, i) => Number(values[i] ?? 0)));
             } catch {
@@ -71,11 +71,11 @@ export function useRoomData(roomId) {
         setActionMessage("");
         try {
             if (isFavourite) {
-                await axios.delete(`/api/rooms/${roomId}/favourite`, { headers: authHeaders });
+                await api.delete(`/api/rooms/${roomId}/favourite`, { headers: authHeaders });
                 setIsFavourite(false);
                 setActionMessage("Removed from favourites.");
             } else {
-                await axios.post(`/api/rooms/${roomId}/favourite`, {}, { headers: authHeaders });
+                await api.post(`/api/rooms/${roomId}/favourite`, {}, { headers: authHeaders });
                 setIsFavourite(true);
                 setActionMessage("Added to favourites.");
             }

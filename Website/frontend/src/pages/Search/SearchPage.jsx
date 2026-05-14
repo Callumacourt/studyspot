@@ -17,11 +17,11 @@ import styles from "./SearchPage.module.css";
 import RoomFilter from "../../components/RoomFilter/RoomFilter";
 import RoomCard from "../../components/RoomCard/RoomCard.jsx";
 import { useState, useEffect } from "react";
-import axios from "axios";
 import RoomSearcher from "../../components/RoomSearcher/RoomSearcher";
 import chevronUp from "../../assets/icons/chevron-up.svg";
 import chevronDown from "../../assets/icons/chevron-down.svg";
 import Select from "react-select";
+import api from "../../utils/axios.js";
 
 // Search results page: URL-backed filters + grouped room cards.
 export default function SearchPage() {
@@ -35,7 +35,7 @@ export default function SearchPage() {
 
   // Load universities once; default to Cardiff if URL has no selection.
   useEffect(() => {
-    axios.get("/api/universities")
+    api.get("/api/universities")
       .then((res) => {
         const list = res.data?.universities ?? [];
         setUniversities(list);
@@ -85,7 +85,7 @@ export default function SearchPage() {
 
       try {
         const endpoint = queryString ? `/api/rooms/filter?${queryString}` : "/api/rooms";
-        const res = await axios.get(endpoint);
+        const res = await api.get(endpoint);
         const payload = res.data?.rooms ?? res.data?.data ?? [];
         if (!cancelled) setRooms(payload);
       } catch (err) {

@@ -21,8 +21,8 @@ import adminRoute from "./routes/AdminRoute";
 import userRoute from "./routes/UserRoute";
 import { SensorService } from "./services/SensorService";
 import cors from "cors";
+import express from "express";
 
-const express = require('express');
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -34,7 +34,7 @@ app.use(express.json());
 app.use(cors({
   origin: [
     "http://localhost:5173",
-    "https://your-frontend.vercel.app"
+    "https://studyspot-muod.vercel.app"
   ]
 }));
 app.disable("x-powered-by");

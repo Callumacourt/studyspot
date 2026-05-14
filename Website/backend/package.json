@@ -3,7 +3,9 @@
     "test": "vitest run --config src/config/vitest.config.ts",
     "test:watch": "vitest --config src/config/vitest.config.ts",
     "test:integration": "vitest run --config src/config/vitest.config.ts src/tests/**/*.integration.test.ts",
-    "test:nfr": "vitest run --config src/config/vitest.config.ts src/tests/NFR.test.ts"
+    "test:nfr": "vitest run --config src/config/vitest.config.ts src/tests/NFR.test.ts",
+    "vercel-build": "prisma generate && tsc",
+    "build": "tsc"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.5.0",

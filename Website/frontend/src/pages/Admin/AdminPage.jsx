@@ -9,7 +9,8 @@ import {
   getApiErrorMessage,
   updateAdminReportStatus,
 } from "./adminApi";
-import api from "../../utils/api";
+
+import api from "../../utils/axios";
 
 const emptyBuildingForm = { id: null, name: "", universityId: "" };
 const emptyRoomForm = {

@@ -14,7 +14,7 @@
  */
 import { useState, useEffect } from "react";
 import { getAuthHeaders } from "../../utils/auth";
-import api from "../../utils/api";
+import api from "../../utils/axios";
 
 export function useRoomData(roomId) {
     const isLoggedIn   = Boolean(localStorage.getItem("token"));

@@ -7,6 +7,8 @@ Combines:
 - cloud telemetry publishing,
 - a fullstack web app for discovery, filtering, booking, and administration of study rooms.
 
+Demo Link (mock data): https://studyspot-muod-o12kdwkjf-callumacourts-projects.vercel.app/
+
 ## Architecture Reference
 <img width="1800" height="2160" alt="system_architecture(2)" src="https://github.com/user-attachments/assets/0ad1ee41-4fbf-4601-a192-b577148294ae" />
 
